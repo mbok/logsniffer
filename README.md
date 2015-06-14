@@ -1,5 +1,5 @@
 # logsniffer
-<img src="http://www.logsniffer.com/sites/default/files/logo-109x150.png">
+<div style="text-align:center"><img src="http://www.logsniffer.com/sites/default/files/logo-109x150.png"></div>
 logsniffer is a sophisticated open source web tool for viewing, monitoring and analysing log data - smarter and easier.
 
 ## License
