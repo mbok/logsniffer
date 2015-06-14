@@ -1,6 +1,6 @@
 
 
-# logsniffer ![alt tag](http://www.logsniffer.com/sites/default/files/logo-109x150.png) 
+# logsniffer ![alt tag](https://raw.githubusercontent.com/logsniffer/logsniffer/master/logo-109x150.png) 
 logsniffer is a sophisticated open source web tool for viewing, monitoring and analysing log data - smarter and easier.
 
 ## License
