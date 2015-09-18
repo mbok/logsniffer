@@ -1,0 +1,141 @@
+<script type="text/javascript">
+	LogSnifferNgApp.controllerProvider.register(
+		"SeverityMappingFilterWizardController", ['$scope', '$log', function ($scope, $log) {
+
+		$scope.classes = [];
+		var classTemp = ["EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING", "NOTICE", "INFORMATIONAL", "DEBUG", "TRACE"];
+		for(var i=0; i < classTemp.length; i++) {
+		    $scope.classes.push({
+				"i": i,
+				"n": classTemp[i]
+		   });
+		}
+		$scope.levels = [
+		];
+		if ($scope.bean.severityLevels) {
+			for (var key in $scope.bean.severityLevels) {
+			    $scope.levels.push({
+					key: key,
+					value: $scope.bean.severityLevels[key]
+			    });
+			}
+		}
+		$scope.addLevel = function() {
+			$scope.levels.push({
+			    key:"",
+			    value: {
+					"o":"",
+					"c":6,
+					"n":""
+			    }
+			})
+		};
+		$scope.deleteLevel = function(i) {
+			$scope.levels.splice(i,1);
+		};
+		$scope.$watch('levels', function(newValue, oldValue) {
+			$scope.bean.severityLevels = {};
+			for (var i = 0; i < newValue.length; i++) {
+			    var h = newValue[i];
+			    $scope.bean.severityLevels[h.key] = h.value;
+			}
+			$log.info("Synchronize levels", $scope.levels, $scope.bean.severityLevels);
+	    }, true);
+
+		if ($scope.levels.length == 0) {
+		    $scope.addLevel();
+		}
+		if ($scope.bean.fallback) {
+		    $scope.fallbackLevelEnabled = true;
+		} else {
+		    $scope.fallbackLevelEnabled = false;
+		}
+	}]);
+</script>
+<div ng-controller="SeverityMappingFilterWizardController">
+	<lsf-info-label label="Resolves the severity level of a log entry from an arbitrary string field">
+		This filter maps a source field value to the standard complex <code>_severity</code> field, which
+		is natively used e.g. for highlighting of entries and for retrieval. The complex severity
+		level is composed of three information:
+		<dl>
+			<dt>Classification</dt>
+			<dd>Classifies the severity into levels
+				known from <a href="https://en.wikipedia.org/wiki/Syslog#Severity_level" target="_blank">Syslog</a>.
+				This information part is used for visual aspects e.g. to highlight a log entry.
+			</dd>
+			<dt>Name</dt>
+			<dd>Descriptive name of the severity level e.g. to transform abbreviations or severity codes to a user friendly form.</dd>
+			<dt>Ordinal number</dt>
+			<dd>Is used to order levels e.g. to support order based retrieval. A lower number represents critical severity and a higher number a more informative severity.</dd>
+		</dl>
+		You can define a fallback level which is set in case of no alternative level matches the source field.
+	</lsf-info-label>
+	<div class="row">
+		<div class="col-md-4">
+			<lsf-form-group class="form-group required" field-name="sourceField" field-path="sourceField" bind-errors="bindErrors">
+				<label for="url" class="control-label">Source field:</label>
+				<input type="text" ng-model="bean.sourceField" name="sourceField" id="sourceField" class="form-control" required="required">
+			</lsf-form-group>
+		</div>
+		<div class="col-md-4"><br>
+			<label><input type="checkbox" ng-model="bean.override" name="override" id="override" > Override severity field</label>
+		</div>
+		<div class="col-md-4"><br>
+			<label><input type="checkbox" ng-model="bean.ignoreCase" name="ignoreCase" id="ignoreCase" > Ignore case for source value comparison</label>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-12">
+			<label>Severity level mappings</label>
+			<a class="btn btn-link" ng-click="addLevel()">
+				<i class="glyphicon glyphicon-plus"></i> Add mapping</a>
+		</div>
+		<div class="col-md-12">
+			<table class="table table-condensed table-hover">
+				<tr>
+					<th>Matching value in source</th>
+					<th>Severity classification</th>
+					<th>Level ordinal number</th>
+					<th>Level name</th>
+					<th></th>
+				</tr>
+				<tr ng-repeat="lw in levels">
+					<td>
+						<input type="text" ng-model="lw.key" required="required" class="form-control" placeholder="Source value">
+					<td>
+						<select ng-model="lw.value.c" required="required" class="form-control" ng-options="c.i as c.n for c in classes">
+							<option value="">- Please select -</option>
+						</select>
+					</td>
+					<td>
+						<input type="number" ng-model="lw.value.o" required="required" class="form-control" placeholder="Ordinal number">
+					</td>
+					<td>
+						<input type="text" ng-model="lw.value.n" required="required" class="form-control" placeholder="Name">
+					</td>
+					<td><button class="btn btn-default" type="button" ng-click="deleteLevel($index)"><i class="glyphicon glyphicon-trash"></i></button></td>
+				</tr>
+				<tfoot>
+					<tr>
+						<td>
+							<label for="fallbackLevelEnabled" class="control-label">
+								<input type="checkbox" id="fallbackLevelEnabled" ng-model="fallbackLevelEnabled" ng-click="bean.fallback = null"> Fallback level enabled
+							</label>
+						<td>
+							<select ng-if="fallbackLevelEnabled" ng-model="bean.fallback.c" required="required" class="form-control" ng-options="c.i as c.n for c in classes">
+								<option value="">- Please select -</option>
+							</select>
+						</td>
+						<td>
+							<input ng-if="fallbackLevelEnabled" type="number" ng-model="bean.fallback.o" required="required" class="form-control" placeholder="Ordinal number">
+						</td>
+						<td>
+							<input ng-if="fallbackLevelEnabled" type="text" ng-model="bean.fallback.n" required="required" class="form-control" placeholder="Name">
+						</td>
+						<td></td>					
+					</tr>
+				</tfoot>
+			</table>
+		</div>
+	</div>
+</div>

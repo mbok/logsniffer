@@ -1,0 +1,65 @@
+<script type="text/javascript">
+	var DataBuilderEditorRequestParts = function ($scope, $log) {
+		$scope.moveBuilderUp = function(index) {
+			LogSniffer.moveUp($scope.requestParts, index);
+		};
+		
+		$scope.moveBuilderDown = function(index) {
+			LogSniffer.moveDown($scope.requestParts, index);
+		};
+		
+		$scope.deleteBuilder = function(index) {
+			$scope.requestParts.splice(index, 1);
+		};
+		
+		$scope.addBuilder = function() {
+			$scope.requestParts.push({
+				name: "New series"
+			});
+		};
+	};	
+</script>
+
+<div class="modal-header">
+    <h3>Datasource Builder</h3>
+</div>
+<div class="modal-body">
+	<form name="dbForm" ng-init="requestParts=dataBuilderConfig.builders[0].requestParts" ng-controller="DataBuilderEditorRequestParts">
+		<accordion close-others="true">
+			<accordion-group ng-repeat="builderData in requestParts" is-open="isopen">
+				<accordion-heading>
+	            	<a class="accordion-toggle" ng-click="isopen = !isopen"><i class="glyphicon" ng-class="{'glyphicon glyphicon-chevron-down': isopen, 'glyphicon glyphicon-chevron-right': !isopen}"></i> {{builderData.name}}</a> 
+	            	<div class="pull-right">
+		            	<div class="btn-group">
+			            	<button ng-click="moveBuilderUp($index)" ng-disabled="$first" class="btn btn-default btn-sm glyphicon glyphicon glyphicon-arrow-up" title="Delete"></button>
+			            	<button ng-click="moveBuilderDown($index)" ng-disabled="$last" class="btn btn-default btn-sm glyphicon glyphicon glyphicon-arrow-down" title="Delete"></button>
+			            	<button ng-click="deleteBuilder($index)" class="btn btn-default btn-sm glyphicon glyphicon-trash" title="Delete"></button>
+		            	</div>
+		            </div>
+	        	</accordion-heading>
+				<ng-form name="seriesForm">
+					<div class="row">
+						<div class="col-md-6 form-group" ng-class="{error: seriesForm.type.$invalid && !seriesForm.type.$pristine}">
+							<label class="control-label">Series type*:</label>
+							<select class="form-control" name="type" ng-model="builderData._type" ng-options="n for n in ['DateHistogramFacet', 'TermsAgg', 'StatsAgg']" required>
+								<option value=""> - Please select - </option>
+							</select>
+						</div>
+						<div class="col-md-6 form-group">
+							<label class="control-label">Name*:</label>
+							<div class="controls">
+								<input type="text" ng-model="builderData.name" class="form-control" placeholder="Name" />
+							</div>
+						</div>
+					</div>
+					<div class="slide-animate" ng-include="templatesPath + builderData._type + '.html'"></div>
+				</ng-form>
+			</accordion-group>
+		</accordion>
+	    <a ng-click="addBuilder()" class="btn btn-primary btn-sm"><i class="glyphicon glyphicon-plus icon-white"></i> Add data series</a>
+	</form>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-click="ok()" ng-disabled="dbForm.$invalid">OK</button>
+    <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+</div>

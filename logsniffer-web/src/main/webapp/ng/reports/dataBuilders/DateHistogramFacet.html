@@ -1,0 +1,49 @@
+<script type="text/javascript">
+	var DateHistogramBuilder = function ($scope, $log) {
+		angular.extend($scope.builderData, new LogSniffer.DataSourceBuilder.ElasticRequestBuilder.DateHistogramFacet($scope.builderData));
+		$log.info($scope.builderData);
+	};	
+</script>
+<div ng-controller="DateHistogramBuilder">
+	<div class="row">
+		<div class="col-md-6 form-group">
+			<label class="control-label">Date field*:</label>
+			<div class="controls">
+				<input type="text" ng-model="builderData.request.date_histogram.field" class="form-control" placeholder="Date field" 
+					typeahead="f for f in ['occurrence', 'published', 'entries.fields._timestamp']"/>
+			</div>
+		</div>
+		<div class="col-md-6 form-group">
+			<label class="control-label">Interval*:</label>
+			<div class="controls">
+				<select class="form-control" ng-model="builderData.request.date_histogram.interval" ng-options="in for in in ['year', 'quarter', 'month', 'week', 'day', 'hour', 'minute', 'second']">
+				</select>
+			</div>
+		</div>
+	</div>
+	<h4>Filter</h4>
+	<div ng-include="templatesPath + 'facetFilter.html'"></div>
+	<h4>Columns</h4>
+	<div class="row" ng-repeat="col in builderData.cols">
+		<div class="col-md-4 form-group">
+			<label class="control-label">Label*:</label>
+			<div class="controls">
+				<input type="text" ng-model="col.options.label" class="form-control" placeholder="Column label" />
+			</div>
+		</div>
+		<div class="col-md-4 form-group">
+			<label class="control-label">Value source*:</label>
+			<div class="controls">
+				<select class="form-control" ng-model="col.path" ng-options="o for o in ['time', 'count']">
+				</select>
+			</div>
+		</div>
+		<div class="col-md-4 form-group">
+			<label class="control-label">Type*:</label>
+			<div class="controls">
+				<select class="form-control" ng-model="col.options.type" ng-options="t for t in {time:['datetime','date','timeofday'], count: ['number']}[col.path]">
+				</select>
+			</div>
+		</div>
+	</div>
+</div>

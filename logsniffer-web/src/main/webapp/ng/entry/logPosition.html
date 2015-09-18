@@ -1,0 +1,40 @@
+<div>
+	<div class="row" ng-if="log['@type']=='rolling'">
+		<div class="col-md-2">Rolling file:</div>
+		<div class="col-md-10">
+			<div class="row" id="{{name}}part">
+				<div class="col-md-8">
+					<input ng-if="!disabled()" type="text" class="part-slider" data-slider-min="0" data-slider-max="{{log.parts.length-1}}"
+										data-slider-tooltip="show">
+					<div ng-if="disabled()" class="progress" ng-class="{'progress-striped active': active()}">
+						<div class="bar"></div>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="controls">
+						<select class="col-md-12 form-control" ng-disabled="disabled()" onchange="${name}.partSlider.setValue(this.options.length-1-this.selectedIndex);${name}.currentFile.reset(0,$(this.options[this.selectedIndex]).data('size'));${name}.fireChangeListener();">
+							<option ng-repeat="part in log.parts" value="{{part.path}}" data-size="{{part.size}}">
+								{{part.path | fileName}}
+							</option>
+						</select>
+					</div>
+				</div>		
+			</div>
+		</div>
+	</div>
+	
+	<div class="row">
+		<div class="col-md-2">File position:</div>
+		<div class="col-md-10">
+			<div class="row" id="{{name}}current">
+				<div class="col-md-8">
+					<input ng-if="!disabled()" type="text" class="filepos-slider" data-slider-tooltip="show">
+					<div ng-if="disabled()" class="progress" ng-class="{'progress-striped active': active()}">
+						<div class="progress-bar bar"></div>
+					</div>
+				</div>
+				<div class="col-md-4 info"></div>
+			</div>
+		</div>
+	</div>
+</div>

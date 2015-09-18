@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    logsniffer, open source tool for viewing, monitoring and analysing log data.
+    Copyright (c) 2015 Scaleborn UG, www.scaleborn.com
+   
+    logsniffer is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+   
+    logsniffer is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+   
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ -->
+
+<web-fragment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://java.sun.com/xml/ns/javaee"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-fragment_3_0.xsd"
+	id="WebAppFragment_ID" version="3.0">
+	<name>logsniffer_core_fragment</name>
+	
+	<!-- 
+	<jsp-config>
+		<taglib>
+			<taglib-uri>http://logsniffer.com/jstl/fn</taglib-uri>
+			<taglib-location>/tlds/logsniffer-fn.tld</taglib-location>
+		</taglib>
+		<taglib>
+			<taglib-uri>http://logsniffer.com/tags</taglib-uri>
+			<taglib-location>/tlds/logsniffer-tags.tld</taglib-location>
+		</taglib>
+		<taglib>
+			<taglib-uri>http://logsniffer.com/tags/templates</taglib-uri>
+			<taglib-location>/tlds/logsniffer-tpl.tld</taglib-location>
+		</taglib>
+	</jsp-config>
+	 -->
+
+	<!-- INSERT JSPC-HERE -->
+</web-fragment>

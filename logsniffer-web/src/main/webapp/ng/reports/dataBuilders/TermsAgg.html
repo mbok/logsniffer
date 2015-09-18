@@ -1,0 +1,39 @@
+<script type="text/javascript">
+	var TermsAggBuilder = function ($scope, $log) {
+		angular.extend($scope.builderData, new LogSniffer.DataSourceBuilder.ElasticRequestBuilder.TermsAgg($scope.builderData));
+	};	
+</script>
+<div ng-controller="TermsAggBuilder">
+	<div class="row">
+		<div class="col-md-6 form-group">
+			<label class="control-label">Terms field*:</label>
+			<div class="controls">
+				<input type="text" ng-model="builderData.request.aggs.terms.terms.field" class="form-control" placeholder="Terms field e.g. 'entries.fields._severity.n'" 
+					typeahead="f for f in ['entries.fields._severity.n', 'entries.fields._severity.c', 'entries.fields._raw']"/>
+			</div>
+		</div>
+		<div class="col-md-6 form-group">
+			<label class="control-label">Size*:</label>
+			<div class="controls">
+				<select class="form-control" ng-model="builderData.request.aggs.terms.terms.size" ng-options="s for s in [5,10,15,20,25,30,50,100,250]">
+					<option value="">Default</option>
+				</select>
+			</div>
+		</div>
+	</div>
+	<h4>Columns</h4>
+	<div class="row">
+		<div class="col-md-4 form-group">
+			<label class="control-label">Label for terms column*:</label>
+			<div class="controls">
+				<input type="text" ng-model="builderData.cols[0].options.label" class="form-control" placeholder="Terms" />
+			</div>
+		</div>
+		<div class="col-md-4 form-group">
+			<label class="control-label">Label for count column*:</label>
+			<div class="controls">
+				<input type="text" ng-model="builderData.cols[1].options.label" class="form-control" placeholder="Count" />
+			</div>
+		</div>
+	</div>
+</div>

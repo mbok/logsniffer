@@ -1,0 +1,308 @@
+/** 3rd party **/
+.slider.progress {
+	overflow: visible !important;
+	display: block;
+}
+
+.slider .slider-handle {
+	height: 30px;
+}
+
+.nav, .pagination, .carousel, .panel-title a { cursor: pointer; }
+
+.json-formatter-row .json-formatter-row {
+  margin-left: 1.5em;
+}
+
+/** Bootstrap **/
+/* Move down content because we have a fixed navbar that is 50px tall */
+body {
+  padding-top: 50px;
+}
+
+
+/*
+ * Global add-ons
+ */
+
+.sub-header {
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+/*
+ * Sidebar
+ */
+
+/* Hide for mobile, show later */
+.sidebar {
+  display: none;
+}
+@media (min-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 51px;
+    bottom: 0;
+    left: 0;
+    z-index: 1000;
+    display: block;
+    padding: 20px;
+    overflow-x: hidden;
+    overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
+    background-color: #f5f5f5;
+    border-right: 1px solid #eee;
+  }
+}
+
+/* Sidebar navigation */
+.nav-sidebar {
+  margin-right: -21px; /* 20px padding + 1px border */
+  margin-bottom: 20px;
+  margin-left: -20px;
+}
+.nav-sidebar > li > a {
+  padding-right: 20px;
+  padding-left: 20px;
+}
+.nav-sidebar > .active > a {
+  color: #fff;
+  background-color: #428bca;
+}
+
+
+/*
+ * Main content
+ */
+.main {
+  padding: 20px;
+}
+
+@media (min-width: 768px) {
+  .main {
+    padding-right: 40px;
+    padding-left: 40px;
+  }
+}
+.main .page-header {
+  margin-top: 0;
+}
+
+.navbar .navbar-brand {
+	background: url(images/logo25x34.png) no-repeat left center;
+	margin-left: 15px !important;
+	padding-left: 35px;
+}
+
+.nav-tabs {
+	margin-bottom: 15px;
+}
+
+h1.page-header {
+	margin-top: 0;
+}
+
+.alert {
+	margin-top: 10px;
+}
+
+.breadcrumb sup {
+	font-size: 100% !important;
+}
+
+.breadcrumb li.dropdown:before {
+	content: none !important;
+}
+
+a.accordion-toggle {
+	cursor: pointer;	
+}
+
+h1 .label {
+	font-size: 40%;
+}
+
+ul.pagination {
+	margin: 0;
+}
+
+hr.spaceless {
+	margin: 0;
+}
+
+hr.small {
+	margin: 5px 0;
+}
+
+.cc {
+	text-align: center;
+}
+
+.cr {
+	text-align: right;
+}
+
+ul.bordered-list {
+	margin: 5px 0px;
+	padding: 0px;
+}
+
+ul.bordered-list li {
+	padding: 5px 0;
+	border-bottom: 1px solid #EEE;
+	overflow: hidden;
+	display: block;
+	margin: 0px;
+}
+
+.panel .bean-wizard {
+	border: none !important;
+	background: none !important;
+	box-shadow: none !important;
+}
+
+.panel-body {
+    background-color: #f9f9f9;
+}
+
+/** Own **/
+.hidden2 {
+	display: none;
+}
+
+.help-popup {
+	cursor: pointer;	
+}
+
+.pre-desc {
+	margin-bottom: -4px;
+	position: relative;
+}
+
+.desc.thumbnail {
+	padding-bottom: 10px;
+	margin-bottom: 0;
+}
+
+.post-desc {
+	margin-top: -10px;
+	position: relative;
+}
+
+.capitalized {
+	text-transform: capitalize;
+}
+
+.log .text {
+	font-family: Monaco, Menlo, Consolas, "Courier New", monospace;
+	font-size: 12px;
+	line-height: 12px;
+	white-space: pre-wrap;
+}
+
+.log .text.nowrap {
+	white-space: pre !important
+}
+
+.log .text.DATE {
+	white-space: nowrap;
+}
+
+.severity.sc-4,.severity.sc-5 {
+	/* WARNING, NOTICE */
+	color: #c09853;
+	background-color: #fcf8e3;
+	border: 1px solid #fbeed5;
+}
+
+.severity.sc-0,.severity.sc-1,.severity.sc-2,.severity.sc-3 {
+	/* All < WARNING */
+	color: #b94a48;
+	background-color: #f2dede;
+	border-color: #eed3d7;
+}
+
+/** Misc **/
+.busy-container {
+	position: relative;
+}
+
+.busy-container .backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 500;
+  background-color: rgba(255,255,255,0.5);
+}
+
+.busy-container .spinner-area {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	margin-left: -16px;
+	margin-top: -16px;
+}
+
+.backdrop-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 500;
+  background-color: rgba(255,255,255,0.5);
+}
+
+.overlay-backdrop-visible {
+	z-index: 501;
+}
+
+.spin {
+	-webkit-transform-origin: 50% 50%;
+	transform-origin:50% 50%;
+	-ms-transform-origin:50% 50%; /* IE 9 */
+	-webkit-animation: spin 1s infinite linear;
+	-moz-animation: spin 1s infinite linear;
+	-o-animation: spin 1s infinite linear;
+	animation: spin 1s infinite linear;
+}
+
+@-moz-keyframes spin {
+  from {
+    -moz-transform: rotate(0deg);
+  }
+  to {
+    -moz-transform: rotate(360deg);
+  }
+}
+
+@-webkit-keyframes spin {
+  from {
+    -webkit-transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.form-group.required .control-label:after {
+  content: "*";
+}
+
+.help-icon {
+	color: #aaa;
+}
+
+.blocked {
+	display: block;
+}

@@ -1,0 +1,73 @@
+<script type="text/javascript">
+	function FacetFilterTermsController($scope, $log) {
+		$scope.termFilterNewTerm = "";
+		$scope.terms = [];
+		$log.info("Filters init for: " + $scope.builderData);
+		if ($scope.builderData.request.facet_filter.terms
+				&& $scope.builderData.request.facet_filter.terms['entries.fields._raw']) {
+			$
+					.each(
+							$scope.builderData.request.facet_filter.terms['entries.fields._raw'],
+							function(i, v) {
+								$scope.terms.push({
+									value : v
+								});
+							});
+		}
+
+		function applyTerms() {
+			if ($scope.terms.length > 0) {
+				if (!$scope.builderData.request.facet_filter.terms) {
+					$scope.builderData.request.facet_filter.terms = {};
+				}
+				$scope.builderData.request.facet_filter.terms['entries.fields._raw'] = [];
+				for (var i = 0; i < $scope.terms.length; i++) {
+					$scope.builderData.request.facet_filter.terms['entries.fields._raw']
+							.push($scope.terms[i].value);
+				}
+			} else if ($scope.builderData.request.facet_filter.terms) {
+				delete $scope.builderData.request.facet_filter.terms['entries.fields._raw'];
+				if (LogSniffer.objSize($scope.builderData.request.facet_filter.terms)==0) {
+					delete $scope.builderData.request.facet_filter.terms;
+				}
+			}
+		}
+
+		$scope.addTerm = function() {
+			if ($scope.termFilterNewTerm.length > 0) {
+				$scope.terms.push({
+					value : $scope.termFilterNewTerm
+				});
+				$scope.termFilterNewTerm = "";
+				applyTerms();
+			}
+		};
+
+		$scope.deleteTerm = function($index) {
+			$scope.terms.splice($index, 1);
+			applyTerms();
+		};
+	}
+</script>
+<div class="row" ng-controller="FacetFilterTermsController">
+	<div class="col-md-12">
+		<label class="control-label">By Term:</label>
+		<div class="input-group form-group">
+			<input type="text" ng-model="termFilterNewTerm" class="form-control"
+				placeholder="Term" /> <span class="input-group-btn">
+				<button class="btn btn-default" type="button" ng-click="addTerm()">
+					<i class="glyphicon glyphicon-plus"></i>
+				</button>
+			</span>
+		</div>
+		<div class="input-group form-group" ng-repeat="term in terms">
+			<input type="text" ng-model="term.value" class="form-control"
+				disabled="disabled" /> <span class="input-group-btn">
+				<button class="btn btn-default" type="button"
+					ng-click="deleteTerm($index)">
+					<i class="glyphicon glyphicon-trash"></i>
+				</button>
+			</span>
+		</div>
+	</div>
+</div>

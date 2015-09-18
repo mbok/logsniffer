@@ -1,0 +1,49 @@
+<script type="text/javascript">
+	LogSnifferNgApp.controllerProvider.register(
+		"JsonParserFilterWizardController", ['$scope', '$log', function ($scope, $log) {
+
+		if ($scope.bean.fallbackJsonValue) {
+		    $scope.fallbackEnabled = true;
+		} else {
+		    $scope.fallbackEnabled = false;
+		}
+	}]);
+</script>
+<div ng-controller="JsonParserFilterWizardController">
+	<lsf-info-label label="Parses JSON string value from a field and transforms it to a JSON object">
+		This filter parses the string value from the source field as JSON and assigns the structured object to the target field.
+		Parsing a JSON string to a structured JSON representation allows enhanced post processing when sniffing for events and retrieval by this field. 
+		Arbitrary JSON types are supported as input: Object, array or another valid primitive value.
+	</lsf-info-label>
+	<div class="row">
+		<div class="col-md-6">
+			<lsf-form-group class="form-group required" field-name="sourceField" field-path="sourceField" bind-errors="bindErrors">
+				<label for="url" class="control-label">Source field:</label>
+				<input type="text" ng-model="bean.sourceField" name="sourceField" id="sourceField" class="form-control" required="required">
+			</lsf-form-group>
+		</div>
+		<div class="col-md-6">
+			<lsf-form-group class="form-group required" field-name="targetField" field-path="targetField" bind-errors="bindErrors">
+				<label for="url" class="control-label">Target field:</label>
+				<input type="text" ng-model="bean.targetField" name="targetField" id="targetField" class="form-control" required="required">
+			</lsf-form-group>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-12">
+			<label for="fallbackLevelEnabled" class="control-label">
+				<input type="checkbox" id="fallbackEnabled" ng-model="fallbackEnabled" ng-click="bean.fallbackJsonValue = null"> JSON fallback value enabled
+			</label>
+		</div>
+		<div class="col-md-12" ng-if="fallbackEnabled" >
+			<lsf-form-group class="form-group required" field-name="fallbackJsonValue" field-path="fallbackJsonValue" bind-errors="bindErrors">
+				<lsf-info-label label="JSON fallback value:" for="fallbackJsonValue">
+					The fallback JSON is assigned to the target field in case of empty source field or in case of parse errors. Arbitrary JSON types are
+					supported: Object, array or another valid primitive value.
+				</lsf-info-label>
+				<textarea ng-model="bean.fallbackJsonValue" name="fallbackJsonValue" id="fallbackJsonValue" class="form-control" placeholder="JSON fallback value"
+					required="required" rows="5"></textarea>
+			</lsf-form-group>
+		</div>
+	</div>
+</div>

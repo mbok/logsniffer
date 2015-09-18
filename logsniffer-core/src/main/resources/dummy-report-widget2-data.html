@@ -1,0 +1,58 @@
+<script type="text/javascript">
+dashboardApp.controller("ReportDashboardCtrl", function ($scope) {				
+	$scope.chart=
+			    	{
+							chartType: "BarChart",
+					    	options: {
+						        "title": "Sales per month",
+						        "fill": 20,
+						    },
+						    formatters: {},
+						    dataWrapper: {
+						    	request: {
+						    		
+						    	},
+						    	binding: {
+						    		rows: "facets.severities.terms",
+						    		cols: [
+						    			{
+						    				path: "term",
+						    				options: {type:'string',label:'Severity'}
+						    			},
+						    			{
+						    				path: "count",
+						    				options: {type:'number',label:'Events count'}
+						    			}
+						    		]
+						    	}
+						    },
+						    data: function() {
+						    	var data=new google.visualization.DataTable();
+						    	$.ajax({
+						    	    type: "POST",
+						    	    contentType : "application/json",
+						    	    url: "/c/reports/eventSearch",
+						    	    async: false,
+						    	    data: JSON.stringify({
+						    	    	  "facets": {
+						    	    		    "severities" : { "terms" : {"field" : "entries.fields._severity.n"} }  
+						    	    		  }
+						    	    		  ,
+						    	    		  "size": 0
+						    	    })
+						    	}).success(
+						    		new LogSniffer.DataTableBinder().rows('facets.severities.terms').
+						    			col('term',{type:'string',label:'Severity'}).
+						    			col('count',{type:'number',label:'Events count'}).
+						    			bind(data)
+						    	);
+								return data;
+						    }
+			    	};			    	
+			});
+			
+			
+		</script>
+<div ng-cloak="" ng-controller="ReportDashboardCtrl">
+	<div google-chart chart="chart"></div>
+</div>

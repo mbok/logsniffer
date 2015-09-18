@@ -1,0 +1,23 @@
+<div class="modal-header">
+	<h4 class="modal-title">{{title}}</h4>
+</div>
+<div class="modal-body" class="zoom-entry-modal" style="padding-bottom:0">
+	<lsf-busy-container busy="busy">
+		<div lsf-alerts alerts="alerts"></div>
+		 <div class="row">
+		 	<div class="form-group col-md-12 required" ng-class="{'has-error': form.log.$invalid && !form.log.$pristine}">
+				<label class="control-label" for="log">Reference log:</label>
+				<select ng-model="settings.testLog" name="log" id="log" required="required" ng-options="log.path for log in logs track by log.path" class="form-control">
+					<option value="">- Please select -</option>
+				</select>
+			</div>
+		</div>
+		<div ng-if="settings.testLog">
+			<lsf-log-viewer source="source" log="settings.testLog" pointer="settings.logPointer" 
+				init-tail="false" follow-disabled="true" on-error="logViewerErrorHandler"></lsf-log-viewer>
+		</div>
+	</lsf-busy-container>
+</div>
+<div class="modal-footer">
+	<button class="btn" ng-click="close()">Close</button>
+</div>

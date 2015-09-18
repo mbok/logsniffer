@@ -1,0 +1,2 @@
+explain analyze 
+	SELECT count(`ID`), `entries__severity` FROM (SELECT i_entries.ID, e_entries.SEVERITY AS `entries__severity`, e_entries.SEVERITY_C AS `entries__severity_C`, e_entries.SEVERITY_N AS `entries__severity_N` FROM (SELECT ID FROM SNIFFERS_EVENTS WHERE SNIFFER=1) AS i_entries LEFT JOIN LOG_ENTRIES AS e_entries ON (i_entries.ID = e_entries.CTX_ID)) GROUP BY `entries__severity` 

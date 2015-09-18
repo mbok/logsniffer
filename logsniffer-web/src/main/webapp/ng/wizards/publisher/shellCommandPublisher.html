@@ -1,0 +1,21 @@
+<div>
+	<div class="row">
+		<div class="col-md-12">
+			<lsf-form-group class="form-group required" field-name="shellScript" field-path="shellScript" bind-errors="bindErrors">
+				<lsf-info-label label="Shell script:">Shell script to execute. The script is rendered before execution using Velocity templating with the passed event data
+					in attribute <code>event</code>. See this documentation for more details regarding rendering of event data via Velocity.</lsf-info-label>
+				<textarea rows="5" name="shellScript" id="shellScript" ng-model="bean.shellScript" class="form-control" required="required"></textarea>
+			</lsf-form-group>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-12">
+			<lsf-form-group class="form-group" field-name="workingDir" field-path="workingDir" bind-errors="bindErrors">
+				<lsf-info-label label="Working directory:">Working directory for script execution. If not specified the working directory of the current Java process
+					is used, usually the directory named by the system property <code>user.dir</code>, as the working directory of the child process.</lsf-info-label>
+				<input type="text" name="workingDir" id="workingDir" ng-model="bean.workingDir" class="form-control">
+			</lsf-form-group>
+		</div>
+	</div>
+
+</div>

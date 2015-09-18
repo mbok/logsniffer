@@ -1,0 +1,112 @@
+<form lsf-busy-container busy="state.busy" name="form" method="post" role="form" novalidate="novalidate">
+	<div lsf-alerts alerts="alerts"></div>
+	
+	<div class="row">
+		<div class="col-md-12">
+		<div class="form-group">
+			<lsf-info-label label="Home directory:">The home directory is configured by the system property <code>-Dlogsniffer.home</code> passed to the VM
+				process when logsniffer is started. To change the default setting <code>${user.home}/logsniffer</code> just add the property
+				to the start process e.g. <code>java -jar logsniffer.war -Dlogsniffer.home=/opt/logsniffer</code>.<br>
+				<b>Note:</b> Changing the home directory causes loss of persisted data (like events, log configuration etc.) unless the content
+				of the old home directory is transfered to new location.  
+			</lsf-info-label>
+			<input type="text" ng-model="settings.homeDir" readonly="readonly" class="form-control">
+		</div></div>
+	</div>
+
+	<div class="row">
+		<div class="col-md-12">
+			<lsf-form-group class="form-group required" field-name="baseUrl" field-path="baseUrl" bind-errors="bindErrors">
+				<lsf-info-label label="Base URL:">Specify the HTTP address of the logsniffer installation, such as http://yourhost.yourdomain/logsniffer/. This value is used to let logsniffer know how to refer to itself, ie. to 
+					to create links in emails etc. for referencing events and other resources.
+				</lsf-info-label>
+				<input type="text" ng-model="settings.baseUrl" name="baseUrl" id="baseUrl" class="form-control" required>
+			</lsf-form-group>
+		</div>
+	</div>
+	
+	<div class="well well-sm">
+		<h4>Mail settings</h4>
+		<div class="row">
+			<div class="col-md-6">
+				<div class="form-group required" ng-class="{'has-error': form.mailHost.$invalid || bindErrors['mailSettings.host']}">
+					<label for="mailHost" class="control-label">SMTP host:</label>
+					<input type="text" ng-model="settings.mailSettings.host" name="mailHost" id="mailHost" class="form-control" required>
+					<div class="help-block" ng-if="bindErrors['mailSettings.host']">{{bindErrors['mailSettings.host']}}</div>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<div class="form-group required" ng-class="{'has-error': form.mailPort.$invalid || bindErrors['mailSettings.port']}">
+					<label for="mailPort" class="control-label">SMTP port:</label>
+					<input type="number" ng-model="settings.mailSettings.port" name="mailPort" id="mailPort" class="form-control" required>
+					<div class="help-block" ng-if="bindErrors['mailSettings.port']">{{bindErrors['mailSettings.port']}}</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-6">
+				<div class="form-group" ng-class="{'has-error': form.mailUser.$invalid || bindErrors['mailSettings.user']}">
+					<label for="mailHost" class="control-label">Username:</label>
+					<input type="text" ng-model="settings.mailSettings.user" name="mailUser" id="mailUser" class="form-control">
+					<div class="help-block" ng-if="bindErrors['mailSettings.user']">{{bindErrors['mailSettings.user']}}</div>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<div class="form-group" ng-class="{'has-error': form.mailPassword.$invalid || bindErrors['mailSettings.password']}">
+					<label for="mailPort" class="control-label">Password:</label>
+					<input type="password" ng-model="settings.mailSettings.password" name="mailPassword" id="mailPassword" class="form-control">
+					<div class="help-block" ng-if="bindErrors['mailSettings.password']">{{bindErrors['mailSettings.password']}}</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="well well-sm">
+		<h4>HTTP proxy settings</h4>
+		<div class="checkbox">
+			<label for="httpProxyEnabled" class="control-label">
+				<input type="checkbox" id="httpProxyEnabled" ng-model="state.httpProxyEnabled" ng-click="settings.httpProxy = null"> HTTP proxy enabled
+			</label>
+		</div>
+		<div class="row" ng-if="state.httpProxyEnabled">
+			<div class="col-md-6">
+				<div class="form-group required" ng-class="{'has-error': form.httpProxyHost.$invalid || bindErrors['httpProxy.host']}">
+					<label for="httpProxyHost" class="control-label">Host:</label>
+					<input type="text" ng-model="settings.httpProxy.host" name="httpProxyHost" id="httpProxyHost" class="form-control" required>
+					<div class="help-block" ng-if="bindErrors['httpProxy.host']">{{bindErrors['httpProxy.host']}}</div>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<div class="form-group required" ng-class="{'has-error': form.httpProxyPort.$invalid || bindErrors['httpProxy.port']}">
+					<label for="httpProxyPort" class="control-label">Port:</label>
+					<input type="number" ng-model="settings.httpProxy.port" name="httpProxyPort" id="httpProxyPort" class="form-control" required>
+					<div class="help-block" ng-if="bindErrors['httpProxy.port']">{{bindErrors['httpProxy.port']}}</div>
+				</div>
+			</div>
+		</div>
+		<div class="row" ng-if="state.httpProxyEnabled">
+			<div class="col-md-6">
+				<div class="form-group" ng-class="{'has-error': form.httpProxyUser.$invalid || bindErrors['httpProxy.user']}">
+					<label for="httpProxyUser" class="control-label">Username:</label>
+					<input type="text" ng-model="settings.httpProxy.user" name="httpProxyUser" id="httpProxyUser" class="form-control">
+					<div class="help-block" ng-if="bindErrors['httpProxy.user']">{{bindErrors['httpProxy.user']}}</div>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<div class="form-group" ng-class="{'has-error': form.httpProxyPassword.$invalid || bindErrors['mailSettings.password']}">
+					<label for="httpProxyPassword" class="control-label">Password:</label>
+					<input type="password" ng-model="settings.httpProxy.password" name="httpProxyPassword" id="httpProxyPassword" class="form-control">
+					<div class="help-block" ng-if="bindErrors['httpProxy.password']">{{bindErrors['httpProxy.password']}}</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<hr>
+
+	<div class="row">
+		<div class="col-md-12">
+			<button type="button" class="btn btn-primary" ng-disabled="form.$invalid" ng-click="save(form)">save</button>
+		</div>
+	</div>
+</form>

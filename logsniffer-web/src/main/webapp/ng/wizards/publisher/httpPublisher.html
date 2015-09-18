@@ -1,0 +1,86 @@
+<script type="text/javascript">
+	LogSnifferNgApp.controllerProvider.register(
+		"HttpPublisherWizardController", ['$scope', '$log', function ($scope, $log) {
+		$scope.headers = [];
+		if ($scope.bean.headers) {
+			for (var key in $scope.bean.headers) {
+			    $scope.headers.push({
+					key: key,
+					value: $scope.bean.headers[key]
+			    });
+			}
+		}
+		$scope.addHeader = function() {
+			$scope.headers.push({
+			    key:"",
+			    value:""
+			})
+		};
+		$scope.deleteHeader = function(i) {
+			$scope.headers.splice(i,1);
+		};
+		$scope.$watch('headers', function(newValue, oldValue) {
+			$scope.bean.headers = {};
+			for (var i = 0; i < newValue.length; i++) {
+			    var h = newValue[i];
+			    $scope.bean.headers[h.key] = h.value;
+			}
+			$log.info("Synchronize headers", $scope.headers, $scope.bean.headers);
+	    }, true);
+	}]);
+</script>
+<div ng-controller="HttpPublisherWizardController">
+	<div class="row">
+		<div class="col-md-2">
+			<lsf-form-group class="form-group required" field-name="method" field-path="method" bind-errors="bindErrors">
+				<label for="method" class="control-label">Method:</label>
+				<select ng-model="bean.method" name="method" id="method" class="form-control"
+					ng-options="m for m in ['GET','POST','PUT','DELETE','HEAD','OPTIONS','PATCH','TRACE']">
+				</select>
+			</lsf-form-group>
+		</div>
+		<div class="col-md-10">
+			<lsf-form-group class="form-group required" field-name="url" field-path="url" bind-errors="bindErrors">
+				<label for="url" class="control-label">URL:</label>
+				<input type="text" ng-model="bean.url" name="url" id="url" class="form-control">
+			</lsf-form-group>
+		</div>
+	</div>
+	<div class="row" ng-if="bean.method=='POST' || bean.method=='PUT'">
+		<div class="col-md-12">
+			<lsf-info-label label="Body:">HTTP {{bean.method}} body. The body text is rendered using Velocity template engine and enables to include event data passed
+				in attribute <code>event</code>.
+				<div ng-include="contextPath + '/ng/help/velocity4events.html'"></div>
+			</lsf-info-label>
+			<textarea rows="5" name="body2" id="body" ng-model="bean.body" class="form-control"></textarea>
+		</div>
+	</div>
+	<div class="row" ng-if="bean.method=='POST' || bean.method=='PUT'">
+		<div class="col-md-12">
+			<lsf-form-group class="form-group required" field-name="bodyMimeType" field-path="bodyMimeType" bind-errors="bindErrors">
+				<lsf-info-label label="Mime-type:" for="bodyMimeType">Mime-type of {{bean.method}} body e.g. <code>application/json</code>.</lsf-info-label>
+				<input type="text" ng-model="bean.bodyMimeType" name="bodyMimeType" id="bodyMimeType" class="form-control" required>
+			</lsf-form-group>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-12">
+			<label>HTTP headers</label>
+			<a class="btn btn-link" ng-click="addHeader()">
+				<i class="glyphicon glyphicon-plus"></i> Add header</a>
+		</div>
+		<div ng-repeat="h in headers">
+			<div class="col-md-3"><div style="padding:0.5em 0"><input type="text" ng-model="h.key" required="required" class="form-control" placeholder="Key"></div></div>
+			<div class="col-md-3">
+				<div style="padding:0.5em 0">
+					<div class="input-group">
+						<input type="text" ng-model="h.value" required="required" class="form-control" placeholder="Value">
+						<div class="input-group-btn">
+							<button class="btn btn-default" type="button" ng-click="deleteHeader($index)"><i class="glyphicon glyphicon-trash"></i></button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
