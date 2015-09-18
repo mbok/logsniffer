@@ -32,9 +32,9 @@
 	</properties>
 
 	<scm>
-		<connection>scm:svn:http://svn.mbok.de/source/scaleborn/logsniffer/trunk</connection>
-		<developerConnection>scm:svn:http://svn.mbok.de/source/scaleborn/logsniffer/trunk</developerConnection>
-		<url>http://svn.mbok.de/source/scaleborn/logsniffer/trunk</url>
+		<connection>scm:git:git@github.com:logsniffer/logsniffer.git</connection>
+		<developerConnection>scm:git:git@github.com:logsniffer/logsniffer.git</developerConnection>
+		<url>https://github.com/logsniffer/logsniffer.git</url>
 	</scm>
 
 	<developers>
