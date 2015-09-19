@@ -32,7 +32,7 @@
 	</properties>
 
 	<scm>
-		<connection>scm:git:git@github.com:logsniffer/logsniffer.git</connection>
+		<connection>scm:git:git://github.com:logsniffer/logsniffer.git</connection>
 		<developerConnection>scm:git:git@github.com:logsniffer/logsniffer.git</developerConnection>
 		<url>https://github.com/logsniffer/logsniffer.git</url>
 	</scm>
