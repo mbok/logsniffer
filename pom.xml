@@ -7,15 +7,14 @@
 	without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR 
 	PURPOSE. See the GNU General Public License for more details. You should 
 	have received a copy of the GNU General Public License along with this program. 
-	If not, see <http://www.gnu.org/licenses/>. -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	If not, see <http://www.gnu.org/licenses />. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.logsniffer</groupId>
 	<artifactId>logsniffer-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>LogSniffer Parent POM</name>
-	<version>0.1.0-SNAPSHOT</version>
+	<version>0.1.1</version>
 	<description>logsniffer is a sophisticated open source web tool for viewing, monitoring and analysing log data - smarter and easier.</description>
 
 	<properties>
@@ -28,7 +27,8 @@
 		<connection>scm:git:git://github.com:logsniffer/logsniffer.git</connection>
 		<developerConnection>scm:git:git@github.com:logsniffer/logsniffer.git</developerConnection>
 		<url>https://github.com/logsniffer/logsniffer.git</url>
-	</scm>
+	  <tag>0.1.1</tag>
+  </scm>
 
 	<developers>
 		<developer>
