@@ -148,7 +148,7 @@
 									<LogSniffer-Version>${project.version}</LogSniffer-Version>
 								</manifestEntries>
 							</archive>
-							<warName>logsniffer.war</warName>
+							<warName>logsniffer</warName>
 						</configuration>
 					</plugin>
 					<plugin>
@@ -205,6 +205,7 @@
 						<configuration>
 							<tag>${project.version}</tag>
 							<repositoryId>logsniffer/logsniffer</repositoryId>
+							<artifact>${project.build.directory}/logsniffer.war</artifact>
 						</configuration>
 						<executions>
 							<execution>
