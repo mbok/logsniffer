@@ -204,6 +204,15 @@
 						<configuration>
 							<tag>${project.version}</tag>
 						</configuration>
+						<executions>
+							<execution>
+								<id>upload2github</id>
+								<phase>install</phase>
+								<goals>
+									<goal>release</goal>
+								</goals>
+							</execution>
+						</executions>
 					</plugin>
 				</plugins>
 			</build>
