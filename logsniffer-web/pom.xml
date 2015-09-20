@@ -148,6 +148,7 @@
 									<LogSniffer-Version>${project.version}</LogSniffer-Version>
 								</manifestEntries>
 							</archive>
+							<warName>logsniffer.war</warName>
 						</configuration>
 					</plugin>
 					<plugin>
