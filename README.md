@@ -3,6 +3,13 @@
 # logsniffer ![alt tag](https://raw.githubusercontent.com/logsniffer/logsniffer/master/logo-109x150.png) 
 logsniffer is a sophisticated open source web tool for viewing, monitoring and analysing log data - smarter and easier.
 
+## Quick start
+1. Download the latest [release](https://github.com/logsniffer/logsniffer/releases) of `logsniffer.war`
+2. Execute in a shell `java -jar logsniffer.war` (*)
+3. Open a browser and navigate to [http://localhost:8082](http://localhost:8082) to enjoy viewing, monitoring and analysing your log data
+
+\* The only prerequisite is an installed JRE or JDK at least in version 1.7 
+
 ## License
 
 Copyright 2015 Scaleborn UG (haftungsbeschränkt)
