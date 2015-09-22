@@ -36,7 +36,7 @@ public class ReaderStrategyWizardsJavaConfig {
 	public ConfigBeanWizard<MinBAmountReadStrategy> minBAmountReadStrategyWizard2() {
 		return new SimpleBeanWizard<MinBAmountReadStrategy>(
 				"logsniffer.wizard.readerStrategy.minByteAmount",
-				"/wizards/readerStrategy/minByteAmount",
+				"wizards/readerStrategy/minByteAmount",
 				MinBAmountReadStrategy.class, new MinBAmountReadStrategy());
 	}
 }

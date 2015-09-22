@@ -38,7 +38,7 @@ public class SourceWizardsAppConfig {
 	public ConfigBeanWizard<WildcardLogsSource> wildcardFileSourceWizard() {
 		return new SimpleBeanWizard<WildcardLogsSource>(
 				"logsniffer.wizard.source.file.wildcard",
-				"/wizards/source/file.wildcard", WildcardLogsSource.class,
+				"wizards/source/file.wildcard", WildcardLogsSource.class,
 				new WildcardLogsSource());
 	}
 

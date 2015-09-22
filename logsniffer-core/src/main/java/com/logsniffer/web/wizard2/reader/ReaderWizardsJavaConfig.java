@@ -37,7 +37,7 @@ public class ReaderWizardsJavaConfig {
 	@Bean
 	public ConfigBeanWizard<Log4jTextReader> log4jTextReaderWizard() {
 		return new SimpleBeanWizard<Log4jTextReader>(
-				"logsniffer.wizard.reader.log4j", "/wizards/readers/log4j",
+				"logsniffer.wizard.reader.log4j", "wizards/readers/log4j",
 				Log4jTextReader.class, new Log4jTextReader());
 	}
 

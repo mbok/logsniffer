@@ -36,7 +36,7 @@ public class PublisherWizardsAppConfig {
 	@Bean
 	public ConfigBeanWizard<MailPublisher> mailPublisherWizard() {
 		return new SimpleBeanWizard<MailPublisher>(
-				"logsniffer.wizard.publisher.mail", "/wizards/publisher/mail",
+				"logsniffer.wizard.publisher.mail", "wizards/publisher/mail",
 				MailPublisher.class, new MailPublisher());
 	}
 

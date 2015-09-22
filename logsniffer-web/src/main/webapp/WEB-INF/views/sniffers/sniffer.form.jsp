@@ -73,6 +73,9 @@
 		    });
 			
 			$scope.addPublisher = function() {
+			    if (!$scope.bean.publishers) {
+					$scope.bean.publishers = [];
+			    }
 				$scope.bean.publishers.push({});  
 			};
 

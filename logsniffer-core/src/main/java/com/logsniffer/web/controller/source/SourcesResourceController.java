@@ -160,10 +160,10 @@ public class SourcesResourceController {
 
 	@RequestMapping(value = "/sources/{logSource}/logs", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
-	List<Log> getSourceLogs(@PathVariable("logSource") final long logSourceId)
+	Log[] getSourceLogs(@PathVariable("logSource") final long logSourceId)
 			throws ResourceNotFoundException, IOException {
 		LogSource<LogInputStream> source = getActiveSource(logSourceId);
-		return source.getLogs();
+		return source.getLogs().toArray(new Log[0]);
 	}
 
 	@RequestMapping(value = "/sources/logs", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)

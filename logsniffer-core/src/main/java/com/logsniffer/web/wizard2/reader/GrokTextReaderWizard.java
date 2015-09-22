@@ -50,7 +50,7 @@ public class GrokTextReaderWizard implements ConfigBeanWizard<GrokTextReader> {
 
 	@Override
 	public String getWizardView() {
-		return "/wizards/readers/grok";
+		return "wizards/readers/grok";
 	}
 
 	@Override
