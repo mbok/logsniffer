@@ -10,6 +10,14 @@ logsniffer is a sophisticated open source web tool for viewing, monitoring and a
 
 \* The only prerequisite is an installed JRE or JDK at least in version 1.7 
 
+## Documentation
+
+See the [Wiki](https://github.com/logsniffer/logsniffer/wiki) for documentation, examples, operational details and other information.
+
+## Bugs and Feedback
+
+For bugs, questions and discussions please use the [Github Issues](https://github.com/logsniffer/logsniffer/issues).
+
 ## License
 
 Copyright 2015 Scaleborn UG (haftungsbeschränkt)
