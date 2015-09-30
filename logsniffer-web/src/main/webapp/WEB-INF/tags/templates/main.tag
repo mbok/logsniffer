@@ -79,13 +79,13 @@
 		<jsp:invoke fragment="htmlHead"/>
 	</head>
 	<body ng-app="LogSnifferNgApp" ng-controller="LogSnifferRootController" class="ng-cloak">
-		<jsp:doBody />
-		
+		<div id="body-wrapper">
+			<jsp:doBody />		
+			<div class="push"></div>
+		</div>
 		<hr>
-
-			<footer>
-				<p>&copy; Company 2013</p>
-			</footer>
-		
+		<footer>
+			<p>logsniffer, v${logsnifferProps['logsniffer.version']} - <a href="http://www.logsniffer.com">www.logsniffer.com</a><br>&copy; Scaleborn 2015</p>
+		</footer>
 	</body>
 </html>

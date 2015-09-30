@@ -69,6 +69,24 @@ body {
   background-color: #428bca;
 }
 
+/* Footer */
+* {
+    margin: 0;
+}
+html, body {
+    height: 100%;
+}
+#body-wrapper {
+    min-height: 100%;
+    height: auto !important;
+    height: 100%;
+    margin: 0 auto -35px;
+}
+footer, .push {
+    height: 35px;
+    text-align: center;
+    color: #999;
+}
 
 /*
  * Main content
