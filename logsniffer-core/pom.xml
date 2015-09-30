@@ -8,8 +8,7 @@
 	PURPOSE. See the GNU General Public License for more details. You should 
 	have received a copy of the GNU General Public License along with this program. 
 	If not, see <http://www.gnu.org/licenses />. -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>logsniffer-core</artifactId>
 	<packaging>jar</packaging>
@@ -17,7 +16,7 @@
 	<parent>
 		<groupId>com.logsniffer</groupId>
 		<artifactId>logsniffer-parent</artifactId>
-		<version>0.1.10-SNAPSHOT</version>
+		<version>0.1.10</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -76,8 +75,7 @@
 								</goals>
 								<configuration>
 									<tasks>
-										<move file="${project.build.directory}/web.xml"
-											tofile="${project.build.outputDirectory}/META-INF/web-fragment.xml" />
+										<move file="${project.build.directory}/web.xml" tofile="${project.build.outputDirectory}/META-INF/web-fragment.xml" />
 									</tasks>
 								</configuration>
 							</execution>
