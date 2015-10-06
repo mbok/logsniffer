@@ -82,8 +82,7 @@ public class DataSourceAppConfig {
 	 */
 	@Bean(destroyMethod = "dispose")
 	public DataSource dataSource() throws SQLException {
-		JdbcConnectionPool pool = JdbcConnectionPool
-				.create(url, user, password);
+		JdbcConnectionPool pool = JdbcConnectionPool.create(url, user, password);
 		pool.setMaxConnections(maxPoolConnections);
 		Connection con = null;
 		con = pool.getConnection();
@@ -92,12 +91,10 @@ public class DataSourceAppConfig {
 			logger.info("H2 database not found, creating new schema and populate with default data");
 			try {
 				ResourceDatabasePopulator dbPopulator = new ResourceDatabasePopulator();
-				dbPopulator.addScript(new ClassPathResource(
-						"/sql/quartz/tables_h2.sql"));
-				dbPopulator.addScript(new ClassPathResource(
-						"/sql/model/schema_h2.sql"));
-				dbPopulator.addScript(new ClassPathResource(
-						"/sql/model/schema_h2_data.sql"));
+				dbPopulator.addScript(new ClassPathResource("/sql/quartz/tables_h2.sql"));
+				dbPopulator.addScript(new ClassPathResource("/sql/model/schema_h2.sql"));
+				// dbPopulator.addScript(new
+				// ClassPathResource("/sql/model/schema_h2_data.sql"));
 				dbPopulator.populate(con);
 				newSchema = true;
 				logger.info("Established H2 connection pool with new database");
@@ -115,8 +112,7 @@ public class DataSourceAppConfig {
 	@PostConstruct
 	public void populateNewSchema() throws Exception {
 		if (newSchema) {
-			for (DBInitPopulator pop : ContextProvider.getContext()
-					.getBeansOfType(DBInitPopulator.class).values()) {
+			for (DBInitPopulator pop : ContextProvider.getContext().getBeansOfType(DBInitPopulator.class).values()) {
 				pop.populate();
 			}
 		}

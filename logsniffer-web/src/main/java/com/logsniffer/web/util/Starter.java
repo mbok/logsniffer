@@ -62,25 +62,30 @@ public class Starter {
 		System.out.println("Preparing Jetty...");
 		ProtectionDomain domain = Starter.class.getProtectionDomain();
 		URL warUrl = domain.getCodeSource().getLocation();
-		System.out.println("...for WAR location: " + warUrl);
+		File warFile = new File(warUrl.toURI());
 
 		JarFile jarFile = null;
 		ArrayList<URL> execLibs = new ArrayList<URL>();
 		try {
 			jarFile = new JarFile(warUrl.getPath());
 			for (String execLib : getExecLibs(jarFile)) {
-				execLibs.add(extractExecLib(jarFile, "exec/" + execLib));
+				execLibs.add(extractExecLib(warFile, jarFile, "WEB-INF/exec/" + execLib, execLib));
 			}
 
-			File launcherLib = File.createTempFile("logsniffer", "launcher.jar");
-			launcherLib.deleteOnExit();
-			ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(launcherLib)));
-			ZipEntry ze1 = new ZipEntry(JETTY_LAUNCHER_CLASS.replace('.', '/') + ".class");
-			zos.putNextEntry(ze1);
-			copy(jarFile.getInputStream(
-					jarFile.getEntry("WEB-INF/classes/" + JETTY_LAUNCHER_CLASS.replace('.', '/') + ".class")), zos);
-
-			zos.close();
+			File launcherLib = getFileInHomeDir("exec/launcher.jar");
+			if (!launcherLib.exists() || launcherLib.lastModified() < warFile.lastModified()) {
+				ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(launcherLib)));
+				for (String z : new String[] { JETTY_LAUNCHER_CLASS,
+						"com.logsniffer.web.util.WebContextWithExtraConfigurations",
+						"com.logsniffer.web.util.WebInfConfigurationHomeUnpacked",
+						"com.logsniffer.web.util.WebInfConfigurationUnpackOverridable" }) {
+					ZipEntry ze1 = new ZipEntry(z.replace('.', '/') + ".class");
+					zos.putNextEntry(ze1);
+					copy(jarFile.getInputStream(jarFile.getEntry("WEB-INF/classes/" + z.replace('.', '/') + ".class")),
+							zos);
+				}
+				zos.close();
+			}
 			execLibs.add(launcherLib.toURI().toURL());
 		} finally {
 			if (jarFile != null) {
@@ -111,7 +116,7 @@ public class Starter {
 					+ "\". Logsniffer can't operate without a write enabled home directory. Please create the home directory manually and grant the user Logsniffer is running as the write access.";
 			try {
 				if (logSnifferHomeDirFile.mkdirs()) {
-					return true;
+					return prepareHomeDirStructure(logSnifferHomeDirFile);
 				}
 				System.err.println(errMsg);
 			} catch (Exception e) {
@@ -122,30 +127,55 @@ public class Starter {
 			System.err.println("Configured home directory \"" + logSnifferHomeDirFile.getPath()
 					+ "\" isn't write enabled. Logsniffer can't operate without a write enabled home directory. Please grant the user Logsniffer is running as the write access.");
 		} else {
-			return true;
+			return prepareHomeDirStructure(logSnifferHomeDirFile);
 		}
 		return false;
+	}
+
+	private static boolean prepareHomeDirStructure(final File homeDir) {
+		for (String sub : new String[] { "exec", "logs" }) {
+			File subFolder = new File(homeDir, sub);
+			if (!subFolder.exists()) {
+				boolean created = false;
+				try {
+					created = subFolder.mkdir();
+				} catch (SecurityException e) {
+					e.printStackTrace();
+				}
+				if (!created) {
+					System.err.println("Failed to create folder in home directory: " + subFolder.getAbsolutePath());
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	private static String[] getExecLibs(final JarFile jarFile) throws IOException {
 		InputStream libsis = null;
 		try {
-			libsis = jarFile.getInputStream(jarFile.getEntry("exec/libs.txt"));
+			libsis = jarFile.getInputStream(jarFile.getEntry("WEB-INF/exec/libs.txt"));
 			return new BufferedReader(new InputStreamReader(libsis)).readLine().split(":");
 		} finally {
 			if (libsis != null) {
 				libsis.close();
 			}
 		}
-
 	}
 
-	private static URL extractExecLib(final JarFile jarFile, final String libPath) throws Exception {
-		File tempLib = File.createTempFile("logsniffer", libPath.replace("/", "-"));
-		BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(tempLib));
-		copy(jarFile.getInputStream(jarFile.getEntry(libPath)), out);
-		out.close();
-		tempLib.deleteOnExit();
+	private static File getFileInHomeDir(final String file) {
+		return new File(new File(System.getProperty("logsniffer.home")), file);
+	}
+
+	private static URL extractExecLib(final File sourcePackage, final JarFile jarFile, final String libPath,
+			final String lib) throws Exception {
+		File tempLib = getFileInHomeDir("exec/" + lib);
+		if (!tempLib.exists() || tempLib.lastModified() < sourcePackage.lastModified()) {
+			BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(tempLib));
+			copy(jarFile.getInputStream(jarFile.getEntry(libPath)), out);
+			out.close();
+			tempLib.deleteOnExit();
+		}
 		return tempLib.toURI().toURL();
 	}
 

@@ -3,8 +3,8 @@
 <%@attribute name="title" required="true" type="java.lang.String"%>
 <%@attribute name="ngModules" required="false"  type="java.lang.String" %>
 <%@attribute name="htmlHead" required="false" fragment="true" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jstl/core"%>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jstl/fmt"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <%@ taglib prefix="tpl" tagdir="/WEB-INF/tags/templates" %>
 
 <tpl:main title="${title}" ngModules="${ngModules}">

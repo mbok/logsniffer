@@ -52,9 +52,8 @@ public class SniffMePopulator implements DBInitPopulator {
 	@Override
 	public void populate() throws ParseException {
 		RollingLogsSource myLogSource = new RollingLogsSource();
-		myLogSource.setPattern(new File(home.getHomeDir(), "logsniffer.log")
-				.getPath());
-		myLogSource.setName("LogSniffer");
+		myLogSource.setPattern(new File(home.getHomeDir(), "logs/logsniffer.log").getPath());
+		myLogSource.setName("logsniffer");
 		Log4jTextReader reader = new Log4jTextReader();
 		reader.setFormatPattern("%d{ABSOLUTE} %-5p [%c] %m%n");
 		myLogSource.setReader(new FilteredLogEntryReader(reader, null));

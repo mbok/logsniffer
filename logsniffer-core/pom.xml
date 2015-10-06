@@ -8,7 +8,8 @@
 	PURPOSE. See the GNU General Public License for more details. You should 
 	have received a copy of the GNU General Public License along with this program. 
 	If not, see <http://www.gnu.org/licenses />. -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>logsniffer-core</artifactId>
 	<packaging>jar</packaging>
@@ -46,7 +47,7 @@
 				<plugins>
 					<!-- Precompile JSPs -->
 					<plugin>
-						<groupId>org.mortbay.jetty</groupId>
+						<groupId>org.eclipse.jetty</groupId>
 						<artifactId>jetty-jspc-maven-plugin</artifactId>
 						<version>${jetty.version}</version>
 						<executions>
@@ -75,7 +76,8 @@
 								</goals>
 								<configuration>
 									<tasks>
-										<move file="${project.build.directory}/web.xml" tofile="${project.build.outputDirectory}/META-INF/web-fragment.xml" />
+										<move file="${project.build.directory}/web.xml"
+											tofile="${project.build.outputDirectory}/META-INF/web-fragment.xml" />
 									</tasks>
 								</configuration>
 							</execution>
@@ -122,11 +124,6 @@
 		<dependency>
 			<groupId>cglib</groupId>
 			<artifactId>cglib-nodep</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>jstl</artifactId>
-			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
@@ -186,22 +183,8 @@
 
 		<!-- Jetty Servlet API -->
 		<dependency>
-			<groupId>org.eclipse.jetty.orbit</groupId>
-			<artifactId>javax.servlet</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<!-- jstl -->
-		<dependency>
-			<groupId>javax.servlet.jsp.jstl</groupId>
-			<artifactId>jstl-api</artifactId>
-			<version>1.2</version>
-			<scope>provided</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>javax.servlet</groupId>
-					<artifactId>servlet-api</artifactId>
-				</exclusion>
-			</exclusions>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
 		</dependency>
 
 		<!-- Testing -->

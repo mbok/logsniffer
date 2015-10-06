@@ -20,12 +20,10 @@ package com.logsniffer.web.ide;
 import java.io.File;
 import java.net.URL;
 
-import org.eclipse.jetty.webapp.FragmentConfiguration;
-import org.eclipse.jetty.webapp.MetaInfConfiguration;
-import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.webapp.WebInfConfiguration;
 
 import com.logsniffer.web.util.JettyLauncher;
+import com.logsniffer.web.util.WebContextWithExtraConfigurations;
 
 /**
  * Launcher for IDE with exploded sources.
@@ -36,23 +34,20 @@ import com.logsniffer.web.util.JettyLauncher;
 public class JettyIDELauncher extends JettyLauncher {
 
 	@Override
-	protected WebAppContext createWebAppContext() throws Exception {
-		WebContextWithExtraConfigurations webAppContext = new WebContextWithExtraConfigurations();
-		webAppContext.replaceConfiguration(MetaInfConfiguration.class,
-				new MetaInfFolderConfiguration());
-		webAppContext.replaceConfiguration(FragmentConfiguration.class,
-				new FragmentFolderConfiguration());
-		webAppContext.replaceConfiguration(WebInfConfiguration.class,
-				new WebInfFolderExtendedConfiguration());
+	protected void configureWebAppContext(final WebContextWithExtraConfigurations context) throws Exception {
+		super.configureWebAppContext(context);
+		WebContextWithExtraConfigurations webAppContext = context;
+		// webAppContext.replaceConfiguration(MetaInfConfiguration.class,
+		// new MetaInfFolderConfiguration());
+		// webAppContext.replaceConfiguration(FragmentConfiguration.class,
+		// FragmentFolderConfiguration.class);
+		webAppContext.replaceConfiguration(WebInfConfiguration.class, WebInfFolderExtendedConfiguration.class);
 
 		// TODO Review - this will make EVERYTHING on the classpath be
 		// scanned for META-INF/resources and web-fragment.xml - great for dev!
 		// NOTE: Several patterns can be listed, separate by comma
-		webAppContext.setAttribute(WebInfConfiguration.CONTAINER_JAR_PATTERN,
-				".*");
-		webAppContext
-				.setAttribute(WebInfConfiguration.WEBINF_JAR_PATTERN, ".*");
-		return webAppContext;
+		webAppContext.setAttribute(WebInfConfiguration.CONTAINER_JAR_PATTERN, ".*");
+		webAppContext.setAttribute(WebInfConfiguration.WEBINF_JAR_PATTERN, ".*");
 	}
 
 	/**
