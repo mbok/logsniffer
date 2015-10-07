@@ -18,9 +18,14 @@
 package com.logsniffer.app;
 
 import java.util.Properties;
+import java.util.UUID;
 
 import javax.sql.DataSource;
 
+import org.quartz.SchedulerException;
+import org.quartz.simpl.SimpleInstanceIdGenerator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -35,6 +40,8 @@ import org.springframework.scheduling.quartz.SchedulerFactoryBean;
  */
 @Configuration
 public class SchedulerAppConfig {
+	private static Logger logger = LoggerFactory.getLogger(SchedulerAppConfig.class);
+
 	@Autowired
 	private DataSource dataSource;
 
@@ -54,9 +61,37 @@ public class SchedulerAppConfig {
 		schedulerFactory.setAutoStartup(true);
 		schedulerFactory.setDataSource(dataSource);
 		schedulerFactory.setWaitForJobsToCompleteOnShutdown(true);
-		schedulerFactory.setQuartzProperties(logSnifferProperties);
 		schedulerFactory.setOverwriteExistingJobs(true);
 		schedulerFactory.setSchedulerName("LogsnifferScheduler");
+		Properties quartzProperties = new Properties(logSnifferProperties);
+		quartzProperties.setProperty("org.quartz.scheduler.instanceIdGenerator.class",
+				SafeSimpleInstanceIdGenerator.class.getName());
+		schedulerFactory.setQuartzProperties(quartzProperties);
 		return schedulerFactory;
+	}
+
+	/**
+	 * Because {@link SimpleInstanceIdGenerator} can fail in case of DNS issues
+	 * with the local host name, this class provides in a fallback a UUID.
+	 * 
+	 * @author mbok
+	 *
+	 */
+	public static final class SafeSimpleInstanceIdGenerator extends SimpleInstanceIdGenerator {
+		@Override
+		public String generateInstanceId() throws SchedulerException {
+			try {
+				String name = super.generateInstanceId();
+				logger.info("Using host based schedule instance id: {}", name);
+				return name;
+			} catch (Exception e) {
+				String name = UUID.randomUUID().toString();
+				logger.info(
+						"Using generated UUID '{}' for scheduler instance id, because of errors getting the host name: {}",
+						name, (e.getCause() != null ? e.getCause().getMessage() : e.getMessage()));
+				return name;
+			}
+		}
+
 	}
 }
