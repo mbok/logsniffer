@@ -19,6 +19,7 @@ package com.logsniffer.reader.filter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -66,80 +67,80 @@ public class FilteredLogEntryReaderTest {
 
 	@Test
 	public void testNotWrapping() {
+		Assert.assertEquals(targetReader, FilteredLogEntryReader.wrappIfNeeded(targetReader, null));
 		Assert.assertEquals(targetReader,
-				FilteredLogEntryReader.wrappIfNeeded(targetReader, null));
-		Assert.assertEquals(targetReader, FilteredLogEntryReader.wrappIfNeeded(
-				targetReader, new ArrayList<FieldsFilter>()));
+				FilteredLogEntryReader.wrappIfNeeded(targetReader, new ArrayList<FieldsFilter>()));
 	}
 
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testFiltering() throws IOException, FormatException {
-		LogEntryReader<LogInputStream> r = FilteredLogEntryReader
-				.wrappIfNeeded(targetReader, filters);
+		LogEntryReader<LogInputStream> r = FilteredLogEntryReader.wrappIfNeeded(targetReader, filters);
 		Assert.assertNotEquals(r, targetReader);
 		final Log log = Mockito.mock(Log.class);
-		LogRawAccess<LogInputStream> logAccess = Mockito
-				.mock(LogRawAccess.class);
+		LogRawAccess<LogInputStream> logAccess = Mockito.mock(LogRawAccess.class);
 		LogPointer startOffset = Mockito.mock(LogPointer.class);
 		LogEntryConsumer consumer = Mockito.mock(LogEntryConsumer.class);
 
 		final LogEntry logEntry = new LogEntry();
 		Mockito.doAnswer(new Answer<Object>() {
 			@Override
-			public Object answer(final InvocationOnMock invocation)
-					throws Throwable {
-				LogEntryConsumer consumer = (LogEntryConsumer) invocation
-						.getArguments()[3];
-				consumer.consume(log, Mockito.mock(LogPointerFactory.class),
-						logEntry);
+			public Object answer(final InvocationOnMock invocation) throws Throwable {
+				LogEntryConsumer consumer = (LogEntryConsumer) invocation.getArguments()[3];
+				consumer.consume(log, Mockito.mock(LogPointerFactory.class), logEntry);
 				return null;
 			}
-		})
-				.when(targetReader)
-				.readEntries(Mockito.eq(log), Mockito.eq(logAccess),
-						Mockito.eq(startOffset),
-						Mockito.any(LogEntryConsumer.class));
+		}).when(targetReader).readEntries(Mockito.eq(log), Mockito.eq(logAccess), Mockito.eq(startOffset),
+				Mockito.any(LogEntryConsumer.class));
 
 		// Call
 		r.readEntries(log, logAccess, startOffset, consumer);
 
 		// Verify
-		Mockito.verify(consumer).consume(Mockito.eq(log),
-				Mockito.any(LogPointerFactory.class), Mockito.eq(logEntry));
+		Mockito.verify(consumer).consume(Mockito.eq(log), Mockito.any(LogPointerFactory.class), Mockito.eq(logEntry));
 		Mockito.verify(f1).filter(logEntry.getFields());
 		Mockito.verify(f2).filter(logEntry.getFields());
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testFilteringSupportedSeverities() {
-		LogEntryReader<LogInputStream> r = FilteredLogEntryReader
-				.wrappIfNeeded(targetReader, filters);
+		LogEntryReader<LogInputStream> r = FilteredLogEntryReader.wrappIfNeeded(targetReader, filters);
 		Assert.assertNotEquals(r, targetReader);
-		List<SeverityLevel> sevs = new ArrayList<>();
+		// Use notModifieable list in relation to issue #10
+		List<SeverityLevel> sevs = Collections.emptyList();
 		Mockito.when(targetReader.getSupportedSeverities()).thenReturn(sevs);
+		Mockito.doAnswer(new Answer<Object>() {
+			@Override
+			public Object answer(final InvocationOnMock invocation) throws Throwable {
+				List<SeverityLevel> sevs2Filter = (List<SeverityLevel>) invocation.getArguments()[0];
+				sevs2Filter.add(new SeverityLevel());
+				return null;
+			}
+		}).when(f1).filterSupportedSeverities(Mockito.anyList());
 
 		// Call
-		Assert.assertEquals(sevs, r.getSupportedSeverities());
+		Assert.assertEquals(sevs.size() + 1, r.getSupportedSeverities().size());
 
 		// Verify
-		Mockito.verify(f1).filterSupportedSeverities(sevs);
-		Mockito.verify(f2).filterSupportedSeverities(sevs);
+		Mockito.verify(f1).filterSupportedSeverities(Mockito.anyList());
+		Mockito.verify(f2).filterSupportedSeverities(Mockito.anyList());
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testFilteringKnownFields() throws FormatException {
-		LogEntryReader<LogInputStream> r = FilteredLogEntryReader
-				.wrappIfNeeded(targetReader, filters);
+		LogEntryReader<LogInputStream> r = FilteredLogEntryReader.wrappIfNeeded(targetReader, filters);
 		Assert.assertNotEquals(r, targetReader);
 		LinkedHashMap<String, FieldBaseTypes> types = new LinkedHashMap<>();
 		Mockito.when(targetReader.getFieldTypes()).thenReturn(types);
 
 		// Call
-		Assert.assertEquals(types, r.getFieldTypes());
+		Assert.assertFalse(types == r.getFieldTypes());
 
 		// Verify
-		Mockito.verify(f1).filterKnownFields(types);
-		Mockito.verify(f2).filterKnownFields(types);
+		// Custom map should be created in relation to issue #10
+		Mockito.verify(f1).filterKnownFields(Mockito.any(LinkedHashMap.class));
+		Mockito.verify(f2).filterKnownFields(Mockito.any(LinkedHashMap.class));
 	}
 }

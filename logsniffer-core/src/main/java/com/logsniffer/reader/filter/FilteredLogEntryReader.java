@@ -42,8 +42,7 @@ import com.logsniffer.reader.LogEntryReader;
  * @author mbok
  * 
  */
-public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream>
-		implements LogEntryReader<STREAMTYPE> {
+public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream> implements LogEntryReader<STREAMTYPE> {
 	@JsonProperty
 	@Valid
 	private List<FieldsFilter> filters = new ArrayList<>();
@@ -73,8 +72,7 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream>
 	 *         current reader is returned back without wrapping.
 	 */
 	public static <STREAMTYPE extends LogInputStream> LogEntryReader<STREAMTYPE> wrappIfNeeded(
-			final LogEntryReader<STREAMTYPE> targetReader,
-			final List<FieldsFilter> filters) {
+			final LogEntryReader<STREAMTYPE> targetReader, final List<FieldsFilter> filters) {
 		if (filters != null && !filters.isEmpty()) {
 			return new FilteredLogEntryReader<>(targetReader, filters);
 		}
@@ -85,9 +83,7 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream>
 	 * @param targetReader
 	 * @param filters
 	 */
-	public FilteredLogEntryReader(
-			final LogEntryReader<STREAMTYPE> targetReader,
-			final List<FieldsFilter> filters) {
+	public FilteredLogEntryReader(final LogEntryReader<STREAMTYPE> targetReader, final List<FieldsFilter> filters) {
 		super();
 		this.targetReader = targetReader;
 		this.filters = filters;
@@ -108,20 +104,16 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream>
 	}
 
 	@Override
-	public void readEntries(final Log log,
-			final LogRawAccess<STREAMTYPE> logAccess,
-			final LogPointer startOffset, final LogEntryConsumer consumer)
-			throws IOException, FormatException {
-		targetReader.readEntries(log, logAccess, startOffset,
-				new LogEntryConsumer() {
-					@Override
-					public boolean consume(final Log log,
-							final LogPointerFactory pointerFactory,
-							final LogEntry entry) throws IOException {
-						filterLogEntry(entry);
-						return consumer.consume(log, pointerFactory, entry);
-					}
-				});
+	public void readEntries(final Log log, final LogRawAccess<STREAMTYPE> logAccess, final LogPointer startOffset,
+			final LogEntryConsumer consumer) throws IOException, FormatException {
+		targetReader.readEntries(log, logAccess, startOffset, new LogEntryConsumer() {
+			@Override
+			public boolean consume(final Log log, final LogPointerFactory pointerFactory, final LogEntry entry)
+					throws IOException {
+				filterLogEntry(entry);
+				return consumer.consume(log, pointerFactory, entry);
+			}
+		});
 
 	}
 
@@ -133,7 +125,7 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream>
 
 	@Override
 	public List<SeverityLevel> getSupportedSeverities() {
-		List<SeverityLevel> severities = targetReader.getSupportedSeverities();
+		List<SeverityLevel> severities = new ArrayList<>(targetReader.getSupportedSeverities());
 		for (FieldsFilter f : filters) {
 			f.filterSupportedSeverities(severities);
 		}
@@ -141,10 +133,8 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream>
 	}
 
 	@Override
-	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes()
-			throws FormatException {
-		LinkedHashMap<String, FieldBaseTypes> fieldTypes = targetReader
-				.getFieldTypes();
+	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
+		LinkedHashMap<String, FieldBaseTypes> fieldTypes = new LinkedHashMap<>(targetReader.getFieldTypes());
 		for (FieldsFilter f : filters) {
 			f.filterKnownFields(fieldTypes);
 		}
