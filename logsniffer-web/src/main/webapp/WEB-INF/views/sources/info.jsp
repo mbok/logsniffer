@@ -10,15 +10,15 @@
 <tpl:bodyFull title="${logfn:fileName(activeLog.path)} - Info" activeNavbar="sources">
 	<ul class="breadcrumb">
 		<li><a href="<c:url value="/c/sources" />"><spring:message code="logsniffer.breadcrumb.sources" /></a></li>
-		<li><a href="<c:url value="/c/sources/${activeLogSource.id}/logs" />">${activeLogSource.name}</a></li>
+		<li><a href="<c:url value="/c/sources/${activeSource.id}/logs" />">${activeSource.name}</a></li>
 		<li class="active">${logfn:fileName(activeLog.path)}</li>
 	</ul>
 	<ul class="nav nav-tabs">
-		<c:url var="showHref" value="/c/sources/${activeLogSource.id}/show">
+		<c:url var="showHref" value="/c/sources/${activeSource.id}/show">
 			<c:param name="log" value="${activeLog.path }" />
 		</c:url>
 		<li><a href="${showHref}">Browse</a></li>
-		<c:url var="infoHref" value="/c/sources/${activeLogSource.id}/info">
+		<c:url var="infoHref" value="/c/sources/${activeSource.id}/info">
 			<c:param name="log" value="${activeLog.path }" />
 		</c:url>
 		<li class="active"><a href="${infoHref}">Info</a></li>
