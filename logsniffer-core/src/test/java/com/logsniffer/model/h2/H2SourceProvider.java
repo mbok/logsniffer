@@ -20,9 +20,8 @@ package com.logsniffer.model.h2;
 import java.io.File;
 import java.io.IOException;
 
-import junit.framework.Assert;
-
 import org.apache.commons.io.FilenameUtils;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +32,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.logsniffer.app.CoreAppConfig;
 import com.logsniffer.app.QaDataSourceAppConfig;
-import com.logsniffer.config.BeanConfigFactoryManager;
 import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.model.file.WildcardLogsSource;
@@ -52,11 +50,6 @@ public class H2SourceProvider {
 	@Bean
 	public H2LogSourceProvider sourceProvider() {
 		return new H2LogSourceProvider();
-	}
-
-	@Bean
-	BeanConfigFactoryManager configManager() {
-		return new BeanConfigFactoryManager();
 	}
 
 	@Bean

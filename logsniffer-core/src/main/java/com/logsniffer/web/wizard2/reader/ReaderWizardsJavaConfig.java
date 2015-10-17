@@ -22,15 +22,16 @@ import org.springframework.context.annotation.Configuration;
 
 import com.logsniffer.reader.filter.support.JsonParseFilter;
 import com.logsniffer.reader.filter.support.SeverityMappingFilter;
+import com.logsniffer.reader.filter.support.TimestampConvertFilter;
 import com.logsniffer.reader.log4j.Log4jTextReader;
 import com.logsniffer.web.wizard2.ConfigBeanWizard;
 import com.logsniffer.web.wizard2.SimpleBeanWizard;
 
 /**
  * Exposes simple reader wizards.
- * 
+ *
  * @author mbok
- * 
+ *
  */
 @Configuration
 public class ReaderWizardsJavaConfig {
@@ -56,4 +57,13 @@ public class ReaderWizardsJavaConfig {
 				"/ng/wizards/reader/filter/jsonParser.html",
 				JsonParseFilter.class, new JsonParseFilter());
 	}
+
+	@Bean
+	public ConfigBeanWizard<TimestampConvertFilter> timestampConvertFilterWizard() {
+		return new SimpleBeanWizard<TimestampConvertFilter>(
+				"logsniffer.wizard.reader.filter.timestampConvert",
+				"/ng/wizards/reader/filter/timestampConvert.html",
+				TimestampConvertFilter.class, new TimestampConvertFilter());
+	}
+
 }

@@ -1,0 +1,28 @@
+<div>
+	<lsf-info-label label="Parses a date/time string value from a field and transforms it to a date object">
+		This filter parses the string value from the source field regarding the specified date/time format and assigns the converted value to the target field.
+		The date/time value is parsed using the pattern syntax defined by <a href="http://docs.oracle.com/javase/7/docs/api/java/text/SimpleDateFormat.html" target="_blank">SimpleDateFormat</a>.
+	</lsf-info-label>
+	<div class="row">
+		<div class="col-md-6">
+			<lsf-form-group class="form-group required" field-name="sourceField" field-path="sourceField" bind-errors="bindErrors">
+				<label for="sourceField" class="control-label">Source field:</label>
+				<input type="text" ng-model="bean.sourceField" name="sourceField" id="sourceField" class="form-control" required="required">
+			</lsf-form-group>
+		</div>
+		<div class="col-md-6">
+			<lsf-form-group class="form-group required" field-name="targetField" field-path="targetField" bind-errors="bindErrors">
+				<label for="targetField" class="control-label">Target field:</label>
+				<input type="text" ng-model="bean.targetField" name="targetField" id="targetField" class="form-control" required="required">
+			</lsf-form-group>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-12">
+			<lsf-form-group class="form-group required" field-name="pattern" field-path="pattern" bind-errors="bindErrors">
+				<lsf-info-label label="Date/time format pattern:" for="pattern">Pattern as defined by <a href="http://docs.oracle.com/javase/7/docs/api/java/text/SimpleDateFormat.html" target="_blank">SimpleDateFormat</a>.</lsf-info-label>
+				<input type="text" ng-model="bean.pattern" name="pattern" id="pattern" class="form-control" required="required">
+			</lsf-form-group>
+		</div>
+	</div>
+</div>

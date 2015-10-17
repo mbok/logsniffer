@@ -19,28 +19,24 @@ package com.logsniffer.reader.filter.support;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.validation.Valid;
 
-import org.hibernate.validator.constraints.NotEmpty;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logsniffer.model.LogEntryData;
 import com.logsniffer.model.SeverityLevel;
 import com.logsniffer.model.fields.FieldBaseTypes;
-import com.logsniffer.model.fields.FieldsMap;
-import com.logsniffer.reader.filter.FieldsFilter;
 
 /**
  * Maps a source string field to a severity object.
- * 
+ *
  * @author mbok
- * 
+ *
  */
-public final class SeverityMappingFilter implements FieldsFilter {
+public final class SeverityMappingFilter extends
+		AbstractTransformationFilter<SeverityLevel> {
 	@JsonProperty
 	@Valid
 	private Map<String, SeverityLevel> severityLevels = new HashMap<>();
@@ -48,39 +44,14 @@ public final class SeverityMappingFilter implements FieldsFilter {
 	private Map<String, SeverityLevel> _levels = null;
 
 	@JsonProperty
-	private boolean override = true;
-
-	@JsonProperty
 	private boolean ignoreCase = true;
-
-	@JsonProperty
-	@NotEmpty
-	private String sourceField;
 
 	@JsonProperty
 	@Valid
 	private SeverityLevel fallback;
 
-	@Override
-	public void filter(final FieldsMap fields) {
-		if (_levels == null) {
-			resetInternalLevels();
-		}
-		if (override || !fields.containsKey(LogEntryData.FIELD_SEVERITY_LEVEL)) {
-			Object source = fields.get(sourceField);
-			if (source != null) {
-				String strSource = source.toString().trim();
-				if (ignoreCase) {
-					strSource = strSource.toLowerCase();
-				}
-				SeverityLevel mapping = _levels.get(strSource);
-				if (mapping != null) {
-					fields.put(LogEntryData.FIELD_SEVERITY_LEVEL, mapping);
-				} else if (fallback != null) {
-					fields.put(LogEntryData.FIELD_SEVERITY_LEVEL, fallback);
-				}
-			}
-		}
+	{
+		setTargetField(LogEntryData.FIELD_SEVERITY_LEVEL);
 	}
 
 	private void resetInternalLevels() {
@@ -116,38 +87,9 @@ public final class SeverityMappingFilter implements FieldsFilter {
 	}
 
 	/**
-	 * @return the override
-	 */
-	public boolean isOverride() {
-		return override;
-	}
-
-	/**
-	 * @param override
-	 *            the override to set
-	 */
-	public void setOverride(final boolean override) {
-		this.override = override;
-	}
-
-	/**
-	 * @return the sourceField
-	 */
-	public String getSourceField() {
-		return sourceField;
-	}
-
-	/**
-	 * @param sourceField
-	 *            the sourceField to set
-	 */
-	public void setSourceField(final String sourceField) {
-		this.sourceField = sourceField;
-	}
-
-	/**
 	 * @return the fallback
 	 */
+	@Override
 	public SeverityLevel getFallback() {
 		return fallback;
 	}
@@ -177,20 +119,29 @@ public final class SeverityMappingFilter implements FieldsFilter {
 	}
 
 	@Override
-	public void filterKnownFields(
-			final LinkedHashMap<String, FieldBaseTypes> knownFields) {
-		if (!knownFields.containsKey(LogEntryData.FIELD_SEVERITY_LEVEL)) {
-			knownFields.put(LogEntryData.FIELD_SEVERITY_LEVEL,
-					FieldBaseTypes.SEVERITY);
-		}
-	}
-
-	@Override
 	public void filterSupportedSeverities(final List<SeverityLevel> severities) {
 		severities.addAll(new HashSet<>(severityLevels.values()));
 		if (fallback != null) {
 			severities.add(fallback);
 		}
+	}
+
+	@Override
+	protected FieldBaseTypes getTargetType() {
+		return FieldBaseTypes.SEVERITY;
+	}
+
+	@Override
+	protected SeverityLevel transform(String sourceValue) {
+		if (_levels == null) {
+			resetInternalLevels();
+		}
+		String strSource = sourceValue.toString().trim();
+		if (ignoreCase) {
+			strSource = strSource.toLowerCase();
+		}
+		SeverityLevel mapping = _levels.get(strSource);
+		return mapping;
 	}
 
 }

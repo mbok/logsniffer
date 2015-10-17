@@ -23,17 +23,14 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
-
-import com.logsniffer.reader.support.DateFormatUtils;
 
 /**
  * Test for {@link DateFormatUtils}.
- * 
+ *
  * @author mbok
- * 
+ *
  */
 public class DateFormatUtilsTest {
 

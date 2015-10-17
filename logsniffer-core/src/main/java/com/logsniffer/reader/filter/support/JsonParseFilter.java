@@ -18,11 +18,8 @@
 package com.logsniffer.reader.filter.support;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,21 +31,18 @@ import com.logsniffer.config.BeanConfigFactoryManager;
 import com.logsniffer.config.BeanPostConstructor;
 import com.logsniffer.config.ConfigException;
 import com.logsniffer.config.PostConstructed;
-import com.logsniffer.model.SeverityLevel;
 import com.logsniffer.model.fields.FieldBaseTypes;
-import com.logsniffer.model.fields.FieldsMap;
-import com.logsniffer.reader.filter.FieldsFilter;
 import com.logsniffer.validators.JsonStringConastraint;
 
 /**
  * Parses the string value of a source field and converts it to an (JSON) object
  * field.
- * 
+ *
  * @author mbok
- * 
+ *
  */
 @PostConstructed(constructor = JsonParseFilter.JsonParseFilterBuilder.class)
-public final class JsonParseFilter implements FieldsFilter {
+public final class JsonParseFilter extends AbstractTransformationFilter<Object> {
 	private static final Logger logger = LoggerFactory
 			.getLogger(JsonParseFilter.class);
 	private ObjectMapper objectMapper;
@@ -70,73 +64,11 @@ public final class JsonParseFilter implements FieldsFilter {
 	}
 
 	@JsonProperty
-	@NotEmpty
-	private String sourceField;
-
-	@JsonProperty
-	@NotEmpty
-	private String targetField;
-
-	@JsonProperty
 	@JsonStringConastraint
 	private String fallbackJsonValue;
 
 	private Object fallbackJsonObject;
 
-	@Override
-	public void filter(final FieldsMap fields) {
-		Object sourceStr = fields.get(sourceField);
-		if (sourceStr instanceof String
-				&& StringUtils.isNotEmpty((String) sourceStr)) {
-			try {
-				Object jsonObj = objectMapper.readValue((String) sourceStr,
-						Object.class);
-				fields.put(targetField, jsonObj);
-				return;
-			} catch (IOException e) {
-				// Fallback
-			}
-		}
-		if (fallbackJsonObject != null) {
-			fields.put(targetField, fallbackJsonObject);
-		}
-	}
-
-	@Override
-	public void filterKnownFields(
-			final LinkedHashMap<String, FieldBaseTypes> knownFields) {
-		knownFields.put(targetField, FieldBaseTypes.OBJECT);
-	}
-
-	/**
-	 * @return the sourceField
-	 */
-	public String getSourceField() {
-		return sourceField;
-	}
-
-	/**
-	 * @param sourceField
-	 *            the sourceField to set
-	 */
-	public void setSourceField(final String sourceField) {
-		this.sourceField = sourceField;
-	}
-
-	/**
-	 * @return the targetField
-	 */
-	public String getTargetField() {
-		return targetField;
-	}
-
-	/**
-	 * @param targetField
-	 *            the targetField to set
-	 */
-	public void setTargetField(final String targetField) {
-		this.targetField = targetField;
-	}
 
 	/**
 	 * @return the fallbackJsonValue
@@ -170,8 +102,24 @@ public final class JsonParseFilter implements FieldsFilter {
 		}
 	}
 
+
 	@Override
-	public void filterSupportedSeverities(final List<SeverityLevel> severities) {
-		// NOP
+	protected FieldBaseTypes getTargetType() {
+		return FieldBaseTypes.OBJECT;
+	}
+
+	@Override
+	protected Object transform(String sourceValue) {
+		try {
+			return objectMapper.readValue(sourceValue, Object.class);
+		} catch (IOException e) {
+			logger.trace("Failed to parse source as JSON",e);
+			return null;
+		}
+	}
+
+	@Override
+	protected Object getFallback() {
+		return fallbackJsonObject;
 	}
 }
