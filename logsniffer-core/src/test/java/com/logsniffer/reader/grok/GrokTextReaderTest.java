@@ -17,8 +17,8 @@
  *******************************************************************************/
 package com.logsniffer.reader.grok;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 
@@ -38,6 +38,7 @@ import com.logsniffer.model.support.ByteArrayLog;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.grok.GrokTextReader.GrokTextReaderConstructor;
 import com.logsniffer.reader.log4j.Log4jTextReaderTest;
+import com.logsniffer.util.grok.GrokAppConfig;
 
 /**
  * Test for {@link GrokTextReader}.
@@ -46,8 +47,7 @@ import com.logsniffer.reader.log4j.Log4jTextReaderTest;
  * 
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { GrokAppConfig.class,
-		GrokTextReaderTest.class, CoreAppConfig.class })
+@ContextConfiguration(classes = { GrokAppConfig.class, GrokTextReaderTest.class, CoreAppConfig.class })
 @Configuration
 public class GrokTextReaderTest {
 
@@ -64,22 +64,19 @@ public class GrokTextReaderTest {
 	@Before
 	public void initReader() {
 		grokReader = new GrokTextReader();
-		grokReader.setGrokPattern("%{SYSLOGBASE}-my");
+		grokReader.getGrokBean().setPattern("%{SYSLOGBASE}-my");
 		grokReader.setOverflowAttribute("msg");
-		grokReader = configManager.createBeanFromJSON(GrokTextReader.class,
-				configManager.saveBeanToJSON(grokReader));
+		grokReader = configManager.createBeanFromJSON(GrokTextReader.class, configManager.saveBeanToJSON(grokReader));
 	}
 
 	@Test
 	public void testReader() throws IOException, FormatException {
-		assertEquals("%{SYSLOGBASE}-my", grokReader.getGrokPattern());
+		assertEquals("%{SYSLOGBASE}-my", grokReader.getGrokBean().getPattern());
 		assertEquals("msg", grokReader.getOverflowAttribute());
 		String logLine1 = "Nov  1 21:14:23 <1.3> localhost kernel:-my";
-		ByteArrayLog log = Log4jTextReaderTest.createLog(0, logLine1
-				+ "\noverflow");
+		ByteArrayLog log = Log4jTextReaderTest.createLog(0, logLine1 + "\noverflow");
 		grokReader.setOverflowAttribute(null);
-		LogEntry[] entries = Log4jTextReaderTest.readEntries(grokReader, log,
-				null, 1);
+		LogEntry[] entries = Log4jTextReaderTest.readEntries(grokReader, log, null, 1);
 		assertEquals(1, entries.length);
 		assertEquals("Nov  1 21:14:23", entries[0].getFields().get("timestamp"));
 		assertEquals("1", entries[0].getFields().get("facility"));
@@ -90,10 +87,8 @@ public class GrokTextReaderTest {
 
 		// Test overflow attachment to "msg" field
 		grokReader.setOverflowAttribute("msg");
-		entries = Log4jTextReaderTest.readEntries(
-				grokReader,
-				Log4jTextReaderTest.createLog(0, logLine1
-						+ "\noverflow1\noverflow2"), null, 1);
+		entries = Log4jTextReaderTest.readEntries(grokReader,
+				Log4jTextReaderTest.createLog(0, logLine1 + "\noverflow1\noverflow2"), null, 1);
 		assertEquals(1, entries.length);
 		assertEquals("Nov  1 21:14:23", entries[0].getFields().get("timestamp"));
 		assertEquals("1", entries[0].getFields().get("facility"));
@@ -104,8 +99,7 @@ public class GrokTextReaderTest {
 
 		// Test overflow to existing field "program"
 		grokReader.setOverflowAttribute("program");
-		entries = Log4jTextReaderTest.readEntries(grokReader,
-				Log4jTextReaderTest.createLog(0, logLine1 + "\noverflow"),
+		entries = Log4jTextReaderTest.readEntries(grokReader, Log4jTextReaderTest.createLog(0, logLine1 + "\noverflow"),
 				null, 1);
 		assertEquals(1, entries.length);
 		assertEquals("kernel\noverflow", entries[0].getFields().get("program"));

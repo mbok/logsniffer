@@ -23,10 +23,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.logsniffer.config.BeanConfigFactoryManager;
-import com.logsniffer.reader.grok.Grok;
 import com.logsniffer.reader.grok.GrokTextReader;
 import com.logsniffer.reader.grok.GrokTextReader.GrokTextReaderConstructor;
-import com.logsniffer.reader.grok.GroksRegistry;
+import com.logsniffer.util.grok.Grok;
+import com.logsniffer.util.grok.GroksRegistry;
 import com.logsniffer.web.wizard2.ConfigBeanWizard;
 
 /**

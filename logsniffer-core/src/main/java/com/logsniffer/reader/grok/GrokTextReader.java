@@ -22,13 +22,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.logsniffer.config.BeanConfigFactoryManager;
 import com.logsniffer.config.BeanPostConstructor;
 import com.logsniffer.config.ConfigException;
@@ -40,6 +43,11 @@ import com.logsniffer.model.fields.FieldsMap;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.grok.GrokTextReader.GrokTextReaderConstructor;
 import com.logsniffer.reader.support.AbstractPatternLineReader;
+import com.logsniffer.util.grok.Grok;
+import com.logsniffer.util.grok.GrokException;
+import com.logsniffer.util.grok.GrokMatcher;
+import com.logsniffer.util.grok.GrokPatternBean;
+import com.logsniffer.util.grok.GroksRegistry;
 
 /**
  * Grok text reader.
@@ -51,14 +59,12 @@ import com.logsniffer.reader.support.AbstractPatternLineReader;
 public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> {
 
 	@Component
-	public static class GrokTextReaderConstructor implements
-			BeanPostConstructor<GrokTextReader> {
+	public static class GrokTextReaderConstructor implements BeanPostConstructor<GrokTextReader> {
 		@Autowired
 		private GroksRegistry groksRegistry;
 
 		@Override
-		public void postConstruct(final GrokTextReader bean,
-				final BeanConfigFactoryManager configManager)
+		public void postConstruct(final GrokTextReader bean, final BeanConfigFactoryManager configManager)
 				throws ConfigException {
 			bean.groksRegistry = groksRegistry;
 		}
@@ -68,21 +74,13 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> {
 	private GroksRegistry groksRegistry;
 
 	@JsonProperty
-	@NotEmpty
-	@GrokPatternConstraint
-	private String grokPattern;
+	@JsonUnwrapped
+	@NotNull
+	@Valid
+	private GrokPatternBean grokBean = new GrokPatternBean();
 
 	@JsonProperty
 	private String overflowAttribute;
-
-	@JsonProperty
-	private boolean multiLine = true;
-
-	@JsonProperty
-	private boolean dotAll = true;
-
-	@JsonProperty
-	private boolean caseInsensitive = true;
 
 	@JsonIgnore
 	private Grok grok;
@@ -93,8 +91,7 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> {
 	}
 
 	@Override
-	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes()
-			throws FormatException {
+	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
 		initPattern();
 		LinkedHashMap<String, FieldBaseTypes> fields = new LinkedHashMap<String, FieldBaseTypes>();
 		for (String attr : grok.getGroupNames().keySet()) {
@@ -109,14 +106,11 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> {
 	@Override
 	protected void initPattern() throws FormatException {
 		try {
-			grok = Grok.compile(groksRegistry, grokPattern,
-					(isMultiLine() ? Pattern.MULTILINE : 0)
-							| (isDotAll() ? Pattern.DOTALL : 0)
-							| (isCaseInsensitive() ? Pattern.CASE_INSENSITIVE
-									: 0));
+			grok = Grok.compile(groksRegistry, grokBean.getPattern(),
+					(grokBean.isMultiLine() ? Pattern.MULTILINE : 0) | (grokBean.isDotAll() ? Pattern.DOTALL : 0)
+							| (grokBean.isCaseInsensitive() ? Pattern.CASE_INSENSITIVE : 0));
 		} catch (GrokException e) {
-			throw new FormatException("Failed to compile grok pattern: "
-					+ grokPattern + " -> " + e.getMessage(), e);
+			throw new FormatException("Failed to compile grok pattern: " + grokBean + " -> " + e.getMessage(), e);
 		}
 	}
 
@@ -127,8 +121,7 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> {
 	}
 
 	@Override
-	protected void fillAttributes(final LogEntry entry, final GrokMatcher ctx)
-			throws FormatException {
+	protected void fillAttributes(final LogEntry entry, final GrokMatcher ctx) throws FormatException {
 		LinkedHashMap<String, Integer> groups = grok.getGroupNames();
 		for (String attrName : groups.keySet()) {
 			entry.getFields().put(attrName, ctx.group(groups.get(attrName)));
@@ -136,8 +129,7 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> {
 	}
 
 	@Override
-	protected void attachOverflowLine(final LogEntry entry,
-			final String overflowLine) {
+	protected void attachOverflowLine(final LogEntry entry, final String overflowLine) {
 		if (overflowAttribute != null) {
 			FieldsMap fMap = entry.getFields();
 			String oldMsg = (String) fMap.get(overflowAttribute);
@@ -149,24 +141,21 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> {
 		}
 	}
 
-	@Override
-	protected String getPatternInfo() {
-		return grokPattern;
-	}
-
 	/**
 	 * @return the grokPattern
 	 */
+	@Deprecated
 	public String getGrokPattern() {
-		return grokPattern;
+		return grokBean.getPattern();
 	}
 
 	/**
 	 * @param grokPattern
 	 *            the grokPattern to set
 	 */
+	@Deprecated
 	public void setGrokPattern(final String grokPattern) {
-		this.grokPattern = grokPattern;
+		grokBean.setPattern(grokPattern);
 	}
 
 	/**
@@ -181,53 +170,27 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> {
 	 *            the overflowAttribute to set
 	 */
 	public void setOverflowAttribute(final String overflowAttribute) {
-		this.overflowAttribute = StringUtils.isNotEmpty(overflowAttribute) ? overflowAttribute
-				.trim() : null;
+		this.overflowAttribute = StringUtils.isNotEmpty(overflowAttribute) ? overflowAttribute.trim() : null;
+	}
+
+	@Override
+	protected String getPatternInfo() {
+		return grokBean.getPattern();
 	}
 
 	/**
-	 * @return the multiLine
+	 * @return the grokBean
 	 */
-	public boolean isMultiLine() {
-		return multiLine;
+	public GrokPatternBean getGrokBean() {
+		return grokBean;
 	}
 
 	/**
-	 * @param multiLine
-	 *            the multiLine to set
+	 * @param grokBean
+	 *            the grokBean to set
 	 */
-	public void setMultiLine(final boolean multiLine) {
-		this.multiLine = multiLine;
-	}
-
-	/**
-	 * @return the dotAll
-	 */
-	public boolean isDotAll() {
-		return dotAll;
-	}
-
-	/**
-	 * @param dotAll
-	 *            the dotAll to set
-	 */
-	public void setDotAll(final boolean dotAll) {
-		this.dotAll = dotAll;
-	}
-
-	/**
-	 * @return the caseInsensitive
-	 */
-	public boolean isCaseInsensitive() {
-		return caseInsensitive;
-	}
-
-	/**
-	 * @param caseInsensitive
-	 *            the caseInsensitive to set
-	 */
-	public void setCaseInsensitive(final boolean caseInsensitive) {
-		this.caseInsensitive = caseInsensitive;
+	public void setGrokBean(GrokPatternBean grokBean) {
+		this.grokBean = grokBean;
 	}
 
 }

@@ -20,11 +20,11 @@
 				<div class="modal-header">
 					<button type="button" class="close" data-dismiss="modal"
 						aria-hidden="true">&times;</button>
-					<h4 class="modal-title">Grok Pattern Matching</h4>
+					<h4 class="modal-title">Regular Expression Pattern Matching</h4>
 				</div>
 				<div class="modal-body">
 					<ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
-			        	<li class="active"><a href="#tab-groks" data-toggle="tab">Predefined patterns</a></li>
+			        	<li class="active"><a href="#tab-groks" data-toggle="tab">Predefined Grok patterns</a></li>
 			        	<li><a href="#tab-info" data-toggle="tab">Info</a></li>
 				    </ul>
 			    	<div class="tab-content" style="overflow:auto;height:380px;">
@@ -43,7 +43,14 @@
 			        	</div>
 			        	<div class="tab-pane" id="tab-info">
 							<p>
-								Grok is a pattern matching concept based on regular expressions. 
+								This reader parses the content of a log using regular expressions. The supported pattern syntax is described on 
+								this <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html" target="_blank">JavaDoc</a> page.
+								Named capturing groups in a pattern describes the name of the log entry field the matching text will be assigned to.
+								Example: <code>(?&lt;TextField&gt;.+)</code> matches a whole line and assigns it to the field with name <code>TextField</code>.<br>
+								Regular expressions can be mixed with Grok patterns.
+							</p>
+							<p>
+								Grok is a pattern matching concept based on regular expressions.
 								It lets build or use existing sets of named regular expressions to you use them for string matching.
 								The goal is to bring more semantics to regular expressions and allows to express ideas rather than syntax.
 							</p>
@@ -52,10 +59,6 @@
 								The Grok pattern <code>%{IP:clientip} %{USER:ident}</code> matches a text line starting with an IP followed by a user name e.g. '127.0.0.1 admin'.
 								The Grok reader would assign for the parsed log entry the matching IP to the <code>clientip</code> field and the user name to the 
 								<code>ident</code> field.
-							</p>
-							<p>
-								Grok was originally developed by <a href="https://github.com/jordansissel" target="_blank">Jordan Sissel</a>.
-								See his <a href="https://code.google.com/p/semicomplete/wiki/Grok" target="_blank">concepts page</a> for more details.
 							</p>
 			        	</div>
 			        </div>
@@ -67,13 +70,20 @@
 		</div>
 	</div>
 
+	<lsf-info-label label="Regular expression pattern reader">
+		This reader parses the content of a log using regular expressions. The supported pattern syntax is described on 
+		this <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html" target="_blank">JavaDoc</a> page.
+		Named capturing groups in a pattern describes the name of the log entry field the matching text will be assigned to.
+		Example: <code>(?&lt;TextField&gt;.+)</code> matches a whole line and assigns it to the field with name <code>TextField</code>.<br>
+		Regular expressions can be mixed with Grok patterns.
+	</lsf-info-label>
 	<div class="row">
 		<t:ngFormFieldWrapper cssClass="form-group col-md-10" fieldName="grokPattern">
-			<label for="grokPattern" class="control-label">Grok pattern*: 
+			<label for="grokPattern" class="control-label">Pattern*: 
 				<a href="#" onclick="$('#grokReference').modal();return false"><i class="glyphicon glyphicon-info-sign"></i></a>
 			</label>
 			<div class="controls controls-row">
-				<input type="text" class="form-control pattern" ng-model="bean.grokPattern" name="grokPattern" id="grokPattern" required/>
+				<input type="text" class="form-control pattern" ng-model="bean.pattern" name="grokPattern" id="grokPattern" required/>
 			</div>
 		</t:ngFormFieldWrapper>
 		<t:ngFormFieldWrapper cssClass="form-group col-md-2" fieldName="charset">
@@ -104,7 +114,7 @@
 		</div>
 		<t:ngFormFieldWrapper cssClass="form-group col-md-6" fieldName="overflowAttribute">
 			<label for="overflowAttribute" class="control-label">Overflow field: <i class="glyphicon glyphicon-info-sign help-popup" data-container="body" data-html="true" data-content="
-				 In case of lines not matching the Grok pattern these can be attached to a field of last well parsed log entry.
+				 In case of lines not matching the pattern these can be attached to a field of last well parsed log entry.
 				 The overflow field can reference an existing or a new field. If not set, the not matching lines will be attached (as default)
 				 to the raw content of the last well parsed log entry."></i></label>
 			<input type="text" class="form-control pattern" ng-model="bean.overflowAttribute" id="overflowAttribute" name="overflowAttribute" />

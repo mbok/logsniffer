@@ -34,8 +34,10 @@ import com.logsniffer.validators.RegexPatternConstraint;
  * subsequence are mapped to {@link EventData#getFields()}.
  * 
  * @author mbok
+ * @deprecated replaced by Grok scanner
  * 
  */
+@Deprecated
 public class RegexScanner extends SingleEntryIncrementalMatcher {
 	@JsonProperty
 	@NotEmpty

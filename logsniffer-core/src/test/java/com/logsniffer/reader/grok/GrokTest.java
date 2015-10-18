@@ -27,6 +27,11 @@ import java.util.HashMap;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
+import com.logsniffer.util.grok.Grok;
+import com.logsniffer.util.grok.GrokException;
+import com.logsniffer.util.grok.GrokMatcher;
+import com.logsniffer.util.grok.GroksRegistry;
+
 /**
  * Tests for {@link Grok} and {@link GroksRegistry}.
  * 

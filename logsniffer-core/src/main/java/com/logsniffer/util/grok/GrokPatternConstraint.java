@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
-package com.logsniffer.reader.grok;
+package com.logsniffer.util.grok;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.logsniffer.app.ContextProvider;
-import com.logsniffer.reader.grok.GrokPatternConstraint.GrokPatternValidator;
+import com.logsniffer.util.grok.GrokPatternConstraint.GrokPatternValidator;
 
 /**
  * Validates the string input for a valid {@link Grok} syntax.
