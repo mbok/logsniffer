@@ -36,9 +36,9 @@ import com.logsniffer.config.BeanConfigFactoryManager;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.support.ByteArrayLog;
 import com.logsniffer.reader.FormatException;
-import com.logsniffer.reader.grok.GrokTextReader.GrokTextReaderConstructor;
 import com.logsniffer.reader.log4j.Log4jTextReaderTest;
 import com.logsniffer.util.grok.GrokAppConfig;
+import com.logsniffer.util.grok.GrokConsumerConstructor;
 
 /**
  * Test for {@link GrokTextReader}.
@@ -52,8 +52,8 @@ import com.logsniffer.util.grok.GrokAppConfig;
 public class GrokTextReaderTest {
 
 	@Bean
-	public GrokTextReaderConstructor grokReaderConstructor() {
-		return new GrokTextReaderConstructor();
+	public GrokConsumerConstructor grokReaderConstructor() {
+		return new GrokConsumerConstructor();
 	}
 
 	@Autowired

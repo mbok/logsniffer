@@ -26,24 +26,20 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import com.logsniffer.config.BeanConfigFactoryManager;
-import com.logsniffer.config.BeanPostConstructor;
-import com.logsniffer.config.ConfigException;
 import com.logsniffer.config.PostConstructed;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.SeverityLevel;
 import com.logsniffer.model.fields.FieldBaseTypes;
 import com.logsniffer.model.fields.FieldsMap;
 import com.logsniffer.reader.FormatException;
-import com.logsniffer.reader.grok.GrokTextReader.GrokTextReaderConstructor;
 import com.logsniffer.reader.support.AbstractPatternLineReader;
 import com.logsniffer.util.grok.Grok;
+import com.logsniffer.util.grok.GrokConsumerConstructor;
+import com.logsniffer.util.grok.GrokConsumerConstructor.GrokConsumer;
 import com.logsniffer.util.grok.GrokException;
 import com.logsniffer.util.grok.GrokMatcher;
 import com.logsniffer.util.grok.GrokPatternBean;
@@ -55,20 +51,8 @@ import com.logsniffer.util.grok.GroksRegistry;
  * @author mbok
  * 
  */
-@PostConstructed(constructor = GrokTextReaderConstructor.class)
-public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> {
-
-	@Component
-	public static class GrokTextReaderConstructor implements BeanPostConstructor<GrokTextReader> {
-		@Autowired
-		private GroksRegistry groksRegistry;
-
-		@Override
-		public void postConstruct(final GrokTextReader bean, final BeanConfigFactoryManager configManager)
-				throws ConfigException {
-			bean.groksRegistry = groksRegistry;
-		}
-	}
+@PostConstructed(constructor = GrokConsumerConstructor.class)
+public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher>implements GrokConsumer {
 
 	@JsonIgnore
 	private GroksRegistry groksRegistry;
@@ -191,6 +175,11 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> {
 	 */
 	public void setGrokBean(GrokPatternBean grokBean) {
 		this.grokBean = grokBean;
+	}
+
+	@Override
+	public void initGrokFactory(GroksRegistry groksRegistry) {
+		this.groksRegistry = groksRegistry;
 	}
 
 }

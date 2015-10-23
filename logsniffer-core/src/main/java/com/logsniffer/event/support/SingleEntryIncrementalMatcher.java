@@ -48,31 +48,38 @@ public abstract class SingleEntryIncrementalMatcher implements Scanner {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	@Override
-	public void find(final LogEntryReader<LogInputStream> reader,
-			final LogEntryReaderStrategy readerStrategy, final Log log,
-			final LogRawAccess<LogInputStream> logAccess,
-			final IncrementData incrementData, final EventConsumer eventConsumer)
-			throws IOException, FormatException {
-		reader.readEntries(log, logAccess,
-				incrementData.getNextOffset(logAccess), new LogEntryConsumer() {
-					@Override
-					public boolean consume(final Log log,
-							final LogPointerFactory pointerFactory,
-							final LogEntry entry) throws IOException {
-						incrementData.setNextOffset(entry.getEndOffset());
-						EventData event = matches(entry);
-						if (event != null) {
-							logger.debug("Entry matches the interest: {}",
-									entry);
-							ArrayList<LogEntryData> entries = new ArrayList<LogEntryData>();
-							entries.add(entry);
-							event.setEntries(entries);
-							eventConsumer.consume(event);
-						}
-						return readerStrategy.continueReading(log,
-								pointerFactory, entry);
+	public void find(final LogEntryReader<LogInputStream> reader, final LogEntryReaderStrategy readerStrategy,
+			final Log log, final LogRawAccess<LogInputStream> logAccess, final IncrementData incrementData,
+			final EventConsumer eventConsumer) throws IOException, FormatException {
+		try {
+			reader.readEntries(log, logAccess, incrementData.getNextOffset(logAccess), new LogEntryConsumer() {
+				@Override
+				public boolean consume(final Log log, final LogPointerFactory pointerFactory, final LogEntry entry)
+						throws IOException {
+					incrementData.setNextOffset(entry.getEndOffset());
+					EventData event;
+					try {
+						event = matches(entry);
+					} catch (FormatException e) {
+						throw new IOException(e);
 					}
-				});
+					if (event != null) {
+						logger.debug("Entry matches the interest: {}", entry);
+						ArrayList<LogEntryData> entries = new ArrayList<LogEntryData>();
+						entries.add(entry);
+						event.setEntries(entries);
+						eventConsumer.consume(event);
+					}
+					return readerStrategy.continueReading(log, pointerFactory, entry);
+				}
+			});
+		} catch (IOException e) {
+			if (e.getCause() instanceof FormatException) {
+				throw (FormatException) e.getCause();
+			} else {
+				throw e;
+			}
+		}
 	}
 
 	/**
@@ -84,6 +91,6 @@ public abstract class SingleEntryIncrementalMatcher implements Scanner {
 	 * @return the event data if given entry matches the scanner criteria and
 	 *         null otherwise
 	 */
-	public abstract EventData matches(LogEntry entry);
+	public abstract EventData matches(LogEntry entry) throws IOException, FormatException;
 
 }

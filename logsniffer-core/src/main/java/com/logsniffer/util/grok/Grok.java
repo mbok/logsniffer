@@ -26,9 +26,8 @@ import java.util.regex.Pattern;
  * GROK https://code.google.com/p/semicomplete/wiki/Grok pattern implementation.
  */
 public final class Grok {
-	protected static final Pattern PATTERN_SUBGROK = Pattern
-			.compile("%\\{([A-Z0-9_-]+)(?::([A-Z0-9_-]+))?\\}",
-					Pattern.CASE_INSENSITIVE);
+	protected static final Pattern PATTERN_SUBGROK = Pattern.compile("%\\{([A-Z0-9_-]+)(?::([A-Z0-9_-]+))?\\}",
+			Pattern.CASE_INSENSITIVE);
 
 	/**
 	 * Pattern helper included from
@@ -157,19 +156,20 @@ public final class Grok {
 			return openBracketFound && !closeBracketFound;
 		}
 
-/**
-	     * Determines if the parenthesis at the specified position
-	     * of a string is for a non-capturing group, which is one of
-	     * the flag specifiers (e.g., (?s) or (?m) or (?:pattern).
-	     * If the parenthesis is followed by "?", it must be a non-
-	     * capturing group unless it's a named group (which begins
-	     * with "?<"). Make sure not to confuse it with the lookbehind
-	     * construct ("?<=" or "?<!").
-	     *
-	     * @param s string to evaluate
-	     * @param pos the position of the parenthesis to evaluate
-	     * @return true if the parenthesis is non-capturing; otherwise false
-	     */
+		/**
+		 * Determines if the parenthesis at the specified position of a string
+		 * is for a non-capturing group, which is one of the flag specifiers
+		 * (e.g., (?s) or (?m) or (?:pattern). If the parenthesis is followed by
+		 * "?", it must be a non- capturing group unless it's a named group
+		 * (which begins with "?<"). Make sure not to confuse it with the
+		 * lookbehind construct ("?<=" or "?<!").
+		 *
+		 * @param s
+		 *            string to evaluate
+		 * @param pos
+		 *            the position of the parenthesis to evaluate
+		 * @return true if the parenthesis is non-capturing; otherwise false
+		 */
 		static private boolean isNoncapturingParen(final String s, final int pos) {
 
 			int len = s.length();
@@ -184,8 +184,7 @@ public final class Grok {
 				String pre = s.substring(pos, pos + 4);
 				isLookbehind = pre.equals("(?<=") || pre.equals("(?<!");
 			}
-			return pos >= 0 && pos + 2 < len && s.charAt(pos + 1) == '?'
-					&& (isLookbehind || s.charAt(pos + 2) != '<');
+			return pos >= 0 && pos + 2 < len && s.charAt(pos + 1) == '?' && (isLookbehind || s.charAt(pos + 2) != '<');
 		}
 
 		/**
@@ -277,8 +276,8 @@ public final class Grok {
 	 * @return a compiled grok pattern
 	 * @throws GrokException
 	 */
-	public static Grok compile(final GroksRegistry registry,
-			final String pattern, final int flags) throws GrokException {
+	public static Grok compile(final GroksRegistry registry, final String pattern, final int flags)
+			throws GrokException {
 		Grok g = new Grok();
 		g.grokPattern = pattern;
 		StringBuilder compiledPattern = new StringBuilder();
@@ -289,14 +288,13 @@ public final class Grok {
 			String left = pattern.substring(lastPos, m.start());
 			lastPos = m.end();
 			compiledPattern.append(left);
-			int groupsCount = PatternHelper.countOpenParens(
-					compiledPattern.toString(), compiledPattern.length());
+			int groupsCount = PatternHelper.countOpenParens(compiledPattern.toString(), compiledPattern.length());
 			String subGrokName = m.group(1);
 			String subGrokAttr = m.group(2);
 			Grok subGrok = registry.getGroks().get(subGrokName);
 			if (subGrok == null) {
-				throw new GrokException("No predefined Grok pattern for name '"
-						+ subGrokName + "' found used in pattern: " + pattern);
+				throw new GrokException(
+						"No predefined Grok pattern for name '" + subGrokName + "' found used in pattern: " + pattern);
 			}
 			if (subGrokAttr != null) {
 				compiledPattern.append("(");
@@ -308,18 +306,16 @@ public final class Grok {
 				compiledPattern.append(")");
 			}
 			for (String subGrokSubAttr : subGrok.groupNames.keySet()) {
-				g.groupNames.put(subGrokSubAttr, groupsCount
-						+ subGrok.groupNames.get(subGrokSubAttr));
+				g.groupNames.put(subGrokSubAttr, groupsCount + subGrok.groupNames.get(subGrokSubAttr));
 			}
 		}
 		compiledPattern.append(pattern.substring(lastPos));
 		// g.regexPattern = Pattern.compile(compiledPattern.toString(), flags);
-		com.google.code.regexp.Pattern namedPattern = com.google.code.regexp.Pattern
-				.compile(compiledPattern.toString(), flags);
+		com.google.code.regexp.Pattern namedPattern = com.google.code.regexp.Pattern.compile(compiledPattern.toString(),
+				flags);
 		g.regexPattern = namedPattern.pattern();
 		for (String name : namedPattern.groupInfo().keySet()) {
-			g.groupNames.put(name, namedPattern.groupInfo().get(name).get(0)
-					.groupIndex());
+			g.groupNames.put(name, namedPattern.groupInfo().get(name).get(0).groupIndex() + 1);
 		}
 		return g;
 	}
@@ -335,8 +331,7 @@ public final class Grok {
 	 * @return a compiled grok pattern
 	 * @throws GrokException
 	 */
-	public static Grok compile(final GroksRegistry registry,
-			final String pattern) throws GrokException {
+	public static Grok compile(final GroksRegistry registry, final String pattern) throws GrokException {
 		return compile(registry, pattern, 0);
 	}
 }

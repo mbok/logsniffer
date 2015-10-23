@@ -1,8 +1,12 @@
 package com.logsniffer.util.grok;
 
+import java.util.regex.Pattern;
+
 import org.hibernate.validator.constraints.NotEmpty;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.logsniffer.reader.FormatException;
 
 /**
  * Bean for configuring metadata belonging to a Grok pattern presentation.
@@ -25,6 +29,21 @@ public final class GrokPatternBean {
 	@JsonProperty
 	private boolean caseInsensitive = true;
 
+	@JsonIgnore
+	private Grok grok;
+
+	public Grok getGrok(GroksRegistry registry) throws FormatException {
+		if (grok == null) {
+			try {
+				grok = Grok.compile(registry, pattern, (multiLine ? Pattern.MULTILINE : 0)
+						| (dotAll ? Pattern.DOTALL : 0) | (caseInsensitive ? Pattern.CASE_INSENSITIVE : 0));
+			} catch (GrokException e) {
+				throw new FormatException("Failed to compile grok pattern: " + this + " -> " + e.getMessage(), e);
+			}
+		}
+		return grok;
+	}
+
 	/**
 	 * @return the pattern
 	 */
@@ -38,6 +57,7 @@ public final class GrokPatternBean {
 	 */
 	public void setPattern(String pattern) {
 		this.pattern = pattern;
+		this.grok = null;
 	}
 
 	/**
@@ -53,6 +73,7 @@ public final class GrokPatternBean {
 	 */
 	public void setMultiLine(boolean multiLine) {
 		this.multiLine = multiLine;
+		this.grok = null;
 	}
 
 	/**
@@ -68,6 +89,7 @@ public final class GrokPatternBean {
 	 */
 	public void setDotAll(boolean dotAll) {
 		this.dotAll = dotAll;
+		this.grok = null;
 	}
 
 	/**
@@ -83,6 +105,7 @@ public final class GrokPatternBean {
 	 */
 	public void setCaseInsensitive(boolean caseInsensitive) {
 		this.caseInsensitive = caseInsensitive;
+		this.grok = null;
 	}
 
 	@Override

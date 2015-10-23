@@ -24,8 +24,8 @@ import org.springframework.stereotype.Component;
 
 import com.logsniffer.config.BeanConfigFactoryManager;
 import com.logsniffer.reader.grok.GrokTextReader;
-import com.logsniffer.reader.grok.GrokTextReader.GrokTextReaderConstructor;
 import com.logsniffer.util.grok.Grok;
+import com.logsniffer.util.grok.GrokConsumerConstructor;
 import com.logsniffer.util.grok.GroksRegistry;
 import com.logsniffer.web.wizard2.ConfigBeanWizard;
 
@@ -39,7 +39,8 @@ import com.logsniffer.web.wizard2.ConfigBeanWizard;
 public class GrokTextReaderWizard implements ConfigBeanWizard<GrokTextReader> {
 
 	@Autowired
-	private GrokTextReaderConstructor grokTextReaderConstructor;
+	private GrokConsumerConstructor grokTextReaderConstructor;
+
 	@Autowired
 	private BeanConfigFactoryManager configManager;
 
