@@ -23,9 +23,11 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.reader.filter.FilteredLogEntryReader;
+import com.logsniffer.util.json.Views;
 
 /**
  * Base log source.
@@ -33,16 +35,18 @@ import com.logsniffer.reader.filter.FilteredLogEntryReader;
  * @author mbok
  * 
  */
-public abstract class BaseLogsSource<STREAMTYPE extends LogInputStream>
-		implements LogSource<STREAMTYPE> {
+public abstract class BaseLogsSource<STREAMTYPE extends LogInputStream> implements LogSource<STREAMTYPE> {
 	@JsonProperty
+	@JsonView(Views.Info.class)
 	private long id;
 
 	@JsonProperty
+	@JsonView(Views.Info.class)
 	@NotEmpty
 	private String name;
 
 	@JsonProperty
+	@JsonView(Views.Info.class)
 	@Valid
 	@JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
 	private FilteredLogEntryReader<STREAMTYPE> reader = new FilteredLogEntryReader<>();

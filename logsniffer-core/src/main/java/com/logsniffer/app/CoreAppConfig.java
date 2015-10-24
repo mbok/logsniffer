@@ -43,6 +43,7 @@ import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -80,30 +81,23 @@ public class CoreAppConfig {
 
 	@Bean(name = { BEAN_LOGSNIFFER_PROPS })
 	@Autowired
-	public PropertiesFactoryBean logSnifferProperties(
-			final ApplicationContext ctx) throws IOException {
-		if (ctx.getEnvironment().acceptsProfiles(
-				"!" + ContextProvider.PROFILE_NONE_QA)) {
+	public PropertiesFactoryBean logSnifferProperties(final ApplicationContext ctx) throws IOException {
+		if (ctx.getEnvironment().acceptsProfiles("!" + ContextProvider.PROFILE_NONE_QA)) {
 			File qaFile = File.createTempFile("logsniffer", "qa");
 			qaFile.delete();
 			String qaHomeDir = qaFile.getPath();
-			logger.info("QA mode active, setting random home directory: {}",
-					qaHomeDir);
+			logger.info("QA mode active, setting random home directory: {}", qaHomeDir);
 			System.setProperty("logsniffer.home", qaHomeDir);
 		}
 		PathMatchingResourcePatternResolver pathMatcher = new PathMatchingResourcePatternResolver();
-		Resource[] classPathProperties = pathMatcher
-				.getResources("classpath*:/config/**/logsniffer-*.properties");
-		Resource[] metainfProperties = pathMatcher
-				.getResources("classpath*:/META-INF/**/logsniffer-*.properties");
+		Resource[] classPathProperties = pathMatcher.getResources("classpath*:/config/**/logsniffer-*.properties");
+		Resource[] metainfProperties = pathMatcher.getResources("classpath*:/META-INF/**/logsniffer-*.properties");
 		PropertiesFactoryBean p = new PropertiesFactoryBean();
 		for (Resource r : metainfProperties) {
-			classPathProperties = (Resource[]) ArrayUtils.add(
-					classPathProperties, r);
+			classPathProperties = (Resource[]) ArrayUtils.add(classPathProperties, r);
 		}
 		classPathProperties = (Resource[]) ArrayUtils.add(classPathProperties,
-				new FileSystemResource(System.getProperty("logsniffer.home")
-						+ "/" + LOGSNIFFER_PROPERTIES_FILE));
+				new FileSystemResource(System.getProperty("logsniffer.home") + "/" + LOGSNIFFER_PROPERTIES_FILE));
 		p.setLocations(classPathProperties);
 		p.setLocalOverride(false);
 		p.setIgnoreResourceNotFound(true);
@@ -123,8 +117,7 @@ public class CoreAppConfig {
 	@Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 	@Autowired
 	public PropertyPlaceholderConfigurer propertyPlaceholderConfigurer(
-			@Qualifier(BEAN_LOGSNIFFER_PROPS) final Properties props)
-			throws IOException {
+			@Qualifier(BEAN_LOGSNIFFER_PROPS) final Properties props) throws IOException {
 		PropertyPlaceholderConfigurer c = new PropertyPlaceholderConfigurer();
 		c.setIgnoreResourceNotFound(true);
 		c.setIgnoreUnresolvablePlaceholders(true);
@@ -137,24 +130,20 @@ public class CoreAppConfig {
 	public ObjectMapper jsonObjectMapper() {
 		ObjectMapper jsonMapper = new ObjectMapper();
 		jsonMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-		jsonMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-				false);
+		jsonMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		jsonMapper.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
 		jsonMapper.configure(Feature.ALLOW_SINGLE_QUOTES, true);
+		jsonMapper.configure(MapperFeature.DEFAULT_VIEW_INCLUSION, false);
 
-		SimpleModule module = new SimpleModule("FieldsMapping",
-				Version.unknownVersion());
+		SimpleModule module = new SimpleModule("FieldsMapping", Version.unknownVersion());
 		module.setSerializerModifier(new BeanSerializerModifier() {
 			@Override
-			public JsonSerializer<?> modifyMapSerializer(
-					final SerializationConfig config, final MapType valueType,
-					final BeanDescription beanDesc,
-					final JsonSerializer<?> serializer) {
+			public JsonSerializer<?> modifyMapSerializer(final SerializationConfig config, final MapType valueType,
+					final BeanDescription beanDesc, final JsonSerializer<?> serializer) {
 				if (FieldsMap.class.isAssignableFrom(valueType.getRawClass())) {
 					return new FieldsMapMixInLikeSerializer();
 				} else {
-					return super.modifyMapSerializer(config, valueType,
-							beanDesc, serializer);
+					return super.modifyMapSerializer(config, valueType, beanDesc, serializer);
 				}
 			}
 		});

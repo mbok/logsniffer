@@ -25,6 +25,7 @@ import java.util.List;
 import javax.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogInputStream;
@@ -35,6 +36,7 @@ import com.logsniffer.model.SeverityLevel;
 import com.logsniffer.model.fields.FieldBaseTypes;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.LogEntryReader;
+import com.logsniffer.util.json.Views;
 
 /**
  * Proxy {@link LogEntryReader} with filtering support.
@@ -124,8 +126,14 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream> imp
 	}
 
 	@Override
+	@JsonView(Views.Info.class)
 	public List<SeverityLevel> getSupportedSeverities() {
-		List<SeverityLevel> severities = new ArrayList<>(targetReader.getSupportedSeverities());
+		List<SeverityLevel> severities;
+		if (targetReader != null) {
+			severities = new ArrayList<>(targetReader.getSupportedSeverities());
+		} else {
+			severities = new ArrayList<>();
+		}
 		for (FieldsFilter f : filters) {
 			f.filterSupportedSeverities(severities);
 		}
@@ -133,8 +141,14 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream> imp
 	}
 
 	@Override
+	@JsonView(Views.Info.class)
 	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
-		LinkedHashMap<String, FieldBaseTypes> fieldTypes = new LinkedHashMap<>(targetReader.getFieldTypes());
+		LinkedHashMap<String, FieldBaseTypes> fieldTypes;
+		if (targetReader != null) {
+			fieldTypes = new LinkedHashMap<>(targetReader.getFieldTypes());
+		} else {
+			fieldTypes = new LinkedHashMap<>();
+		}
 		for (FieldsFilter f : filters) {
 			f.filterKnownFields(fieldTypes);
 		}

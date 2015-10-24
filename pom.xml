@@ -101,32 +101,32 @@
 			<dependency>
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-context-support</artifactId>
-				<version>4.1.5.RELEASE</version>
+				<version>4.2.2.RELEASE</version>
 			</dependency>
 			<dependency>
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-jdbc</artifactId>
-				<version>4.1.5.RELEASE</version>
+				<version>4.2.2.RELEASE</version>
 			</dependency>
 			<dependency>
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-tx</artifactId>
-				<version>4.1.5.RELEASE</version>
+				<version>4.2.2.RELEASE</version>
 			</dependency>
 			<dependency>
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-web</artifactId>
-				<version>4.1.5.RELEASE</version>
+				<version>4.2.2.RELEASE</version>
 			</dependency>
 			<dependency>
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-webmvc</artifactId>
-				<version>4.1.5.RELEASE</version>
+				<version>4.2.2.RELEASE</version>
 			</dependency>
 			<dependency>
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-test</artifactId>
-				<version>4.1.5.RELEASE</version>
+				<version>4.2.2.RELEASE</version>
 			</dependency>
 			<dependency>
 				<groupId>javax.mail</groupId>

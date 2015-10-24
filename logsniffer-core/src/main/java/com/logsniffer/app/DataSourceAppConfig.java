@@ -87,7 +87,8 @@ public class DataSourceAppConfig {
 		Connection con = null;
 		con = pool.getConnection();
 		JdbcTemplate tpl = new JdbcTemplate(pool);
-		if (tpl.queryForInt("select count(*) from information_schema.tables where table_name = 'LOG_SOURCES'") == 0) {
+		if (tpl.queryForObject("select count(*) from information_schema.tables where table_name = 'LOG_SOURCES'",
+				int.class) == 0) {
 			logger.info("H2 database not found, creating new schema and populate with default data");
 			try {
 				ResourceDatabasePopulator dbPopulator = new ResourceDatabasePopulator();

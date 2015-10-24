@@ -19,7 +19,6 @@ package com.logsniffer.web.controller.source;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -40,16 +39,14 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.logsniffer.config.ConfigException;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogSource;
-import com.logsniffer.model.LogSource.LogSourceWrapper;
 import com.logsniffer.model.LogSourceProvider;
 import com.logsniffer.model.SeverityLevel;
 import com.logsniffer.model.support.BaseLogsSource;
+import com.logsniffer.util.json.Views;
 import com.logsniffer.web.controller.exception.ResourceNotFoundException;
 
 /**
@@ -60,77 +57,38 @@ import com.logsniffer.web.controller.exception.ResourceNotFoundException;
  */
 @RestController
 public class SourcesResourceController {
-	private static Logger logger = LoggerFactory
-			.getLogger(SourcesManageController.class);
+	private static Logger logger = LoggerFactory.getLogger(SourcesManageController.class);
 
 	@Autowired
 	private LogSourceProvider logsSourceProvider;
 
 	@RequestMapping(value = "/sources/{logSource}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
-	LogSource<LogInputStream> getSource(
-			@PathVariable("logSource") final long logSourceId)
+	LogSource<LogInputStream> getSource(@PathVariable("logSource") final long logSourceId)
 			throws ResourceNotFoundException {
 		return getActiveSource(logSourceId);
 	}
 
-	@JsonSerialize
-	private static class ReducedLogSource extends LogSourceWrapper {
-		private final LogSource<LogInputStream> wrapped;
-
-		/**
-		 * @param wrapped
-		 */
-		public ReducedLogSource(final LogSource<LogInputStream> wrapped) {
-			super();
-			this.wrapped = wrapped;
-		}
-
-		@Override
-		public LogSource<LogInputStream> getWrapped() throws ConfigException {
-			return wrapped;
-		}
-
-		@JsonProperty
-		@Override
-		public long getId() {
-			return super.getId();
-		}
-
-		@JsonProperty
-		@Override
-		public String getName() {
-			return super.getName();
-		}
-	}
-
 	@RequestMapping(value = "/sources", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
-	List<ReducedLogSource> getAllSources() throws ResourceNotFoundException {
-		List<ReducedLogSource> sources = new ArrayList<SourcesResourceController.ReducedLogSource>();
-		for (LogSource<LogInputStream> source : logsSourceProvider.getSources()) {
-			sources.add(new ReducedLogSource(source));
-		}
-		return sources;
+	@JsonView(Views.Info.class)
+	List<LogSource<LogInputStream>> getAllSources() throws ResourceNotFoundException {
+		return logsSourceProvider.getSources();
 	}
 
 	@RequestMapping(value = "/sources/{logSource}/reader/supportedSeverities", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
-	List<SeverityLevel> getReaderSupportedSeverities(
-			@PathVariable("logSource") final long logSourceId)
+	List<SeverityLevel> getReaderSupportedSeverities(@PathVariable("logSource") final long logSourceId)
 			throws ResourceNotFoundException {
-		return getActiveSource(logSourceId).getReader()
-				.getSupportedSeverities();
+		return getActiveSource(logSourceId).getReader().getSupportedSeverities();
 	}
 
 	@RequestMapping(value = "/sources", method = RequestMethod.POST)
 	@Transactional(rollbackFor = Exception.class)
 	@ResponseBody
-	long createSource(
-			@Valid @RequestBody final LogSource<LogInputStream> newSource,
+	long createSource(@Valid @RequestBody final LogSource<LogInputStream> newSource,
 			final RedirectAttributes redirectAttrs)
-			throws ResourceNotFoundException, SchedulerException,
-			ParseException {
+					throws ResourceNotFoundException, SchedulerException, ParseException {
 		long id = logsSourceProvider.createSource(newSource);
 		logger.info("Created new log source: {}", newSource);
 		return id;
@@ -141,16 +99,13 @@ public class SourcesResourceController {
 	@ResponseStatus(HttpStatus.OK)
 	void updateSource(@PathVariable("logSource") final long logSourceId,
 			@Valid @RequestBody final LogSource<LogInputStream> newSource)
-			throws ResourceNotFoundException, SchedulerException,
-			ParseException {
+					throws ResourceNotFoundException, SchedulerException, ParseException {
 		((BaseLogsSource<LogInputStream>) newSource).setId(logSourceId);
 		logsSourceProvider.updateSource(newSource);
 	}
 
-	protected LogSource<LogInputStream> getActiveSource(final long logSourceId)
-			throws ResourceNotFoundException {
-		LogSource<LogInputStream> source = logsSourceProvider
-				.getSourceById(logSourceId);
+	protected LogSource<LogInputStream> getActiveSource(final long logSourceId) throws ResourceNotFoundException {
+		LogSource<LogInputStream> source = logsSourceProvider.getSourceById(logSourceId);
 		if (source == null) {
 			throw new ResourceNotFoundException(LogSource.class, logSourceId,
 					"Log source not found for id: " + logSourceId);
@@ -168,9 +123,7 @@ public class SourcesResourceController {
 
 	@RequestMapping(value = "/sources/logs", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
-	Log[] getSourceLogs(
-			@Valid @RequestBody final LogSource<LogInputStream> source)
-			throws IOException {
+	Log[] getSourceLogs(@Valid @RequestBody final LogSource<LogInputStream> source) throws IOException {
 		return source.getLogs().toArray(new Log[0]);
 	}
 }
