@@ -21,6 +21,9 @@ public final class GrokPatternBean {
 	private String pattern;
 
 	@JsonProperty
+	private boolean subStringSearch = false;
+
+	@JsonProperty
 	private boolean multiLine = true;
 
 	@JsonProperty
@@ -35,8 +38,9 @@ public final class GrokPatternBean {
 	public Grok getGrok(GroksRegistry registry) throws FormatException {
 		if (grok == null) {
 			try {
-				grok = Grok.compile(registry, pattern, (multiLine ? Pattern.MULTILINE : 0)
-						| (dotAll ? Pattern.DOTALL : 0) | (caseInsensitive ? Pattern.CASE_INSENSITIVE : 0));
+				grok = Grok.compile(registry, (subStringSearch ? ".*?" : "") + pattern + (subStringSearch ? ".*?" : ""),
+						(multiLine ? Pattern.MULTILINE : 0) | (dotAll ? Pattern.DOTALL : 0)
+								| (caseInsensitive ? Pattern.CASE_INSENSITIVE : 0));
 			} catch (GrokException e) {
 				throw new FormatException("Failed to compile grok pattern: " + this + " -> " + e.getMessage(), e);
 			}
@@ -108,10 +112,26 @@ public final class GrokPatternBean {
 		this.grok = null;
 	}
 
+	/**
+	 * @return the subStringSearch
+	 */
+	public boolean isSubStringSearch() {
+		return subStringSearch;
+	}
+
+	/**
+	 * @param subStringSearch
+	 *            the subStringSearch to set
+	 */
+	public void setSubStringSearch(boolean subStringSearch) {
+		this.subStringSearch = subStringSearch;
+		this.grok = null;
+	}
+
 	@Override
 	public String toString() {
-		return "GrokPatternBean [pattern=" + pattern + ", multiLine=" + multiLine + ", dotAll=" + dotAll
-				+ ", caseInsensitive=" + caseInsensitive + "]";
+		return "GrokPatternBean [pattern=" + pattern + ", subStringSearch=" + subStringSearch + ", multiLine="
+				+ multiLine + ", dotAll=" + dotAll + ", caseInsensitive=" + caseInsensitive + ", grok=" + grok + "]";
 	}
 
 }

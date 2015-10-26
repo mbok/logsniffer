@@ -35,8 +35,10 @@ public class ScannerWizardsJavaConfig {
 
 	@Bean
 	public ConfigBeanWizard<RegexPatternScanner> grokPatternScannerWizard() {
+		RegexPatternScanner template = new RegexPatternScanner();
+		template.getGrokBean().setSubStringSearch(true);
 		return new SimpleBeanWizard<RegexPatternScanner>("logsniffer.wizard.scanner.regexPattern",
-				"/ng/wizards/scanner/regexPattern.html", RegexPatternScanner.class, new RegexPatternScanner());
+				"/ng/wizards/scanner/regexPattern.html", RegexPatternScanner.class, template);
 	}
 
 }

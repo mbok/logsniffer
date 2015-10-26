@@ -46,8 +46,8 @@ public class JettyIDELauncher extends JettyLauncher {
 		// TODO Review - this will make EVERYTHING on the classpath be
 		// scanned for META-INF/resources and web-fragment.xml - great for dev!
 		// NOTE: Several patterns can be listed, separate by comma
-		webAppContext.setAttribute(WebInfConfiguration.CONTAINER_JAR_PATTERN, ".*");
-		webAppContext.setAttribute(WebInfConfiguration.WEBINF_JAR_PATTERN, ".*");
+		webAppContext.setAttribute(WebInfConfiguration.CONTAINER_JAR_PATTERN, ".*\\.jar");
+		webAppContext.setAttribute(WebInfConfiguration.WEBINF_JAR_PATTERN, ".*\\.jar");
 	}
 
 	/**

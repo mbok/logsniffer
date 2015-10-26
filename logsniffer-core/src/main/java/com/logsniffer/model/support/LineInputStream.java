@@ -45,7 +45,7 @@ public class LineInputStream extends ByteLogInputStream {
 		this.pointerFactory = pointerFactory;
 		this.stream = stream;
 		invalidate();
-		this.buffer = new byte[4096 * 2];
+		this.buffer = new byte[4096 * 4];
 		this.charset = charset;
 	}
 
@@ -122,7 +122,7 @@ public class LineInputStream extends ByteLogInputStream {
 			}
 		}
 		if (lineend < 0) {
-			ByteArrayOutputStream input = new ByteArrayOutputStream(256);
+			ByteArrayOutputStream input = new ByteArrayOutputStream(512);
 			input.write(buffer, buf_pos, buf_end - buf_pos);
 			buf_pos = buf_end;
 			int c;

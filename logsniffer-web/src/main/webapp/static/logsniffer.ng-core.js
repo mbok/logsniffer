@@ -48,6 +48,15 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	   return fullPath.replace(/^.*[\\\/]/, '');
        };
    })
+   .filter('obj2Array', function () {
+	   return function(obj) {
+	       var a = [];
+	       for (var i in obj) {
+	    	   a.push({ key: i, value: obj[i]});
+	       }
+	       return a;
+	   };
+   })
    .directive('lfsFieldsTable', function() {
        return {
 	   restrict: 'AE',

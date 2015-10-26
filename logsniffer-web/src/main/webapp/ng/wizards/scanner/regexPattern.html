@@ -1,5 +1,4 @@
 <div>
-	<span ng-repeat="key for key in sharedScope.source.reader.fieldTypes">{{key}}</span>
 	<lsf-info-label label="Scans for entries matching a regular expressoon or Grok pattern">
 		TBD
 	</lsf-info-label>
@@ -7,7 +6,8 @@
 		<div class="col-md-6">
 			<lsf-form-group class="form-group required" field-name="sourceField" field-path="sourceField" bind-errors="bindErrors">
 				<label for="sourceField" class="control-label">Source field:</label>
-				<input type="text" ng-model="bean.sourceField" name="sourceField" id="sourceField" class="form-control" required="required">
+				<input type="text" ng-model="bean.sourceField" name="sourceField" id="sourceField" class="form-control" required="required"
+					typeahead="i.key for i in sharedScope.source.reader.fieldTypes | obj2Array">
 			</lsf-form-group>
 		</div>
 	</div>
@@ -22,6 +22,9 @@
 		<div class="form-group col-md-6">
 			<label class="control-label">Pattern flags:</label>
 			<div class="controls controls-row">
+				<label class="checkbox-inline">
+					<input type="checkbox" ng-model="bean.subStringSearch" class="subStringSearch"/> Sub string search
+				</label>
 				<label class="checkbox-inline">
 					<input type="checkbox" ng-model="bean.caseInsensitive" class="caseInsensitive"/> Case-insensitive matching
 				</label>

@@ -80,4 +80,18 @@ public class RegexPatternScannerTest {
 		Assert.assertEquals("ef", event.getFields().get("RestField"));
 	}
 
+	@Test
+	public void testNamedCapturesWithSubPattern() throws FormatException {
+		scanner.setSourceField("source");
+		scanner.getGrokBean().setPattern("(?<MyField>abcd)");
+		scanner.getGrokBean().setSubStringSearch(true);
+		LogEntry entry = new LogEntry();
+		entry.getFields().put("source", "wabcdef");
+		EventData event = scanner.matches(entry);
+		// Asserts
+		Assert.assertNotNull(event);
+		Assert.assertEquals(1, event.getFields().size());
+		Assert.assertEquals("abcd", event.getFields().get("MyField"));
+	}
+
 }
