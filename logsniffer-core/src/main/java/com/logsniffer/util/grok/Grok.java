@@ -22,9 +22,14 @@ import java.util.LinkedHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * GROK https://code.google.com/p/semicomplete/wiki/Grok pattern implementation.
  */
+@JsonAutoDetect(creatorVisibility = Visibility.NONE, fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public final class Grok {
 	protected static final Pattern PATTERN_SUBGROK = Pattern.compile("%\\{([A-Z0-9_-]+)(?::([A-Z0-9_-]+))?\\}",
 			Pattern.CASE_INSENSITIVE);
@@ -226,6 +231,7 @@ public final class Grok {
 
 	private LinkedHashMap<String, Integer> groupNames = new LinkedHashMap<String, Integer>();
 	private Pattern regexPattern;
+	@JsonProperty
 	private String grokPattern;
 	private HashMap<Integer, GrokPredicate> groupPredicates;// = new
 															// HashMap<Integer,

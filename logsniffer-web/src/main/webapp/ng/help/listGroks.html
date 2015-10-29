@@ -1,0 +1,51 @@
+<div class="modal-header">
+	<h4 class="modal-title">Grok Patterns</h4>
+</div>
+<div class="modal-body" class="zoom-entry-modal" style="padding-bottom:0">
+	<lsf-busy-container busy="busy">
+		<div lsf-alerts alerts="alerts"></div>
+		<ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
+        	<li class="active"><a href="#tab-groks" data-toggle="tab">Predefined Grok patterns</a></li>
+        	<li><a href="#tab-info" data-toggle="tab">Info</a></li>
+	    </ul>
+    	<div class="tab-content" style="overflow:auto;height:380px;">
+        	<div class="tab-pane active" id="tab-groks">
+				<table class="table table-condensed log" ng-repeat="(groupName, group) in grokGroups">
+					<thead><tr><th colspan="2">{{groupName}}</th></tr></thead>
+					<tr class="text" ng-repeat="(name, grok) in group">
+						<td>{{name}}</td>
+						<td><code>{{grok.grokPattern}}</code></td>
+					</tr>
+				</table>
+        	</div>
+        	<div class="tab-pane" id="tab-info">
+				<p>
+					Grok is a pattern matching concept based on regular expressions.
+					It lets use existing sets of named regular expressions and to assign matching string groups to dedicated fields.
+					A grok is like a shortcut for a well known regular expression combined with the feature of assigning and converting matching values to
+					fields.
+				</p>
+				<p>The syntax for a grok pattern is:
+					<ul>
+						<li><code>%{NAME}</code> will only be used for matching a text against the regular expression referenced by the grok with name <code>NAME</code>.</li>
+						<li><code>%{NAME:fieldA}</code> will match text regarding the regular expression referenced by the grok with name <code>NAME</code>
+							and assign the matching text to the field <code>fieldA</code>.</li>
+						<li><code>%{NAME:fieldB:int}</code> will match text regarding the regular expression referenced by the grok with name <code>NAME</code>,
+							convert the matching text to the integer type and assign the value to the field <code>fieldB</code>.
+							The supported conversion types are: <code>int</code>, <code>long</code>, <code>float</code>, <code>double</code>, <code>boolean</code>.
+						</li>
+					</ul>
+				</p>
+				<h4>Example</h4>
+				<p>
+					The grok pattern <code>%{IP:clientip} %{USER:ident}</code> matches a text line starting with an IP followed by a user name e.g. '127.0.0.1 admin'.
+					In this example the matching IP would be assigned to the <code>clientip</code> field and the user name to the 
+					<code>ident</code> field.
+				</p>
+        	</div>
+        </div>
+	</lsf-busy-container>
+</div>
+<div class="modal-footer">
+	<button class="btn" ng-click="close()">Close</button>
+</div>

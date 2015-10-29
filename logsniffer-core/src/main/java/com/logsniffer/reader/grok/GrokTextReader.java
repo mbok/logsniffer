@@ -52,7 +52,7 @@ import com.logsniffer.util.grok.GroksRegistry;
  * 
  */
 @PostConstructed(constructor = GrokConsumerConstructor.class)
-public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher>implements GrokConsumer {
+public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> implements GrokConsumer {
 
 	@JsonIgnore
 	private GroksRegistry groksRegistry;
@@ -77,7 +77,7 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher>implem
 	@Override
 	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
 		initPattern();
-		LinkedHashMap<String, FieldBaseTypes> fields = new LinkedHashMap<String, FieldBaseTypes>();
+		LinkedHashMap<String, FieldBaseTypes> fields = super.getFieldTypes();
 		for (String attr : grok.getGroupNames().keySet()) {
 			fields.put(attr, FieldBaseTypes.STRING);
 		}

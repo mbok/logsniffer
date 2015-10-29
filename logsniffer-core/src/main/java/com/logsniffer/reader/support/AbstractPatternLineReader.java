@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
+import com.logsniffer.model.LogEntryData;
 import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.fields.FieldBaseTypes;
@@ -42,10 +43,8 @@ import com.logsniffer.reader.LogEntryReader;
  * @author mbok
  * 
  */
-public abstract class AbstractPatternLineReader<MatcherContext> implements
-		LogEntryReader<ByteLogInputStream> {
-	private static final Logger logger = LoggerFactory
-			.getLogger(AbstractPatternLineReader.class);
+public abstract class AbstractPatternLineReader<MatcherContext> implements LogEntryReader<ByteLogInputStream> {
+	private static final Logger logger = LoggerFactory.getLogger(AbstractPatternLineReader.class);
 	private static int MAX_LINES2CONSUME_WITHOUT_PATTERN = 50;
 
 	@JsonProperty
@@ -88,8 +87,7 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements
 	 * @param ctx
 	 *            the matcher context
 	 */
-	protected abstract void fillAttributes(LogEntry entry, MatcherContext ctx)
-			throws FormatException;
+	protected abstract void fillAttributes(LogEntry entry, MatcherContext ctx) throws FormatException;
 
 	/**
 	 * Called in case of a line not matching the format pattern and which is
@@ -101,8 +99,7 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements
 	 * @param overflowLine
 	 *            the overflow line
 	 */
-	protected abstract void attachOverflowLine(LogEntry entry,
-			String overflowLine);
+	protected abstract void attachOverflowLine(LogEntry entry, String overflowLine);
 
 	/**
 	 * 
@@ -111,8 +108,7 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements
 	protected abstract String getPatternInfo();
 
 	@Override
-	public final void readEntries(Log log,
-			LogRawAccess<ByteLogInputStream> logAccess, LogPointer startOffset,
+	public final void readEntries(Log log, LogRawAccess<ByteLogInputStream> logAccess, LogPointer startOffset,
 			LogEntryConsumer consumer) throws IOException, FormatException {
 		initPattern();
 		LinkedHashMap<String, FieldBaseTypes> fieldTypes = getFieldTypes();
@@ -120,8 +116,7 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements
 		try {
 			boolean patternAware = true;
 			int linesWithoutPattern = 0;
-			lis = new LineInputStream(logAccess,
-					logAccess.getInputStream(startOffset), getCharset());
+			lis = new LineInputStream(logAccess, logAccess.getInputStream(startOffset), getCharset());
 			LogEntry entry = null;
 			StringBuilder text = new StringBuilder();
 			String line;
@@ -130,8 +125,7 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements
 				lastOffset = logAccess.createRelative(null, 0);
 			}
 			LogPointer currentOffset = null;
-			while ((line = lis.readNextLine()) != null
-					&& (currentOffset = lis.getPointer()) != null) {
+			while ((line = lis.readNextLine()) != null && (currentOffset = lis.getPointer()) != null) {
 				MatcherContext ctx = matches(line);
 				if (ctx != null || !patternAware) {
 					linesWithoutPattern = -1;
@@ -180,5 +174,12 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements
 		} finally {
 			lis.close();
 		}
+	}
+
+	@Override
+	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
+		LinkedHashMap<String, FieldBaseTypes> fields = new LinkedHashMap<String, FieldBaseTypes>();
+		fields.put(LogEntryData.FIELD_RAW_CONTENT, FieldBaseTypes.STRING);
+		return fields;
 	}
 }

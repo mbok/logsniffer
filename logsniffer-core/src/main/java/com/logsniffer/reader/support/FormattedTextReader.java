@@ -40,10 +40,8 @@ import com.logsniffer.reader.FormatException;
  * @author mbok
  * 
  */
-public abstract class FormattedTextReader extends
-		AbstractPatternLineReader<Matcher> {
-	private static final Logger logger = LoggerFactory
-			.getLogger(FormattedTextReader.class);
+public abstract class FormattedTextReader extends AbstractPatternLineReader<Matcher> {
+	private static final Logger logger = LoggerFactory.getLogger(FormattedTextReader.class);
 
 	public abstract static class Specifier {
 		private int minWidth;
@@ -104,8 +102,7 @@ public abstract class FormattedTextReader extends
 
 		protected abstract String getRegex() throws FormatException;
 
-		protected abstract void set(LogEntry entry, String match)
-				throws FormatException;
+		protected abstract void set(LogEntry entry, String match) throws FormatException;
 
 		protected abstract FieldBaseTypes getFieldType();
 
@@ -129,18 +126,15 @@ public abstract class FormattedTextReader extends
 		 * @param withoutLengthPattern
 		 * @return
 		 */
-		protected String adaptRegexByLength(final String lengthPattern,
-				final String withoutLengthPattern) {
+		protected String adaptRegexByLength(final String lengthPattern, final String withoutLengthPattern) {
 			if (maxWidth > 0 && maxWidth == minWidth) {
 				return lengthPattern + "{" + maxWidth + "}";
 			} else if (maxWidth > 0) {
-				return lengthPattern + "{" + Math.max(0, minWidth) + ","
-						+ maxWidth + "}";
+				return lengthPattern + "{" + Math.max(0, minWidth) + "," + maxWidth + "}";
 			} else if (minWidth > 0) {
 				return lengthPattern + "{" + minWidth + ",}";
 			}
-			return withoutLengthPattern != null ? withoutLengthPattern
-					: lengthPattern;
+			return withoutLengthPattern != null ? withoutLengthPattern : lengthPattern;
 		}
 	}
 
@@ -153,8 +147,7 @@ public abstract class FormattedTextReader extends
 	public static class ArbitraryTextSpecifier extends Specifier {
 		private boolean greedy;
 
-		public ArbitraryTextSpecifier(final String specifierKey,
-				final boolean greedy) {
+		public ArbitraryTextSpecifier(final String specifierKey, final boolean greedy) {
 			super(specifierKey);
 			this.greedy = greedy;
 		}
@@ -165,8 +158,7 @@ public abstract class FormattedTextReader extends
 		}
 
 		@Override
-		protected void set(final LogEntry entry, final String match)
-				throws FormatException {
+		protected void set(final LogEntry entry, final String match) throws FormatException {
 			entry.getFields().put(getFieldName(), match);
 		}
 
@@ -193,8 +185,7 @@ public abstract class FormattedTextReader extends
 		}
 
 		@Override
-		protected void set(final LogEntry entry, final String match)
-				throws FormatException {
+		protected void set(final LogEntry entry, final String match) throws FormatException {
 			// NOP
 		}
 
@@ -238,8 +229,7 @@ public abstract class FormattedTextReader extends
 				int leftPos = 0;
 				while (m.find()) {
 					if (m.start() > leftPos) {
-						parsingPatternStr.append(Pattern.quote(formatPattern
-								.substring(leftPos, m.start())));
+						parsingPatternStr.append(Pattern.quote(formatPattern.substring(leftPos, m.start())));
 					}
 					leftPos = m.end();
 					String minWidthStr = m.group(2);
@@ -267,9 +257,7 @@ public abstract class FormattedTextReader extends
 								specName, formatPattern);
 						spec = new ArbitraryTextSpecifier(specName, false);
 					} else if (spec instanceof IgnoreSpecifier) {
-						logger.debug(
-								"Format specifier '{}' in pattern '{}' is ignored",
-								specName, formatPattern);
+						logger.debug("Format specifier '{}' in pattern '{}' is ignored", specName, formatPattern);
 						continue;
 					}
 					spec.setMaxWidth(maxWidth);
@@ -284,13 +272,11 @@ public abstract class FormattedTextReader extends
 					}
 					specs.add(spec);
 				}
-				parsingPatternStr.append(Pattern.quote(formatPattern
-						.substring(leftPos)));
+				parsingPatternStr.append(Pattern.quote(formatPattern.substring(leftPos)));
 				parsingPattern = Pattern.compile(parsingPatternStr.toString());
 				parsingSpecifiers = specs.toArray(new Specifier[specs.size()]);
-				logger.debug(
-						"Prepared parsing pattern '{}' for log4j conversion pattern: {}",
-						parsingPattern, formatPattern);
+				logger.debug("Prepared parsing pattern '{}' for log4j conversion pattern: {}", parsingPattern,
+						formatPattern);
 			} else {
 				parsingSpecifiers = null;
 				parsingPattern = null;
@@ -321,8 +307,7 @@ public abstract class FormattedTextReader extends
 	}
 
 	@Override
-	protected void fillAttributes(final LogEntry entry, final Matcher ctx)
-			throws FormatException {
+	protected void fillAttributes(final LogEntry entry, final Matcher ctx) throws FormatException {
 		int specNumber = 1;
 		for (Specifier spec : parsingSpecifiers) {
 			String match = ctx.group(specNumber++);
@@ -346,17 +331,15 @@ public abstract class FormattedTextReader extends
 	 * @param specifiersFieldMapping
 	 *            the specifiersFieldMapping to set
 	 */
-	public void setSpecifiersFieldMapping(
-			final Map<String, String> specifiersFieldMapping) {
+	public void setSpecifiersFieldMapping(final Map<String, String> specifiersFieldMapping) {
 		this.specifiersFieldMapping = specifiersFieldMapping;
 		this.parsingPattern = null;
 	}
 
 	@Override
-	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes()
-			throws FormatException {
+	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
 		initPattern();
-		LinkedHashMap<String, FieldBaseTypes> fields = new LinkedHashMap<String, FieldBaseTypes>();
+		LinkedHashMap<String, FieldBaseTypes> fields = super.getFieldTypes();
 		for (Specifier s : parsingSpecifiers) {
 			fields.put(s.getFieldName(), s.getFieldType());
 		}

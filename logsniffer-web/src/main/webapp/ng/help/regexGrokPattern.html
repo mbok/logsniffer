@@ -1,0 +1,50 @@
+<script type="text/javascript">
+	LogSnifferNgApp.controllerProvider.register(
+		"GroksHelpController", ['$scope', '$log', '$modal', function ($scope, $log, $modal) {
+
+		$scope.showGroks = function () {
+			$modal.open({
+			      templateUrl: $scope.contextPath + '/ng/help/listGroks.html',
+			      controller: 'GroksListController',
+			      size: 'lg',
+			      windowClass: 'groks-list-modal',
+			      scope: $scope
+			    });
+		};
+	}]);
+	LogSnifferNgApp.controllerProvider.register(
+			"GroksListController", ['$scope', '$http', '$log', '$modalInstance', 'lsfAlerts', function ($scope, $http, $log, $modalInstance, lsfAlerts) {
+			    $scope.alerts = lsfAlerts.create();
+			    $scope.busy = false;
+
+				$scope.close = function () {
+					$modalInstance.close();
+				};
+				
+				$log.info("Resolving grok groups");
+				$http({
+		        		url : $scope.contextPath + "/c/utils/groks/groups",
+		        		method : "GET"
+		        	})
+		        	.success(
+		        		function(data, status, headers, config) {
+		        		    $scope.busy = false;
+		        		    $scope.grokGroups = data;
+		        		    $log.info("Grok groups loaded: ", $scope.grokGroups);
+		        		})
+		        	.error(
+		        		function(data, status, headers, config, statusText) {
+		        		    $scope.busy = false;
+		        		    $scope.alerts.httpError("Failed to load predefined Grok patterns", data, status, headers, config, statusText);
+		        		}
+		        	);
+			}
+		]);
+</script>
+
+<span ng-controller="GroksHelpController">
+The supported pattern syntax is described on this <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html" target="_blank">JavaDoc</a> page.
+Rugular expressions can be mixed with grok patterns, click <a href ng-click="showGroks()"><i class="glyphicon glyphicon-info-sign help-icon"></i> here</a> 
+to get more information regarding grok and for a list of predefined grok patterns. Use named capturing or grok groups to extract matching text groups from the input and to assign it to destined fields.
+The simpliest pattern you can start with is <code>(?&lt;myField&gt;.+)</code> which matches the whole input text and assigns the content to the <code>myField</code> field.
+</span>
