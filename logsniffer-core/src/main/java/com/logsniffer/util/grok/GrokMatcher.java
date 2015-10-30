@@ -20,6 +20,9 @@ package com.logsniffer.util.grok;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 
+import com.logsniffer.model.fields.FieldsMap;
+import com.logsniffer.util.grok.Grok.TypeConverter;
+
 /**
  * Grok matcher with foreseen predicate support but without implementation.
  * 
@@ -76,6 +79,24 @@ public final class GrokMatcher implements MatchResult {
 
 	public String group(final String groupName) {
 		return regexMatcher.group(grok.getGroupNames().get(groupName));
+	}
+
+	public void setToField(String groupName, FieldsMap fields) {
+		int groupIndex = grok.getGroupNames().get(groupName);
+		String strValue = regexMatcher.group(groupIndex);
+		if (strValue != null) {
+			TypeConverter<Object> typeConverter = grok.getTypeConverters().get(groupIndex);
+			if (typeConverter != null) {
+				Object targetValue = typeConverter.convert(strValue);
+				if (targetValue != null) {
+					fields.put(groupName, targetValue);
+				}
+			} else {
+				fields.put(groupName, strValue);
+			}
+		} else {
+			fields.put(groupName, null);
+		}
 	}
 
 	@Override

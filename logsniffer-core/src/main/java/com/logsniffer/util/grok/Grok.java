@@ -19,8 +19,13 @@ package com.logsniffer.util.grok;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -31,8 +36,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 @JsonAutoDetect(creatorVisibility = Visibility.NONE, fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public final class Grok {
-	protected static final Pattern PATTERN_SUBGROK = Pattern.compile("%\\{([A-Z0-9_-]+)(?::([A-Z0-9_-]+))?\\}",
-			Pattern.CASE_INSENSITIVE);
+	private static final Logger LOGGER = LoggerFactory.getLogger(Grok.class);
+	protected static final Pattern PATTERN_SUBGROK = Pattern.compile(
+			"%\\{([A-Z0-9_-]+)(?::([A-Z0-9_-]+)(?::(int|long|float|double|boolean))?)?\\}", Pattern.CASE_INSENSITIVE);
 
 	/**
 	 * Pattern helper included from
@@ -229,6 +235,26 @@ public final class Grok {
 		}
 	}
 
+	/**
+	 * Converts matching text to the destined type.
+	 * 
+	 * @author mbok
+	 *
+	 * @param <T>
+	 *            destined type
+	 */
+	protected static interface TypeConverter<T> {
+		/**
+		 * Returns the converted value or null in case of errors.
+		 * 
+		 * @param input
+		 *            matching text to convert
+		 * @return converted value or null in case of errors
+		 */
+		T convert(String input);
+	}
+
+	private Map<Integer, TypeConverter<Object>> typeConverters;
 	private LinkedHashMap<String, Integer> groupNames = new LinkedHashMap<String, Integer>();
 	private Pattern regexPattern;
 	@JsonProperty
@@ -236,6 +262,67 @@ public final class Grok {
 	private HashMap<Integer, GrokPredicate> groupPredicates;// = new
 															// HashMap<Integer,
 															// GrokPredicate>();
+	private static Map<String, TypeConverter<? extends Object>> supportedTypeConverters = new HashMap<>();
+
+	static {
+		supportedTypeConverters.put("int", new TypeConverter<Integer>() {
+			@Override
+			public Integer convert(String input) {
+				if (!StringUtils.isEmpty(input)) {
+					try {
+						return Integer.parseInt(input.trim());
+					} catch (NumberFormatException e) {
+					}
+				}
+				return null;
+			}
+		});
+		supportedTypeConverters.put("long", new TypeConverter<Long>() {
+			@Override
+			public Long convert(String input) {
+				if (!StringUtils.isEmpty(input)) {
+					try {
+						return Long.parseLong(input.trim());
+					} catch (NumberFormatException e) {
+					}
+				}
+				return null;
+			}
+		});
+		supportedTypeConverters.put("float", new TypeConverter<Float>() {
+			@Override
+			public Float convert(String input) {
+				if (!StringUtils.isEmpty(input)) {
+					try {
+						return Float.parseFloat(input.trim());
+					} catch (NumberFormatException e) {
+					}
+				}
+				return null;
+			}
+		});
+		supportedTypeConverters.put("double", new TypeConverter<Double>() {
+			@Override
+			public Double convert(String input) {
+				if (!StringUtils.isEmpty(input)) {
+					try {
+						return Double.parseDouble(input.trim());
+					} catch (NumberFormatException e) {
+					}
+				}
+				return null;
+			}
+		});
+		supportedTypeConverters.put("boolean", new TypeConverter<Boolean>() {
+			@Override
+			public Boolean convert(String input) {
+				if (!StringUtils.isEmpty(input)) {
+					return Boolean.parseBoolean(input.trim());
+				}
+				return null;
+			}
+		});
+	}
 
 	/**
 	 * Prohibit outside instantiation.
@@ -270,6 +357,13 @@ public final class Grok {
 	}
 
 	/**
+	 * @return the typeConverter
+	 */
+	protected Map<Integer, TypeConverter<Object>> getTypeConverters() {
+		return typeConverters;
+	}
+
+	/**
 	 * Compiles a grok pattern and generates an internal standard pattern
 	 * representation for it.
 	 * 
@@ -282,6 +376,7 @@ public final class Grok {
 	 * @return a compiled grok pattern
 	 * @throws GrokException
 	 */
+	@SuppressWarnings("unchecked")
 	public static Grok compile(final GroksRegistry registry, final String pattern, final int flags)
 			throws GrokException {
 		Grok g = new Grok();
@@ -289,7 +384,7 @@ public final class Grok {
 		StringBuilder compiledPattern = new StringBuilder();
 		Matcher m = PATTERN_SUBGROK.matcher(pattern);
 		int lastPos = 0;
-
+		g.typeConverters = new HashMap<>();
 		while (m.find()) {
 			String left = pattern.substring(lastPos, m.start());
 			lastPos = m.end();
@@ -297,6 +392,7 @@ public final class Grok {
 			int groupsCount = PatternHelper.countOpenParens(compiledPattern.toString(), compiledPattern.length());
 			String subGrokName = m.group(1);
 			String subGrokAttr = m.group(2);
+			String subGrokType = m.group(3);
 			Grok subGrok = registry.getGroks().get(subGrokName);
 			if (subGrok == null) {
 				throw new GrokException(
@@ -307,12 +403,24 @@ public final class Grok {
 				groupsCount++;
 				g.groupNames.put(subGrokAttr, groupsCount);
 			}
+			if (subGrokType != null) {
+				subGrokType = subGrokType.toLowerCase();
+				if (supportedTypeConverters.containsKey(subGrokType)) {
+					g.typeConverters.put(groupsCount, (TypeConverter<Object>) supportedTypeConverters.get(subGrokType));
+				} else {
+					LOGGER.warn("Conversion type {} not support in grok pattern: {}", subGrokType, m.group(0));
+				}
+			}
 			compiledPattern.append(subGrok.regexPattern.pattern());
 			if (subGrokAttr != null) {
 				compiledPattern.append(")");
 			}
 			for (String subGrokSubAttr : subGrok.groupNames.keySet()) {
-				g.groupNames.put(subGrokSubAttr, groupsCount + subGrok.groupNames.get(subGrokSubAttr));
+				int subGrokGroup = subGrok.groupNames.get(subGrokSubAttr);
+				g.groupNames.put(subGrokSubAttr, groupsCount + subGrokGroup);
+				if (subGrok.typeConverters.get(subGrokGroup) != null) {
+					g.typeConverters.put(groupsCount + subGrokGroup, subGrok.typeConverters.get(subGrokGroup));
+				}
 			}
 		}
 		compiledPattern.append(pattern.substring(lastPos));

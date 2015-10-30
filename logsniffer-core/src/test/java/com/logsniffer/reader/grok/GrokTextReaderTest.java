@@ -79,8 +79,8 @@ public class GrokTextReaderTest {
 		LogEntry[] entries = Log4jTextReaderTest.readEntries(grokReader, log, null, 1);
 		assertEquals(1, entries.length);
 		assertEquals("Nov  1 21:14:23", entries[0].getFields().get("timestamp"));
-		assertEquals("1", entries[0].getFields().get("facility"));
-		assertEquals("3", entries[0].getFields().get("priority"));
+		assertEquals(1, entries[0].getFields().get("facility"));
+		assertEquals(3, entries[0].getFields().get("priority"));
 		assertEquals("localhost", entries[0].getFields().get("logsource"));
 		assertEquals("kernel", entries[0].getFields().get("program"));
 		assertNull(entries[0].getFields().get("msg"));
@@ -91,8 +91,8 @@ public class GrokTextReaderTest {
 				Log4jTextReaderTest.createLog(0, logLine1 + "\noverflow1\noverflow2"), null, 1);
 		assertEquals(1, entries.length);
 		assertEquals("Nov  1 21:14:23", entries[0].getFields().get("timestamp"));
-		assertEquals("1", entries[0].getFields().get("facility"));
-		assertEquals("3", entries[0].getFields().get("priority"));
+		assertEquals(1, entries[0].getFields().get("facility"));
+		assertEquals(3, entries[0].getFields().get("priority"));
 		assertEquals("localhost", entries[0].getFields().get("logsource"));
 		assertEquals("kernel", entries[0].getFields().get("program"));
 		assertEquals("overflow1\noverflow2", entries[0].getFields().get("msg"));

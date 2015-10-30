@@ -107,8 +107,9 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> imple
 	@Override
 	protected void fillAttributes(final LogEntry entry, final GrokMatcher ctx) throws FormatException {
 		LinkedHashMap<String, Integer> groups = grok.getGroupNames();
+		FieldsMap fields = entry.getFields();
 		for (String attrName : groups.keySet()) {
-			entry.getFields().put(attrName, ctx.group(groups.get(attrName)));
+			ctx.setToField(attrName, fields);
 		}
 	}
 

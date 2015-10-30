@@ -30,6 +30,7 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.logsniffer.config.PostConstructed;
 import com.logsniffer.event.EventData;
 import com.logsniffer.model.LogEntry;
+import com.logsniffer.model.fields.FieldsMap;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.util.grok.Grok;
 import com.logsniffer.util.grok.GrokConsumerConstructor;
@@ -67,9 +68,10 @@ public class RegexPatternScanner extends SingleEntryIncrementalMatcher implement
 			GrokMatcher matcher = grok.matcher((String) value);
 			if (matcher.matches()) {
 				EventData event = new EventData();
+				FieldsMap fields = event.getFields();
 				LinkedHashMap<String, Integer> groups = grok.getGroupNames();
 				for (String attrName : groups.keySet()) {
-					event.getFields().put(attrName, matcher.group(attrName));
+					matcher.setToField(attrName, fields);
 				}
 				return event;
 			}

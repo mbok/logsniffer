@@ -94,4 +94,17 @@ public class RegexPatternScannerTest {
 		Assert.assertEquals("abcd", event.getFields().get("MyField"));
 	}
 
+	@Test
+	public void testGrokWithTypeConversion() throws FormatException {
+		scanner.setSourceField("source");
+		scanner.getGrokBean().setPattern("%{INT:MyIntField:int}");
+		scanner.getGrokBean().setSubStringSearch(false);
+		LogEntry entry = new LogEntry();
+		entry.getFields().put("source", "777");
+		EventData event = scanner.matches(entry);
+		// Asserts
+		Assert.assertNotNull(event);
+		Assert.assertEquals(1, event.getFields().size());
+		Assert.assertEquals(777, event.getFields().get("MyIntField"));
+	}
 }

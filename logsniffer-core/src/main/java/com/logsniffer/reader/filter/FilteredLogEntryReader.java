@@ -134,8 +134,10 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream> imp
 		} else {
 			severities = new ArrayList<>();
 		}
-		for (FieldsFilter f : filters) {
-			f.filterSupportedSeverities(severities);
+		if (filters != null) {
+			for (FieldsFilter f : filters) {
+				f.filterSupportedSeverities(severities);
+			}
 		}
 		return severities;
 	}
@@ -149,8 +151,10 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream> imp
 		} else {
 			fieldTypes = new LinkedHashMap<>();
 		}
-		for (FieldsFilter f : filters) {
-			f.filterKnownFields(fieldTypes);
+		if (filters != null) {
+			for (FieldsFilter f : filters) {
+				f.filterKnownFields(fieldTypes);
+			}
 		}
 		return fieldTypes;
 	}
@@ -160,7 +164,7 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream> imp
 	 *            the filters to set
 	 */
 	public void setFilters(final List<FieldsFilter> filters) {
-		this.filters = filters;
+		this.filters = filters != null ? filters : new ArrayList<FieldsFilter>();
 	}
 
 	/**
