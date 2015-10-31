@@ -30,7 +30,7 @@
 						</c:when>
 						<c:otherwise>
 							<div class="progress${active?' progress-striped active':''}">
-								<div class="bar"></div>
+								<div class="progress-bar bar"></div>
 							</div>
 						</c:otherwise>
 					</c:choose>
@@ -70,7 +70,7 @@
 
 
 <div class="row">
-	<div class="col-md-2">File position:</div>
+	<div class="col-md-2">Log position:</div>
 	<div class="col-md-10">
 		<div class="row" id="${name}current">
 			<div class="col-md-8">
