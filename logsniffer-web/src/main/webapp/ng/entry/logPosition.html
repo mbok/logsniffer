@@ -12,7 +12,8 @@
 				</div>
 				<div class="col-md-4">
 					<div class="controls">
-						<select class="col-md-12 form-control" ng-disabled="disabled()" onchange="${name}.partSlider.setValue(this.options.length-1-this.selectedIndex);${name}.currentFile.reset(0,$(this.options[this.selectedIndex]).data('size'));${name}.fireChangeListener();">
+						<select class="col-md-12 form-control" ng-disabled="disabled()" 
+							ng-model="notused" ng-change="changedRollingLog()">
 							<option ng-repeat="part in log.parts" value="{{part.path}}" data-size="{{part.size}}">
 								{{part.path | fileName}}
 							</option>

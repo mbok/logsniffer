@@ -160,6 +160,9 @@ LogPosition.prototype.initLogPartOption = function(sel, bytePos) {
 				break;
 			}
 		}
+		if (bytePos.u && bytePos.u.s) {
+			$(sel.options[i]).data("size", bytePos.u.s);
+		}
 	}
 	this.currentFile.reset($.isNumeric(bytePos) ? bytePos
 			: getFilePointerPos(bytePos)[0], $(sel.options[i]).data("size"));
@@ -173,6 +176,7 @@ LogPosition.prototype.initLogPartOption = function(sel, bytePos) {
 LogPosition.prototype.initLogPart = function(currentBytePos) {
 	if (!this.disabled) {
 		var logObj = this;
+		var sel = $('#' + logObj.name + 'part select')[0];
 		this.partSlider = $('#' + this.name + 'part input.part-slider')
 				.slider(
 						{
@@ -189,16 +193,16 @@ LogPosition.prototype.initLogPart = function(currentBytePos) {
 						}).on('slide', function(e) {
 					var v = logObj.partSlider.getValue();
 					this.value = v;
-					var sel = $('#' + logObj.name + 'part select')[0];
 					sel.selectedIndex = sel.options.length - v - 1;
 					try {
 						logObj.listenerMuted = true;
-						$(sel).change();
+						// $(sel).change();
 					} finally {
 						logObj.listenerMuted = false;
 					}
 				}).on('slideStop', function(e) {
-					logObj.fireChangeListener();
+					$(sel).change();
+					// logObj.fireChangeListener();
 				}).data('slider');
 	}
 	this.changeLogPartPosition(currentBytePos);
@@ -213,6 +217,14 @@ LogPosition.prototype.changeLogPartPosition = function(currentBytePos) {
 		$('#' + this.name + 'part .progress .bar').css("width",
 				((logPartOption + 1) / logPartSel.options.length * 100) + "%");
 	}
+};
+
+LogPosition.prototype.updateAfterRollingPartChange = function() {
+	var logPartSel = $('#' + this.name + 'part select')[0];
+	var selectedIndex = logPartSel.selectedIndex;
+	this.partSlider.setValue(logPartSel.options.length - 1 - selectedIndex);
+	this.currentFile.reset(0, $(logPartSel.options[selectedIndex]).data('size'));
+	this.fireChangeListener();
 };
 
 LogPosition.prototype.fireChangeListener = function() {

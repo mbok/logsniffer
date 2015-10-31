@@ -800,12 +800,21 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	   },
 	   controller: function($scope) {
 	       $scope.$on('updateCurrentPosition', function(event, args) {
-		   $scope.pointer = args.newPointer;
-		   console.log("Updating control position: ", $scope.pointer);
-		   $scope.logPosition.changePosition($scope.pointer);		   
+			   $scope.pointer = args.newPointer;
+			   console.log("Updating control position: ", $scope.pointer);
+			   if ($scope.initialized) {
+				   $scope.logPosition.changePosition($scope.pointer);
+			   }
 	       });
+		   $scope.changedRollingLog = function() {
+			   console.log("Changed rolling log");
+			   $timeout(function () {
+				   $scope.logPosition.updateAfterRollingPartChange();
+			   });
+		   };
 	   },
 	   link: function(scope, element, attrs) {
+		   scope.initialized = false;
 	       scope.logPosition = new LogPosition(scope.name, scope.disabled(), scope.active(), scope.log['@type']=='rolling', scope.pointerTpl(), function(p) {
 			console.log("Changing log pos from control for " + scope.name + ": ", p);
 			scope.$apply(function(){
@@ -814,7 +823,8 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		    	}); 
 	       });
 	       $timeout(function () {
-		   scope.logPosition.init(scope.pointer);
+	    	   scope.logPosition.init(scope.pointer);
+	    	   scope.initialized = true;
 	       });
 	   },
 	   templateUrl: LogSniffer.config.contextPath + '/ng/entry/logPosition.html'
