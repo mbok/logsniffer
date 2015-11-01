@@ -129,7 +129,7 @@
 	<div ng-if="eventsList && eventsList.totalCount!=0">
 		<div id="eventsHistogramChart" google-chart chart="eventsTrendChart" 
 			on-select="setOccurrenceRangeFromChart(selectedItem)" style="width: 100%; height: 100px;"></div>
-		<div class="clearfix" us-spinner spinner-key="eventSearch">
+		<div class="clearfix">
 			<div class="pull-left">
 				<strong>Events {{searchForm._offset + 1}} - {{Math.min(searchForm._offset + searchForm._itemsPerPage, eventsList.totalCount)}} of {{eventsList.totalCount}}</strong>
 			</div>

@@ -13,10 +13,6 @@
 	      google.load('visualization', '1', {packages: ['corechart']});
 	    </script>
 	    <script type="text/javascript" src="<c:url value="/static/date.js" />"></script>
-		<script type="text/javascript" src="<c:url value="/static/codemirror/codemirror.js" />"></script>
-		<script type="text/javascript" src="<c:url value="/static/codemirror/javascript.js" />"></script>
-		<script type="text/javascript" src="<c:url value="/static/codemirror/ui-codemirror.min.js" />"></script>
-		<link rel="stylesheet" type="text/css" href="<c:url value="/static/codemirror/codemirror.css" />"/>
 		<script type="text/javascript" src="<c:url value="/static/angular/ng-google-chart.js" />"></script>
 
 	    <script type="text/javascript" src="<c:url value="/ng/sniffer/event/events.js" />"></script>
