@@ -53,7 +53,7 @@
 			</div>
 		</div>
 		<t:ngFormFieldWrapper cssClass="form-group col-md-6" fieldName="overflowAttribute">
-			<lsf-info-label label="Regular expression pattern reader" for="overflowAttribute">
+			<lsf-info-label label="Overflow attribute" for="overflowAttribute">
 				In case of lines not matching the pattern these can be attached to a field of last well parsed log line.
 				 The overflow field can reference an existing or a new field. If not set, the not matching lines will be attached (as default)
 				 to the <code>_raw</code> field of the last well parsed log entry.
