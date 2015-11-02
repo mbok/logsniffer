@@ -7,6 +7,7 @@ logsniffer is a sophisticated open source web tool for viewing, monitoring and a
 1. Download the latest [release](https://github.com/logsniffer/logsniffer/releases) of `logsniffer.war`
 2. Execute in a shell `java -jar logsniffer.war`
 3. Open a browser and navigate to [http://localhost:8082](http://localhost:8082) to enjoy viewing, monitoring and analysing your log data
+4. Follow the [Getting started](https://github.com/logsniffer/logsniffer/wiki/2.-Getting-started) guide to get your logs into logsniffer 
 
 The only prerequisite is an installed JRE or JDK at least in version 1.7 
 
