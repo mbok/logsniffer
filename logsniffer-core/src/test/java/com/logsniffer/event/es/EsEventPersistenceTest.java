@@ -27,6 +27,8 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -37,6 +39,7 @@ import com.logsniffer.app.ElasticSearchAppConfig.ElasticClientTemplate;
 import com.logsniffer.app.QaDataSourceAppConfig;
 import com.logsniffer.event.Event;
 import com.logsniffer.event.Sniffer;
+import com.logsniffer.event.es.EsEventPersistenceTest.HelperAppConfig;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogEntryData;
 import com.logsniffer.model.file.WildcardLogsSource;
@@ -49,14 +52,21 @@ import com.logsniffer.model.support.DefaultPointer;
  * 
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { EsEventPersistenceTest.class,
-		CoreAppConfig.class, QaDataSourceAppConfig.class,
+@ContextConfiguration(classes = { HelperAppConfig.class, CoreAppConfig.class, QaDataSourceAppConfig.class,
 		ElasticSearchAppConfig.class })
-@Configuration
 public class EsEventPersistenceTest {
-	@Bean
-	public EsEventPersistence eventPersister() {
-		return new EsEventPersistence();
+
+	@Configuration
+	public static class HelperAppConfig {
+		@Bean
+		public EsEventPersistence eventPersister() {
+			return new EsEventPersistence();
+		}
+
+		@Bean
+		public ConversionService conversionService() {
+			return new DefaultFormattingConversionService();
+		}
 	}
 
 	@Autowired
@@ -103,12 +113,8 @@ public class EsEventPersistenceTest {
 			}
 		});
 		// Check
-		Assert.assertEquals(1,
-				persister.getEventsQueryBuilder(sniffer1.getId(), 0, 10).list()
-						.getItems().size());
-		Assert.assertEquals(1,
-				persister.getEventsQueryBuilder(sniffer1.getId(), 0, 10).list()
-						.getTotalCount());
+		Assert.assertEquals(1, persister.getEventsQueryBuilder(sniffer1.getId(), 0, 10).list().getItems().size());
+		Assert.assertEquals(1, persister.getEventsQueryBuilder(sniffer1.getId(), 0, 10).list().getTotalCount());
 		Event checkEvent = persister.getEvent(sniffer1.getId(), eventId);
 		Assert.assertEquals(sniffer1.getId(), checkEvent.getSnifferId());
 		Assert.assertEquals(source1.getId(), checkEvent.getLogSourceId());
@@ -116,21 +122,16 @@ public class EsEventPersistenceTest {
 		Assert.assertEquals(1000 * 100, checkEvent.getPublished().getTime());
 		Assert.assertEquals(2, checkEvent.getEntries().size());
 		Assert.assertEquals("1", checkEvent.getEntries().get(0).getRawContent());
-		Assert.assertEquals(new Date(0), checkEvent.getEntries().get(0)
-				.getFields().get("f1"));
-		Assert.assertEquals(entry1.getStartOffset().getJson(), checkEvent
-				.getEntries().get(0).getStartOffset().getJson());
+		Assert.assertEquals(new Date(0), checkEvent.getEntries().get(0).getFields().get("f1"));
+		Assert.assertEquals(entry1.getStartOffset().getJson(),
+				checkEvent.getEntries().get(0).getStartOffset().getJson());
 		Assert.assertEquals("2", checkEvent.getEntries().get(1).getRawContent());
 		Assert.assertEquals(1, checkEvent.getFields().size());
 		Assert.assertEquals("value", checkEvent.getFields().get("my"));
 
 		// Check offset
-		Assert.assertEquals(0,
-				persister.getEventsQueryBuilder(sniffer1.getId(), 1, 10).list()
-						.getItems().size());
-		Assert.assertEquals(1,
-				persister.getEventsQueryBuilder(sniffer1.getId(), 1, 10).list()
-						.getTotalCount());
+		Assert.assertEquals(0, persister.getEventsQueryBuilder(sniffer1.getId(), 1, 10).list().getItems().size());
+		Assert.assertEquals(1, persister.getEventsQueryBuilder(sniffer1.getId(), 1, 10).list().getTotalCount());
 
 		// Delete event
 		Assert.assertNotNull(persister.getEvent(sniffer1.getId(), eventId));

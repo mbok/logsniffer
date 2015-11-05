@@ -18,13 +18,26 @@
 package com.logsniffer.app;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.annotation.PreDestroy;
+import javax.validation.Valid;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +45,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Scope;
+
+import com.logsniffer.util.value.ConfigValue;
+import com.logsniffer.util.value.Configured;
 
 /**
  * Elasticsearch app config.
@@ -41,13 +58,177 @@ import org.springframework.context.annotation.Scope;
  * 
  */
 @Configuration
+@Import(ConfigValueAppConfig.class)
 public class ElasticSearchAppConfig {
-	private Logger logger = LoggerFactory.getLogger(getClass());
+	private final static Logger logger = LoggerFactory.getLogger(ElasticSearchAppConfig.class);
 	@Autowired
 	private LogSnifferHome logSnifferHome;
 
 	@Value(value = "${logsniffer.es.indexName}")
 	private String indexName;
+
+	private ClientConnection clientConnection;
+
+	private static interface ClientConnection {
+
+		public Client getClient();
+
+		public void close();
+	}
+
+	/**
+	 * Indicates whether elasticsearch is operated locally as embedded instance
+	 * or by connecting to a remote cluster.
+	 * 
+	 * @author mbok
+	 *
+	 */
+	public enum EsOperatingType {
+		EMBEDDED, REMOTE
+	}
+
+	/**
+	 * Remote address representation.
+	 * 
+	 * @author mbok
+	 *
+	 */
+	public static final class RemoteAddress {
+		@NotEmpty
+		private String host;
+		@Min(1)
+		private int port = 9300;
+
+		/**
+		 * @return the host
+		 */
+		public String getHost() {
+			return host;
+		}
+
+		/**
+		 * @param host
+		 *            the host to set
+		 */
+		public void setHost(final String host) {
+			this.host = host;
+		}
+
+		/**
+		 * @return the port
+		 */
+		public int getPort() {
+			return port;
+		}
+
+		/**
+		 * @param port
+		 *            the port to set
+		 */
+		public void setPort(final int port) {
+			this.port = port;
+		}
+
+		@Override
+		public String toString() {
+			return host + ":" + port;
+		}
+
+	}
+
+	/**
+	 * Holds settings for elasticsearch.
+	 * 
+	 * @author mbok
+	 *
+	 */
+	public static final class EsSettingsHolder {
+		public static final String PROP_ES_OPS_TYPE = "logsniffer.es.operatingType";
+		public static final String PROP_ES_REMOTE_ADDRESSES = "logsniffer.es.remoteAddresses";
+
+		@Configured(value = PROP_ES_OPS_TYPE, defaultValue = "EMBEDDED")
+		private ConfigValue<EsOperatingType> operatingType;
+
+		private static final Pattern ADDRESS_PATTERN = Pattern.compile("\\s*([^:]+):(\\d+)\\s*,?");
+		@Configured(value = PROP_ES_REMOTE_ADDRESSES)
+		private ConfigValue<String> remoteAddresses;
+
+		private EsSettings settings;
+
+		public EsSettings getSettings() {
+			if (settings == null) {
+				settings = new EsSettings();
+				settings.setOperatingType(operatingType.get());
+				final List<RemoteAddress> addresses = new ArrayList<>();
+				if (settings.getOperatingType() == EsOperatingType.REMOTE) {
+					logger.info("Building remote addresses from config: {}", remoteAddresses.get());
+					final Matcher m = ADDRESS_PATTERN.matcher(remoteAddresses.get());
+					while (m.find()) {
+						final RemoteAddress ra = new RemoteAddress();
+						ra.setHost(m.group(1));
+						ra.setPort(Integer.parseInt(m.group(2)));
+						addresses.add(ra);
+					}
+					logger.info("Built remote addresses from config: {}", addresses);
+					settings.setRemoteAddresses(addresses);
+				}
+			}
+			return settings;
+		}
+
+		public void storeSettings(final EsSettings settings) throws IOException {
+			// TODO
+		}
+	}
+
+	/**
+	 * Bean for elasticsearch settings.
+	 * 
+	 * @author mbok
+	 *
+	 */
+	public static final class EsSettings {
+		@NotNull
+		private EsOperatingType operatingType = EsOperatingType.EMBEDDED;
+
+		@Valid
+		private List<RemoteAddress> remoteAddresses;
+
+		/**
+		 * @return the operatingType
+		 */
+		public EsOperatingType getOperatingType() {
+			return operatingType;
+		}
+
+		/**
+		 * @param operatingType
+		 *            the operatingType to set
+		 */
+		public void setOperatingType(final EsOperatingType operatingType) {
+			this.operatingType = operatingType;
+		}
+
+		/**
+		 * @return the remoteAddresses
+		 */
+		public List<RemoteAddress> getRemoteAddresses() {
+			return remoteAddresses;
+		}
+
+		/**
+		 * @param remoteAddresses
+		 *            the remoteAddresses to set
+		 */
+		public void setRemoteAddresses(final List<RemoteAddress> remoteAddresses) {
+			this.remoteAddresses = remoteAddresses;
+		}
+
+	}
+
+	public static interface EsClientBuilder {
+		Client buildFromSettings(EsSettings settings);
+	}
 
 	/**
 	 * Client callback.
@@ -75,49 +256,79 @@ public class ElasticSearchAppConfig {
 	 * @author mbok
 	 * 
 	 */
-	public static class ElasticClientTemplate {
-		private Node node;
-
-		public ElasticClientTemplate(final Node node) {
-			super();
-			this.node = node;
-		}
-
-		public <T> T executeWithClient(final ClientCallback<T> callback) {
-			Client c = node.client();
-			try {
-				return callback.execute(c);
-			} finally {
-				c.close();
-			}
-		}
+	public interface ElasticClientTemplate {
+		public <T> T executeWithClient(final ClientCallback<T> callback);
 	}
 
-	@Bean(destroyMethod = "close")
-	public Node esNode() {
-		File esDataDir = new File(logSnifferHome.getHomeDir(), "elasticsearch");
-		logger.info("Preparing local elasticsearch node on data path: {}",
-				esDataDir.getPath());
+	private synchronized ClientConnection getClientConnection(final EsSettings settings) {
+		if (clientConnection == null) {
+			if (settings.getOperatingType() == EsOperatingType.EMBEDDED) {
+				final Node localEmbeddedNode = buildLocalEmbeddedNode();
+				final Client client = localEmbeddedNode.client();
+				clientConnection = new ClientConnection() {
+					@Override
+					public Client getClient() {
+						return client;
+					}
+
+					@Override
+					public void close() {
+						logger.info("Closing local embedded elasticsearch node");
+						client.close();
+						localEmbeddedNode.close();
+					}
+				};
+			} else {
+				logger.info("Establishing remote elasticsearch connection to: {}", settings.getRemoteAddresses());
+				final TransportClient client = new TransportClient();
+				for (final RemoteAddress a : settings.getRemoteAddresses()) {
+					client.addTransportAddress(new InetSocketTransportAddress(a.getHost(), a.getPort()));
+				}
+				clientConnection = new ClientConnection() {
+
+					@Override
+					public Client getClient() {
+						return client;
+					}
+
+					@Override
+					public void close() {
+						client.close();
+						logger.info("Closing remote elasticsearch connection to: {}", settings.getRemoteAddresses());
+					}
+				};
+			}
+		}
+		return clientConnection;
+	}
+
+	@PreDestroy
+	public void shutdownLocalEmbeddedNode() {
+		if (clientConnection != null) {
+			clientConnection.close();
+			clientConnection = null;
+		}
+
+	}
+
+	private Node buildLocalEmbeddedNode() {
+		final File esDataDir = new File(logSnifferHome.getHomeDir(), "elasticsearch");
+		logger.info("Preparing local elasticsearch node on data path: {}", esDataDir.getPath());
 		esDataDir.mkdirs();
-		ImmutableSettings.Builder settings = ImmutableSettings
-				.settingsBuilder();
+		final ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder();
 		settings.put("node.name", "embedded");
 		settings.put("path.data", esDataDir.getPath());
 		settings.put("http.enabled", false);
-		Node node = NodeBuilder.nodeBuilder().settings(settings)
-				.clusterName("embedded").data(true).local(true).node();
+		final Node node = NodeBuilder.nodeBuilder().settings(settings).clusterName("embedded").data(true).local(true)
+				.node();
 		Client client = null;
 		try {
 			client = node.client();
 			// We wait now for the yellow (or green) status
-			client.admin().cluster().prepareHealth().setWaitForYellowStatus()
-					.execute().actionGet();
-			if (!client.admin().indices()
-					.exists(new IndicesExistsRequest(indexName)).actionGet()
-					.isExists()) {
+			client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet();
+			if (!client.admin().indices().exists(new IndicesExistsRequest(indexName)).actionGet().isExists()) {
 				logger.info("Created elasticsearch index: {}", indexName);
-				client.admin().indices()
-						.create(new CreateIndexRequest(indexName)).actionGet();
+				client.admin().indices().create(new CreateIndexRequest(indexName)).actionGet();
 			}
 		} finally {
 			if (client != null) {
@@ -127,10 +338,26 @@ public class ElasticSearchAppConfig {
 		return node;
 	}
 
+	/**
+	 * Exposes the elasticsearch settings holder.
+	 * 
+	 * @return elasticsearch settings holder
+	 */
+	@Bean
+	public EsSettingsHolder esSettingsHolder() {
+		return new EsSettingsHolder();
+	}
+
 	@Bean
 	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 	@Autowired
-	public ElasticClientTemplate clientTemplate(final Node node) {
-		return new ElasticClientTemplate(node);
+	public ElasticClientTemplate clientTemplate(final EsSettingsHolder settingsHolder) {
+		return new ElasticClientTemplate() {
+			@Override
+			public <T> T executeWithClient(final ClientCallback<T> callback) {
+				final Client c = getClientConnection(settingsHolder.getSettings()).getClient();
+				return callback.execute(c);
+			}
+		};
 	}
 }
