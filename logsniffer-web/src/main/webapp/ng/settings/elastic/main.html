@@ -15,7 +15,14 @@
 	<div class="row">
 		<div class="col-md-12">
 			<div class="form-group">
-				<lsf-info-label label="Elasticsearch runtime:">TBD
+				<lsf-info-label label="Elasticsearch runtime:">Log events detected by sniffers are persisted in an Elasticsearch index.
+					By default the embedded local Elasticsearch index is started which is shipped together with logsniffer.
+					Alternatively you can configure a remote Elasticsearch cluster which should persist the events. The last is suggested
+					specialy when:
+					<ul>
+						<li>You expect to get a huge amount of events processed. In this case the data will be distributed in the cluster.</li>
+						<li>You like to analyze the events by 3rd party analysis tools persisted in the remote cluster.</li>
+					</ul>
 				</lsf-info-label>
 				<label class="radio-inline">
 					<input type="radio" ng-model="settings.operatingType" value="EMBEDDED">
