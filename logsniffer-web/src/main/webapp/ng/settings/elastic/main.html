@@ -1,0 +1,62 @@
+<form lsf-busy-container busy="state.busy" name="form" method="post" role="form" novalidate="novalidate">
+	<div lsf-alerts alerts="alerts"></div>
+	
+	<div class="status">
+		 
+	</div>
+	
+	<div class="row">
+		<div class="col-md-12">
+			<label>Status: <i class="fa fa-lightbulb-o" style="font-size:1.5em; color:{{status.status}}"></i></label> <span style="text-transform: lowercase;">{{status.status}}</span>
+			<p style="color:{{status.status}}">{{status.statusMessage}}</p>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-md-12">
+			<div class="form-group">
+				<lsf-info-label label="Elasticsearch runtime:">TBD
+				</lsf-info-label>
+				<label class="radio-inline">
+					<input type="radio" ng-model="settings.operatingType" value="EMBEDDED">
+					Embedded index
+				</label>
+				<label class="radio-inline">
+					<input type="radio" ng-model="settings.operatingType" value="REMOTE">
+					Remote cluster
+				</label>
+			</div>
+		</div>
+	</div>
+	
+	<div ng-if="settings.operatingType=='REMOTE'">
+		<div class="row">
+			<div class="col-md-12">
+				<label>Cluster nodes</label>
+				<a class="btn btn-link" ng-click="addNode()">
+					<i class="glyphicon glyphicon-plus"></i> Add node</a>
+			</div>
+			<div ng-repeat="a in settings.remoteAddresses">
+				<div class="col-md-3"><div style="padding:0.5em 0"><input type="text" ng-model="a.host" required="required" class="form-control" placeholder="Host"></div></div>
+				<div class="col-md-3">
+					<div style="padding:0.5em 0">
+						<div class="input-group">
+							<input type="number" ng-model="a.port" required="required" class="form-control" placeholder="Port">
+							<div class="input-group-btn">
+								<button class="btn btn-default" type="button" ng-click="deleteNode($index)"><i class="glyphicon glyphicon-trash"></i></button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>	
+	</div>
+	
+	<hr>
+
+	<div class="row">
+		<div class="col-md-12">
+			<button type="button" class="btn btn-primary" ng-disabled="form.$invalid" ng-click="saveEsSettings()">save</button>
+		</div>
+	</div>
+</form>

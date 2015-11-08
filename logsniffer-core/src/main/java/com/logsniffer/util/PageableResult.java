@@ -17,7 +17,10 @@
  *******************************************************************************/
 package com.logsniffer.util;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import com.logsniffer.util.messages.Message;
 
 /**
  * Result wrapper for pageable result items.
@@ -30,6 +33,7 @@ import java.util.List;
 public class PageableResult<ItemType> {
 	private long totalCount;
 	private List<ItemType> items;
+	private final List<Message> messages = new ArrayList<>();
 
 	public PageableResult(final long totalCount, final List<ItemType> items) {
 		super();
@@ -69,6 +73,13 @@ public class PageableResult<ItemType> {
 	 */
 	public void setItems(final List<ItemType> items) {
 		this.items = items;
+	}
+
+	/**
+	 * @return the messages
+	 */
+	public List<Message> getMessages() {
+		return messages;
 	}
 
 }

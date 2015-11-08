@@ -19,7 +19,98 @@
 		<script type="text/javascript">
 			angular.module('SettingsRootModule',
 				[<c:if test="${not empty activeNode.pageContext.module}">'${activeNode.pageContext.module}'</c:if>]
-			);
+			)
+			.controller(
+					"SettingsAbstractController",
+					[
+					 '$scope',
+					 '$http',
+					 '$log',
+					 'lsfAlerts',
+					 function($scope, $http, $log, lsfAlerts) {
+						 $scope.loadSettings = function(childScope) {
+							 var callbacks = {};
+					    	 childScope.state.busy = true;
+					    	 $http({
+							     url : childScope.settingsRessource,
+							     method : "GET"
+							 })
+							.success(
+								function(data, status, headers, config) {
+								    $log.info("Settings loaded from", $scope.settingsRessource, data);
+								    childScope.state.busy = false;
+								    if (callbacks.success) {
+								    	callbacks.success(data, status, headers, config);
+								    }
+								}
+							)
+							.error(
+								function(data, status, headers, config, statusText) {
+									childScope.state.busy = false;
+									childScope.alerts.httpError("Failed to load settings", data, status, headers, config, statusText);
+								    if (callbacks.error) {
+								    	callbacks.error(data, status, headers, config, statusText);
+								    }
+								}
+							);
+					    	
+					    	return {
+					    		success: function(callback) {
+					    			callbacks.success = callback;
+					    		},
+					    		error: function(callback) {
+					    			callbacks.error = callback;
+					    		}
+					    	};
+					     };
+					     
+					     $scope.saveSettings = function(childScope, settings) {
+							var callbacks = {};
+					    	childScope.state.busy = true;
+					    	childScope.alerts.clear();
+							$log.info("Saving settings", settings);
+							 $http({
+							     url : childScope.settingsRessource,
+							     method : "POST",
+							     data: settings
+							 })
+							.success(
+								function(data, status, headers, config) {
+								    $log.info("Settings saved", childScope.settingsRessource);
+								    childScope.state.busy = false;
+								    childScope.alerts.success("Changes applied successfully");
+								    if (callbacks.success) {
+								    	callbacks.success(data, status, headers, config);
+								    }
+								}
+							)
+							.error(
+								function(data, status, headers, config, statusText) {
+									childScope.state.busy = false;
+									childScope.alerts.httpError("Failed to save settings", data, status, headers, config, statusText);
+								    if (data && data.bindErrors) {
+								    	childScope.bindErrors = data.bindErrors;
+								    }
+								    if (callbacks.error) {
+								    	callbacks.error(data, status, headers, config, statusText);
+								    }
+								}
+							);
+					    	return {
+					    		success: function(callback) {
+					    			callbacks.success = callback;
+					    		},
+					    		error: function(callback) {
+					    			callbacks.error = callback;
+					    		}
+					    	};
+
+					     };					     
+					 }
+					]
+				);
+			
+			;
 		</script>
     </jsp:attribute>
 	<jsp:attribute name="sidebar">
@@ -45,10 +136,10 @@
 			<li class="active">${activeNode.title}</li>
 		</ul>
 		
-		<c:if test="${not empty activeNode.pageContext.module}">
-			<div ng-controller="${activeNode.pageContext.controller}" ng-include="'<c:url value="/${activeNode.pageContext.template}" />'"></div>
-			
-			
-		</c:if>
+		<div ng-controller="SettingsAbstractController">
+			<c:if test="${not empty activeNode.pageContext.module}">
+				<div ng-controller="${activeNode.pageContext.controller}" ng-include="'<c:url value="/${activeNode.pageContext.template}" />'"></div>
+			</c:if>
+		</div>
 	</jsp:body>
 </tpl:bodySidebar>

@@ -37,9 +37,11 @@
 		
 		var SnifferListModule = angular.module('SnifferListModule', ['ui.bootstrap', 'angularSpinner', 'MessageCenterModule']);
 		SnifferListModule.controller(
-			"SnifferListController", ['$scope', '$http', '$location', '$anchorScroll', 'usSpinnerService',
-			function($scope, $http, $location, $anchorScroll, usSpinnerService) {
-				$scope.sniffers = ${logfn:jsonify(sniffers)};
+			"SnifferListController", ['$scope', '$http', '$location', '$anchorScroll', 'usSpinnerService', 'lsfAlerts',
+			function($scope, $http, $location, $anchorScroll, usSpinnerService, lsfAlerts) {
+				$scope.alerts = lsfAlerts.create();
+				$scope.result = ${logfn:jsonify(result)};
+				$scope.alerts.buildFromMessages($scope.result.messages);
 				$scope.nls = {
 						on:'<spring:message code="logsniffer.sniffers.scheduled.true" />',
 						off:'<spring:message code="logsniffer.sniffers.scheduled.false" />'
@@ -88,10 +90,11 @@
 				</div>
 			</c:when>
 			<c:otherwise>
-				<div>
+				<div ng-controller="SnifferListController">
+					<div lsf-alerts alerts="alerts"></div>
 					<div mc-messages></div> 
-					<ul class="bordered-list sniffers" ng-controller="SnifferListController">
-						<li ng-repeat="sniffer in sniffers">
+					<ul class="bordered-list sniffers">
+						<li ng-repeat="sniffer in result.items">
 							<div ng-controller="SnifferController">
 								<h4>
 									<a href="{{contextPath}}/c/sniffers/{{sniffer.id}}/events">{{sniffer.name}}</a>

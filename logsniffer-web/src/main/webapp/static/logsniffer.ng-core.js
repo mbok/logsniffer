@@ -915,6 +915,19 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
         	   },
         	   warn: function (msg, detail) {
         	       this.add('warn', msg, detail);	       
+        	   },
+        	   buildFromMessages: function (messages) {
+        		   if (messages) {
+        			   for (var i=0; i < messages.length; i++) {
+        				   switch(messages[i].type) {
+        				   	case 'ERROR':
+        					   this.error(messages[i].message);
+        					break;
+        					default:
+        						this.add(messages[i].type.toLowerCase(), messages[i].message);
+        				   }
+        			   }
+        		   }
         	   }
 	       	};
 	   }

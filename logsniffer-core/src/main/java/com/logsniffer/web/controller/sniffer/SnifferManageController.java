@@ -31,6 +31,8 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.logsniffer.event.Sniffer;
+import com.logsniffer.event.SnifferPersistence.AspectSniffer;
+import com.logsniffer.util.PageableResult;
 import com.logsniffer.web.ViewController;
 import com.logsniffer.web.controller.FlashMessage;
 import com.logsniffer.web.controller.FlashMessage.MessageType;
@@ -54,28 +56,23 @@ public class SnifferManageController extends SniffersBaseController {
 
 	@RequestMapping(value = "/sniffers", method = RequestMethod.GET)
 	ModelAndView listSniffers() {
-		ModelAndView mv = new ModelAndView("sniffers/list");
-		mv.addObject(
-				"sniffers",
-				snifferPersistence
-						.getSnifferListBuilder()
-						.withEventsCounter(eventPersistence.getEventsCounter())
-						.withScheduleInfo(
-								snifferScheduler.getScheduleInfoAspectAdaptor())
-						.list().getItems());
+		final ModelAndView mv = new ModelAndView("sniffers/list");
+		final PageableResult<AspectSniffer> result = snifferPersistence.getSnifferListBuilder()
+				.withEventsCounter(eventPersistence.getEventsCounter())
+				.withScheduleInfo(snifferScheduler.getScheduleInfoAspectAdaptor()).list();
+		mv.addObject("result", result);
+		mv.addObject("sniffers", result.getItems());
 		return mv;
 	}
 
 	@RequestMapping(value = "/sniffers/new", method = RequestMethod.GET)
-	String newSnifferForm() throws ResourceNotFoundException,
-			SchedulerException {
+	String newSnifferForm() throws ResourceNotFoundException, SchedulerException {
 		return "sniffers/new";
 	}
 
 	@RequestMapping(value = "/sniffers/{snifferId}", method = RequestMethod.GET)
-	String editSniffer(@PathVariable("snifferId") final long snifferId,
-			final Model model) throws ResourceNotFoundException,
-			SchedulerException {
+	String editSniffer(@PathVariable("snifferId") final long snifferId, final Model model)
+			throws ResourceNotFoundException, SchedulerException {
 		getAndBindActiveSniffer(model, snifferId);
 		return "sniffers/edit";
 	}
@@ -83,25 +80,20 @@ public class SnifferManageController extends SniffersBaseController {
 	@RequestMapping(value = "/sniffers/{snifferId}", method = RequestMethod.POST)
 	String redirectAfterUpdate(@PathVariable("snifferId") final long snifferId,
 			final RedirectAttributes redirectAttrs) {
-		redirectAttrs.addFlashAttribute("message",
-				"Changes applied successfully!");
+		redirectAttrs.addFlashAttribute("message", "Changes applied successfully!");
 		return "redirect:{snifferId}";
 	}
 
 	@RequestMapping(value = "/sniffers/{snifferId}/delete", method = RequestMethod.POST)
 	@Transactional(rollbackFor = Exception.class)
-	String deleteSniffer(@PathVariable("snifferId") final long snifferId,
-			final Locale locale, final RedirectAttributes redirectAttrs)
-			throws ResourceNotFoundException, SchedulerException,
-			ActionViolationException {
+	String deleteSniffer(@PathVariable("snifferId") final long snifferId, final Locale locale,
+			final RedirectAttributes redirectAttrs)
+					throws ResourceNotFoundException, SchedulerException, ActionViolationException {
 		// TODO Duplicate code
-		Sniffer sniffer = snifferPersistence.getSniffer(snifferId);
+		final Sniffer sniffer = snifferPersistence.getSniffer(snifferId);
 		sniffersResourceController.deleteSniffer(snifferId);
-		redirectAttrs.addFlashAttribute(
-				"message",
-				new FlashMessage(MessageType.SUCCESS, messageSource.getMessage(
-						"logsniffer.sniffers.deleted",
-						new String[] { sniffer.getName() }, locale)));
+		redirectAttrs.addFlashAttribute("message", new FlashMessage(MessageType.SUCCESS,
+				messageSource.getMessage("logsniffer.sniffers.deleted", new String[] { sniffer.getName() }, locale)));
 		return "redirect:../../sniffers";
 	}
 }

@@ -17,12 +17,15 @@
  *******************************************************************************/
 package com.logsniffer.web.controller;
 
+import com.logsniffer.util.messages.Message;
+
 /**
- * Message flashed by redirection.
+ * Message flashed by redirection. Should be replace by {@link Message}.
  * 
  * @author mbok
  * 
  */
+@Deprecated
 public class FlashMessage {
 	/**
 	 * Message type.

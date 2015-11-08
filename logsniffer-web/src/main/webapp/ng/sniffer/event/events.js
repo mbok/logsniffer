@@ -60,6 +60,9 @@ angular
 			    $scope.Math = window.Math;
 			    $scope.eventsList = null;
 			    $scope.alerts = lsfAlerts.create();
+			    $scope.state = {
+			    	busy: false	
+			    };
 			    $scope.searchForm = {
 				basicSearch: $routeParams._nativeQuery ? false: true,
 				_nativeQuery: $routeParams._nativeQuery ? $routeParams._nativeQuery : null,
@@ -116,14 +119,10 @@ angular
 			    };
 			    
 			    var loadingStatusStart = function() {
-				$(".backdrop-overlay").show();
-				$timeout(function() {
-				    usSpinnerService.spin('eventSearch');
-				});
+			    	$scope.state.busy = true;
 			    };
 			    var loadingStatusStop = function() {
-				$(".backdrop-overlay").hide();
-				usSpinnerService.stop('eventSearch');
+			    	$scope.state.busy = false;
 			    };
 				
 			    $scope.internalSearch = function() {
@@ -162,12 +161,9 @@ angular
 						})
 					.error(
 					function(data, status, headers,
-						config) {
+						config, statusText) {
 					    loadingStatusStop();
-					    messageCenterService.add(
-						    'danger',
-						    'Failed to load events: '
-							    + status);
+					    $scope.alerts.httpError("Failed to load events", data, status, headers, config, statusText);
 					});
 			    };
 			    $scope.internalSearch();

@@ -49,6 +49,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Scope;
 
 import com.logsniffer.util.value.ConfigValue;
+import com.logsniffer.util.value.ConfigValueStore;
 import com.logsniffer.util.value.Configured;
 
 /**
@@ -142,19 +143,47 @@ public class ElasticSearchAppConfig {
 	 * @author mbok
 	 *
 	 */
-	public static final class EsSettingsHolder {
+	public static interface EsSettingsHolder {
+		/**
+		 * Returns current es settings.
+		 * 
+		 * @return current es settings
+		 */
+		public EsSettings getSettings();
+
+		/**
+		 * Stores new es settings and applies it to the elasticsearch
+		 * connection.
+		 * 
+		 * @param settings
+		 * @throws IOException
+		 */
+		public void storeSettings(final EsSettings settings) throws IOException;
+	}
+
+	/**
+	 * Default settings holder for elasticsearch.
+	 * 
+	 * @author mbok
+	 *
+	 */
+	private final class DefaultSettingsHolder implements EsSettingsHolder {
 		public static final String PROP_ES_OPS_TYPE = "logsniffer.es.operatingType";
 		public static final String PROP_ES_REMOTE_ADDRESSES = "logsniffer.es.remoteAddresses";
 
 		@Configured(value = PROP_ES_OPS_TYPE, defaultValue = "EMBEDDED")
 		private ConfigValue<EsOperatingType> operatingType;
 
-		private static final Pattern ADDRESS_PATTERN = Pattern.compile("\\s*([^:]+):(\\d+)\\s*,?");
+		private final Pattern ADDRESS_PATTERN = Pattern.compile("\\s*([^:]+):(\\d+)\\s*,?");
 		@Configured(value = PROP_ES_REMOTE_ADDRESSES)
 		private ConfigValue<String> remoteAddresses;
 
+		@Autowired
+		private ConfigValueStore configValueStore;
+
 		private EsSettings settings;
 
+		@Override
 		public EsSettings getSettings() {
 			if (settings == null) {
 				settings = new EsSettings();
@@ -176,8 +205,21 @@ public class ElasticSearchAppConfig {
 			return settings;
 		}
 
-		public void storeSettings(final EsSettings settings) throws IOException {
-			// TODO
+		@Override
+		public synchronized void storeSettings(final EsSettings settings) throws IOException {
+			configValueStore.store(PROP_ES_OPS_TYPE, settings.getOperatingType().toString());
+			if (settings.getOperatingType() == EsOperatingType.REMOTE) {
+				final StringBuilder addresses = new StringBuilder();
+				for (final RemoteAddress a : settings.getRemoteAddresses()) {
+					if (addresses.length() > 0) {
+						addresses.append(",");
+					}
+					addresses.append(a.getHost() + ":" + a.getPort());
+				}
+				configValueStore.store(PROP_ES_REMOTE_ADDRESSES, addresses.toString());
+			}
+			this.settings = settings;
+			closeCurrentClientConnection();
 		}
 	}
 
@@ -303,7 +345,7 @@ public class ElasticSearchAppConfig {
 	}
 
 	@PreDestroy
-	public void shutdownLocalEmbeddedNode() {
+	public void closeCurrentClientConnection() {
 		if (clientConnection != null) {
 			clientConnection.close();
 			clientConnection = null;
@@ -345,7 +387,7 @@ public class ElasticSearchAppConfig {
 	 */
 	@Bean
 	public EsSettingsHolder esSettingsHolder() {
-		return new EsSettingsHolder();
+		return new DefaultSettingsHolder();
 	}
 
 	@Bean

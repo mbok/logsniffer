@@ -21,14 +21,12 @@
 	<li class="active">Events</li>
 </ul>
 
-<div class="events">
+<div class="events" lsf-busy-container busy="state.busy">
 	<script type="text/javascript">
 		$(function() {
 			$(".events .help-popup").popover();
 		});
 	</script>
-	<div class="backdrop-overlay" style="display:none"></div>
-	<div ng-if="!eventsList" us-spinner spinner-key="eventSearch"></div>
 
 	<div class="row" style="margin-bottom:10px" ng-if="searchForm.basicSearch">
 		<div class="col-md-5">

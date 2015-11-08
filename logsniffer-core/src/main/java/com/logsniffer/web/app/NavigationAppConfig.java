@@ -42,13 +42,18 @@ public class NavigationAppConfig {
 	@Bean
 	@Qualifier(NAV_NODE_SETTINGS)
 	public NavNode settingsNode() {
-		NavNode settings = new NavNode("Settings", "settings");
+		final NavNode settings = new NavNode("Settings", "settings");
 
-		NavNode general = new NavNode("General", "general");
+		final NavNode general = new NavNode("General", "general");
 		settings.addSubNode(general);
-		general.setPageContext(new NgPage("ng/settings/general/app.js",
-				"SettingsGeneralModule", "SettingsGeneralController",
-				"ng/settings/general/main.html"));
+		general.setPageContext(new NgPage("ng/settings/general/app.js", "SettingsGeneralModule",
+				"SettingsGeneralController", "ng/settings/general/main.html"));
+
+		final NavNode elasticsearch = new NavNode("Elasticsearch", "elastic");
+		elasticsearch.setPageContext(new NgPage("ng/settings/elastic/app.js", "SettingsElasticModule",
+				"SettingsElasticController", "ng/settings/elastic/main.html"));
+		settings.addSubNode(elasticsearch);
+
 		return settings;
 	}
 }
