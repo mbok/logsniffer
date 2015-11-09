@@ -77,7 +77,6 @@ public class SniffersResourceController {
 			throws ResourceNotFoundException, SchedulerException {
 		final long snifferId = snifferPersistence.createSniffer(newSniffer);
 		logger.info("Created new Sniffer with id: {}", snifferId);
-		eventPersistence.prepareMapping(snifferId);
 		return snifferId;
 	}
 
@@ -88,7 +87,6 @@ public class SniffersResourceController {
 			throws ResourceNotFoundException, SchedulerException {
 		snifferPersistence.updateSniffer(sniffer);
 		logger.info("Updated sniffer with id: {}", snifferId);
-		eventPersistence.prepareMapping(snifferId);
 	}
 
 	@Transactional(rollbackFor = Exception.class)

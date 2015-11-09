@@ -201,11 +201,4 @@ public interface EventPersistence {
 
 	public AspectProvider<AspectSniffer, Integer> getEventsCounter();
 
-	/**
-	 * Called when a sniffer is created/updated etc.. The event persistence is
-	 * able to prepare mappings etc.
-	 * 
-	 * @param sniffer
-	 */
-	public void prepareMapping(long snifferId);
 }

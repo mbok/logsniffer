@@ -44,26 +44,44 @@ public interface SnifferPersistence {
 		private final HashMap<String, Object> aspects = new HashMap<String, Object>();
 
 		@Override
-		public <AspectType> void setAspect(final String key,
-				final AspectType aspect) {
+		public <AspectType> void setAspect(final String key, final AspectType aspect) {
 			aspects.put(key, aspect);
 		}
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public <AspectType> AspectType getAspect(final String key,
-				final Class<AspectType> aspectType) {
+		public <AspectType> AspectType getAspect(final String key, final Class<AspectType> aspectType) {
 			return (AspectType) aspects.get(key);
 		}
 	}
 
-	public static interface SnifferListBuilder extends
-			ListQueryBuilder<PageableResult<AspectSniffer>> {
-		SnifferListBuilder withEventsCounter(
-				AspectProvider<AspectSniffer, Integer> eventsCounter);
+	public static interface SnifferListBuilder extends ListQueryBuilder<PageableResult<AspectSniffer>> {
+		SnifferListBuilder withEventsCounter(AspectProvider<AspectSniffer, Integer> eventsCounter);
 
-		SnifferListBuilder withScheduleInfo(
-				QueryAdaptor<AspectSniffer, ScheduleInfo> adaptor);
+		SnifferListBuilder withScheduleInfo(QueryAdaptor<AspectSniffer, ScheduleInfo> adaptor);
+	}
+
+	/**
+	 * Application event to be published when a sniffer is created or updated.
+	 * 
+	 * @author mbok
+	 *
+	 */
+	public static class SnifferChangedEvent {
+		private final Sniffer sniffer;
+
+		public SnifferChangedEvent(final Sniffer sniffer) {
+			super();
+			this.sniffer = sniffer;
+		}
+
+		/**
+		 * @return the sniffer
+		 */
+		public Sniffer getSniffer() {
+			return sniffer;
+		}
+
 	}
 
 	public SnifferListBuilder getSnifferListBuilder();
@@ -76,15 +94,13 @@ public interface SnifferPersistence {
 
 	public void deleteSniffer(Sniffer sniffer);
 
-	public IncrementData getIncrementData(Sniffer sniffer,
-			LogSource<? extends LogInputStream> source, Log log)
+	public IncrementData getIncrementData(Sniffer sniffer, LogSource<? extends LogInputStream> source, Log log)
 			throws IOException;
 
-	public Map<Log, IncrementData> getIncrementDataByLog(Sniffer sniffer,
-			LogSource<? extends LogInputStream> source) throws IOException;
+	public Map<Log, IncrementData> getIncrementDataByLog(Sniffer sniffer, LogSource<? extends LogInputStream> source)
+			throws IOException;
 
-	public void storeIncrementalData(Sniffer observer,
-			LogSource<? extends LogInputStream> source, Log log,
+	public void storeIncrementalData(Sniffer observer, LogSource<? extends LogInputStream> source, Log log,
 			IncrementData data);
 
 }

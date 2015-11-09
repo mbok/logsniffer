@@ -57,6 +57,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -73,6 +74,7 @@ import com.logsniffer.event.EventPersistence;
 import com.logsniffer.event.Sniffer;
 import com.logsniffer.event.SnifferPersistence;
 import com.logsniffer.event.SnifferPersistence.AspectSniffer;
+import com.logsniffer.event.SnifferPersistence.SnifferChangedEvent;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogSource;
@@ -491,8 +493,12 @@ public class EsEventPersistence implements EventPersistence {
 		};
 	}
 
-	@Override
-	public void prepareMapping(final long snifferId) {
+	@EventListener
+	public void handleOrderCreatedEvent(final SnifferChangedEvent event) {
+		prepareMapping(event.getSniffer().getId());
+	}
+
+	private void prepareMapping(final long snifferId) {
 		logger.info("Rebuilding mapping for sniffer {}", snifferId);
 		final Sniffer sniffer = snifferPersistence.getSniffer(snifferId);
 		sniffer.getLogSourceId();

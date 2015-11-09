@@ -33,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.RowCallbackHandler;
@@ -78,6 +79,9 @@ import net.sf.json.JSONObject;
 @Component
 public class H2SnifferPersistence implements SnifferPersistence {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
+
+	@Autowired
+	private ApplicationEventPublisher appEventPublisher;
 
 	/**
 	 * Row mapper for sniffer's.
@@ -359,6 +363,7 @@ public class H2SnifferPersistence implements SnifferPersistence {
 		final long snifferId = keyHolder.getKey().longValue();
 		sniffer.setId(snifferId);
 		logger.debug("Persisted new sniffer with id {}", snifferId);
+		appEventPublisher.publishEvent(new SnifferChangedEvent(sniffer));
 		return snifferId;
 	}
 
@@ -366,6 +371,7 @@ public class H2SnifferPersistence implements SnifferPersistence {
 	public void updateSniffer(final Sniffer sniffer) {
 		jdbcTemplate.update(new SnifferCreator(false, sniffer));
 		logger.debug("Updated sniffer {}", sniffer.getId());
+		appEventPublisher.publishEvent(new SnifferChangedEvent(sniffer));
 	}
 
 	@Override
