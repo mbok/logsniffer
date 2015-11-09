@@ -94,8 +94,7 @@ public interface EventPersistence {
 			super();
 		}
 
-		public EventsCountHistogram(final List<HistogramEntry> entries,
-				final HistogramInterval interval) {
+		public EventsCountHistogram(final List<HistogramEntry> entries, final HistogramInterval interval) {
 			super();
 			this.entries = entries;
 			this.interval = interval;
@@ -146,8 +145,7 @@ public interface EventPersistence {
 			super();
 		}
 
-		public EventsResult(final long totalCount,
-				final List<AspectEvent> items,
+		public EventsResult(final long totalCount, final List<AspectEvent> items,
 				final EventsCountHistogram histogram) {
 			super(totalCount, items);
 			this.eventsCountHistogram = histogram;
@@ -164,23 +162,19 @@ public interface EventPersistence {
 		 * @param eventsCountHistogram
 		 *            the eventsCountHistogram to set
 		 */
-		public void setEventsCountHistogram(
-				final EventsCountHistogram eventsCountHistogram) {
+		public void setEventsCountHistogram(final EventsCountHistogram eventsCountHistogram) {
 			this.eventsCountHistogram = eventsCountHistogram;
 		}
 
 	}
 
-	public static interface BaseEventQueryBuilder<BuilderType> extends
-			ListQueryBuilder<EventsResult> {
+	public static interface BaseEventQueryBuilder<BuilderType> extends ListQueryBuilder<EventsResult> {
 		BuilderType withEventCountTimeHistogram(int maxHistogramIntervalSlots);
 	}
 
-	public static interface EventQueryBuilder extends
-			BaseEventQueryBuilder<EventQueryBuilder> {
+	public static interface EventQueryBuilder extends BaseEventQueryBuilder<EventQueryBuilder> {
 		@Deprecated
-		EventQueryBuilder withEntryFieldsMapAspect(FieldsProjection[] fields,
-				EntriesJoinType joinType);
+		EventQueryBuilder withEntryFieldsMapAspect(FieldsProjection[] fields, EntriesJoinType joinType);
 
 		EventQueryBuilder sortByEntryTimestamp(boolean desc);
 
@@ -189,8 +183,7 @@ public interface EventPersistence {
 		EventQueryBuilder withOccurrenceTo(Date to);
 	}
 
-	public static interface NativeQueryBuilder extends
-			BaseEventQueryBuilder<NativeQueryBuilder> {
+	public static interface NativeQueryBuilder extends BaseEventQueryBuilder<NativeQueryBuilder> {
 		NativeQueryBuilder withNativeQuery(final String nativeQuery);
 	}
 
@@ -200,13 +193,19 @@ public interface EventPersistence {
 
 	public void deleteAll(long snifferId);
 
-	public EventQueryBuilder getEventsQueryBuilder(long snifferId, long offset,
-			int limit);
+	public EventQueryBuilder getEventsQueryBuilder(long snifferId, long offset, int limit);
 
-	public NativeQueryBuilder getEventsNativeQueryBuilder(long snifferId,
-			long offset, int limit);
+	public NativeQueryBuilder getEventsNativeQueryBuilder(long snifferId, long offset, int limit);
 
 	public Event getEvent(long snifferId, String eventId);
 
 	public AspectProvider<AspectSniffer, Integer> getEventsCounter();
+
+	/**
+	 * Called when a sniffer is created/updated etc.. The event persistence is
+	 * able to prepare mappings etc.
+	 * 
+	 * @param sniffer
+	 */
+	public void prepareMapping(long snifferId);
 }

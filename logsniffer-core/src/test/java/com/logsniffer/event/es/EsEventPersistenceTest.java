@@ -24,6 +24,7 @@ import org.elasticsearch.client.Client;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,9 +40,12 @@ import com.logsniffer.app.ElasticSearchAppConfig.ElasticClientTemplate;
 import com.logsniffer.app.QaDataSourceAppConfig;
 import com.logsniffer.event.Event;
 import com.logsniffer.event.Sniffer;
+import com.logsniffer.event.SnifferPersistence;
 import com.logsniffer.event.es.EsEventPersistenceTest.HelperAppConfig;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogEntryData;
+import com.logsniffer.model.LogSource;
+import com.logsniffer.model.LogSourceProvider;
 import com.logsniffer.model.file.WildcardLogsSource;
 import com.logsniffer.model.support.DefaultPointer;
 
@@ -67,6 +71,16 @@ public class EsEventPersistenceTest {
 		public ConversionService conversionService() {
 			return new DefaultFormattingConversionService();
 		}
+
+		@Bean
+		public LogSourceProvider sourceProvider() {
+			return Mockito.mock(LogSourceProvider.class);
+		}
+
+		@Bean
+		public SnifferPersistence snifferPersistence() {
+			return Mockito.mock(SnifferPersistence.class);
+		}
 	}
 
 	@Autowired
@@ -75,35 +89,42 @@ public class EsEventPersistenceTest {
 	@Autowired
 	private EsEventPersistence persister;
 
+	@Autowired
+	private LogSourceProvider sourceProvider;
+
+	@Autowired
+	private SnifferPersistence snifferPersistence;
+
 	private final WildcardLogsSource source1 = new WildcardLogsSource();
 
 	private final Sniffer sniffer1 = new Sniffer();
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testPersist() {
 		// Assert.assertEquals(0,
 		// persister.getEventsQueryBuilder(sniffer1.getId(), 0, 10).list()
 		// .size());
-		Event e = new Event();
+		final Event e = new Event();
 		e.setLogPath("log");
 		e.setSnifferId(sniffer1.getId());
 		e.setLogSourceId(source1.getId());
-		LogEntry entry1 = new LogEntry();
+		final LogEntry entry1 = new LogEntry();
 		entry1.setRawContent("1");
 		entry1.setStartOffset(new DefaultPointer(0, 1));
 		entry1.setEndOffset(new DefaultPointer(1, 1));
 		entry1.getFields().put("f1", new Date(0));
-		LogEntry entry2 = new LogEntry();
+		final LogEntry entry2 = new LogEntry();
 		entry2.setStartOffset(new DefaultPointer(1, 2));
 		entry2.setEndOffset(new DefaultPointer(2, 2));
 		entry2.setRawContent("2");
-		ArrayList<LogEntryData> entries = new ArrayList<LogEntryData>();
+		final ArrayList<LogEntryData> entries = new ArrayList<LogEntryData>();
 		entries.add(entry1);
 		entries.add(entry2);
 		e.setEntries(entries);
 		e.setPublished(new Date(1000 * 100));
 		e.getFields().put("my", "value");
-		String eventId = persister.persist(e);
+		final String eventId = persister.persist(e);
 
 		clientTpl.executeWithClient(new ClientCallback<Object>() {
 			@Override
@@ -115,7 +136,7 @@ public class EsEventPersistenceTest {
 		// Check
 		Assert.assertEquals(1, persister.getEventsQueryBuilder(sniffer1.getId(), 0, 10).list().getItems().size());
 		Assert.assertEquals(1, persister.getEventsQueryBuilder(sniffer1.getId(), 0, 10).list().getTotalCount());
-		Event checkEvent = persister.getEvent(sniffer1.getId(), eventId);
+		final Event checkEvent = persister.getEvent(sniffer1.getId(), eventId);
 		Assert.assertEquals(sniffer1.getId(), checkEvent.getSnifferId());
 		Assert.assertEquals(source1.getId(), checkEvent.getLogSourceId());
 		Assert.assertEquals("log", checkEvent.getLogPath());
@@ -139,6 +160,8 @@ public class EsEventPersistenceTest {
 		Assert.assertNull(persister.getEvent(sniffer1.getId(), eventId));
 
 		// Delete all events
+		Mockito.when(snifferPersistence.getSniffer(sniffer1.getId())).thenReturn(sniffer1);
+		Mockito.when(sourceProvider.getSourceById(sniffer1.getLogSourceId())).thenReturn((LogSource) source1);
 		persister.deleteAll(sniffer1.getId());
 		persister.deleteAll(sniffer1.getId());
 	}

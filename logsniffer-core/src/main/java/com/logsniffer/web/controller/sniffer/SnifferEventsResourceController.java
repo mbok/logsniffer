@@ -54,23 +54,20 @@ import com.logsniffer.web.controller.exception.ResourceNotFoundException;
  */
 @Controller
 public class SnifferEventsResourceController {
-	private static final Logger LOGGER = LoggerFactory
-			.getLogger(SnifferEventsResourceController.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(SnifferEventsResourceController.class);
+
 	@Autowired
 	private EventPersistence eventPersistence;
 
 	@RequestMapping(value = "/sniffers/{snifferId}/events", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
-	PageableResult<AspectEvent> getEvents(
-			final Model model,
-			@PathVariable("snifferId") final long snifferId,
+	PageableResult<AspectEvent> getEvents(final Model model, @PathVariable("snifferId") final long snifferId,
 			@RequestParam(value = "_offset", defaultValue = "0", required = false) final long offset,
 			@RequestParam(value = "_size", defaultValue = "25", required = false) final int size,
 			@RequestParam(value = "_from", defaultValue = "-1", required = false) final long occurrenceFrom,
 			@RequestParam(value = "_to", defaultValue = "-1", required = false) final long occurrenceTo,
 			@RequestParam(value = "_histogram", defaultValue = "true", required = false) final boolean withHistogram) {
-		EventQueryBuilder qb = eventPersistence.getEventsQueryBuilder(
-				snifferId, offset, size);
+		EventQueryBuilder qb = eventPersistence.getEventsQueryBuilder(snifferId, offset, size);
 		if (withHistogram) {
 			qb = qb.withEventCountTimeHistogram(60);
 		}
@@ -81,48 +78,42 @@ public class SnifferEventsResourceController {
 		if (occurrenceTo >= 0) {
 			qb.withOccurrenceTo(new Date(occurrenceTo));
 		}
-		PageableResult<AspectEvent> events = qb.list();
+		final PageableResult<AspectEvent> events = qb.list();
 		return events;
 	}
 
 	@RequestMapping(value = "/sniffers/{snifferId}/events/nativeSearch", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
-	PageableResult<AspectEvent> getEventsByNativeSearch(
-			@PathVariable("snifferId") final long snifferId,
+	PageableResult<AspectEvent> getEventsByNativeSearch(@PathVariable("snifferId") final long snifferId,
 			@RequestParam(value = "_offset", defaultValue = "0", required = false) final long offset,
 			@RequestParam(value = "_size", defaultValue = "25", required = false) final int size,
 			@RequestParam(value = "_histogram", defaultValue = "true", required = false) final boolean withHistogram,
-			final HttpServletRequest request, final HttpServletResponse response)
-			throws IOException {
-		String jsonRequest = IOUtils.toString(request.getInputStream());
-		NativeQueryBuilder qb = eventPersistence.getEventsNativeQueryBuilder(
-				snifferId, offset, size);
+			final HttpServletRequest request, final HttpServletResponse response) throws IOException {
+		final String jsonRequest = IOUtils.toString(request.getInputStream());
+		NativeQueryBuilder qb = eventPersistence.getEventsNativeQueryBuilder(snifferId, offset, size);
 		if (withHistogram) {
 			qb = qb.withEventCountTimeHistogram(60);
 		}
 		qb.withNativeQuery(jsonRequest);
-		PageableResult<AspectEvent> events = qb.list();
+		final PageableResult<AspectEvent> events = qb.list();
 		return events;
 	}
 
 	@RequestMapping(value = "/sniffers/{snifferId}/events/{eventId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
 	@ResponseStatus(HttpStatus.OK)
-	Event showEvent(@PathVariable("snifferId") final long snifferId,
-			@PathVariable("eventId") final String eventId)
+	Event showEvent(@PathVariable("snifferId") final long snifferId, @PathVariable("eventId") final String eventId)
 			throws ResourceNotFoundException {
-		Event event = eventPersistence.getEvent(snifferId, eventId);
+		final Event event = eventPersistence.getEvent(snifferId, eventId);
 		if (event == null) {
-			throw new ResourceNotFoundException(Event.class, eventId,
-					"Event not found for id: " + eventId);
+			throw new ResourceNotFoundException(Event.class, eventId, "Event not found for id: " + eventId);
 		}
 		return event;
 	}
 
 	@RequestMapping(value = "/sniffers/{snifferId}/events/{eventId}", method = RequestMethod.DELETE)
 	@ResponseStatus(HttpStatus.OK)
-	void deleteEvent(@PathVariable("snifferId") final long snifferId,
-			@PathVariable("eventId") final String eventId)
+	void deleteEvent(@PathVariable("snifferId") final long snifferId, @PathVariable("eventId") final String eventId)
 			throws ResourceNotFoundException {
 		LOGGER.debug("Deleting event {} for sniffer {}", eventId, snifferId);
 		// Load event first to check existence
@@ -133,9 +124,8 @@ public class SnifferEventsResourceController {
 
 	@RequestMapping(value = "/sniffers/{snifferId}/events", method = RequestMethod.DELETE)
 	@ResponseStatus(HttpStatus.OK)
-	void deleteAllEvents(@PathVariable("snifferId") final long snifferId)
-			throws ResourceNotFoundException {
-		LOGGER.debug("Deleting all events of sniffer {}", snifferId);
+	void deleteAllEvents(@PathVariable("snifferId") final long snifferId) throws ResourceNotFoundException {
+		LOGGER.info("Deleting all events of sniffer {}", snifferId);
 		eventPersistence.deleteAll(snifferId);
 	}
 }

@@ -340,6 +340,14 @@ public class ElasticSearchAppConfig {
 					}
 				};
 			}
+
+			final Client client = clientConnection.getClient();
+			client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet();
+			if (!client.admin().indices().exists(new IndicesExistsRequest(indexName)).actionGet().isExists()) {
+				logger.info("Created elasticsearch index: {}", indexName);
+				client.admin().indices().create(new CreateIndexRequest(indexName)).actionGet();
+			}
+
 		}
 		return clientConnection;
 	}
@@ -363,20 +371,6 @@ public class ElasticSearchAppConfig {
 		settings.put("http.enabled", false);
 		final Node node = NodeBuilder.nodeBuilder().settings(settings).clusterName("embedded").data(true).local(true)
 				.node();
-		Client client = null;
-		try {
-			client = node.client();
-			// We wait now for the yellow (or green) status
-			client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet();
-			if (!client.admin().indices().exists(new IndicesExistsRequest(indexName)).actionGet().isExists()) {
-				logger.info("Created elasticsearch index: {}", indexName);
-				client.admin().indices().create(new CreateIndexRequest(indexName)).actionGet();
-			}
-		} finally {
-			if (client != null) {
-				client.close();
-			}
-		}
 		return node;
 	}
 

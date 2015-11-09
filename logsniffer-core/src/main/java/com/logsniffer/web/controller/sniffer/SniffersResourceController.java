@@ -51,8 +51,7 @@ import com.logsniffer.web.controller.exception.ResourceNotFoundException;
  */
 @RestController
 public class SniffersResourceController {
-	private static Logger logger = LoggerFactory
-			.getLogger(SniffersResourceController.class);
+	private static Logger logger = LoggerFactory.getLogger(SniffersResourceController.class);
 
 	@Autowired
 	protected SnifferPersistence snifferPersistence;
@@ -64,12 +63,10 @@ public class SniffersResourceController {
 	protected SnifferScheduler snifferScheduler;
 
 	@RequestMapping(value = "/sniffers/{snifferId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	protected Sniffer getSniffer(@PathVariable("snifferId") final long snifferId)
-			throws ResourceNotFoundException {
-		Sniffer activeSniffer = snifferPersistence.getSniffer(snifferId);
+	protected Sniffer getSniffer(@PathVariable("snifferId") final long snifferId) throws ResourceNotFoundException {
+		final Sniffer activeSniffer = snifferPersistence.getSniffer(snifferId);
 		if (activeSniffer == null) {
-			throw new ResourceNotFoundException(Sniffer.class, snifferId,
-					"Sniffer not found for id: " + snifferId);
+			throw new ResourceNotFoundException(Sniffer.class, snifferId, "Sniffer not found for id: " + snifferId);
 		}
 		return activeSniffer;
 	}
@@ -78,27 +75,27 @@ public class SniffersResourceController {
 	@ResponseBody
 	long createSniffer(@Valid @RequestBody final Sniffer newSniffer)
 			throws ResourceNotFoundException, SchedulerException {
-		long snifferId = snifferPersistence.createSniffer(newSniffer);
+		final long snifferId = snifferPersistence.createSniffer(newSniffer);
 		logger.info("Created new Sniffer with id: {}", snifferId);
+		eventPersistence.prepareMapping(snifferId);
 		return snifferId;
 	}
 
 	@RequestMapping(value = "/sniffers/{snifferId}", method = RequestMethod.PUT)
 	@Transactional(rollbackFor = Exception.class)
 	@ResponseStatus(HttpStatus.OK)
-	void updateSniffer(@PathVariable("snifferId") final long snifferId,
-			@Valid @RequestBody final Sniffer sniffer)
+	void updateSniffer(@PathVariable("snifferId") final long snifferId, @Valid @RequestBody final Sniffer sniffer)
 			throws ResourceNotFoundException, SchedulerException {
 		snifferPersistence.updateSniffer(sniffer);
 		logger.info("Updated sniffer with id: {}", snifferId);
+		eventPersistence.prepareMapping(snifferId);
 	}
 
 	@Transactional(rollbackFor = Exception.class)
 	@RequestMapping(value = "/sniffers/{snifferId}/start", method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
 	void start(@PathVariable("snifferId") final long snifferId)
-			throws ResourceNotFoundException, SchedulerException,
-			ParseException {
+			throws ResourceNotFoundException, SchedulerException, ParseException {
 		logger.info("Starting sniffer: {}", snifferId);
 		snifferScheduler.startSniffing(snifferId);
 		logger.info("Started sniffer: {}", snifferId);
@@ -106,8 +103,7 @@ public class SniffersResourceController {
 
 	@RequestMapping(value = "/sniffers/{snifferId}/stop", method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
-	void stop(@PathVariable("snifferId") final long snifferId)
-			throws ResourceNotFoundException, SchedulerException {
+	void stop(@PathVariable("snifferId") final long snifferId) throws ResourceNotFoundException, SchedulerException {
 		logger.info("Stopping sniffer: {}", snifferId);
 		snifferScheduler.stopSniffing(snifferId);
 		logger.info("Stopped sniffer: {}", snifferId);
@@ -117,13 +113,11 @@ public class SniffersResourceController {
 	@ResponseStatus(HttpStatus.OK)
 	@Transactional(rollbackFor = Exception.class)
 	void deleteSniffer(@PathVariable("snifferId") final long snifferId)
-			throws ResourceNotFoundException, SchedulerException,
-			ActionViolationException {
+			throws ResourceNotFoundException, SchedulerException, ActionViolationException {
 		logger.info("Deleting sniffer: {}", snifferId);
-		Sniffer sniffer = snifferPersistence.getSniffer(snifferId);
+		final Sniffer sniffer = snifferPersistence.getSniffer(snifferId);
 		if (sniffer == null) {
-			throw new ResourceNotFoundException(Sniffer.class, snifferId,
-					"Sniffer not found for id: " + snifferId);
+			throw new ResourceNotFoundException(Sniffer.class, snifferId, "Sniffer not found for id: " + snifferId);
 		} else if (snifferScheduler.isScheduled(snifferId)) {
 			throw new ActionViolationException("Can't delete a running sniffer");
 		}
