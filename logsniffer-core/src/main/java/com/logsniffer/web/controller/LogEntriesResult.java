@@ -20,8 +20,8 @@ package com.logsniffer.web.controller;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.model.LogEntry;
-import com.logsniffer.model.fields.FieldBaseTypes;
 
 /**
  * Model bean for entries result containing additional field information.

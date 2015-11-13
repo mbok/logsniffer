@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import com.logsniffer.config.ConfiguredBean;
+import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogInputStream;
@@ -29,7 +30,6 @@ import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.LogPointerFactory;
 import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.SeverityLevel;
-import com.logsniffer.model.fields.FieldBaseTypes;
 
 /**
  * Format dependent log reader. Reading is performed pipeline like.

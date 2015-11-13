@@ -24,10 +24,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.logsniffer.fields.FieldsMap;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.SeverityLevel;
 import com.logsniffer.model.SeverityLevel.SeverityClassification;
-import com.logsniffer.model.fields.FieldsMap;
 import com.logsniffer.reader.filter.support.SeverityMappingFilter;
 
 /**

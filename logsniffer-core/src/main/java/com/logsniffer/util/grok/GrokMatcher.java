@@ -20,7 +20,7 @@ package com.logsniffer.util.grok;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 
-import com.logsniffer.model.fields.FieldsMap;
+import com.logsniffer.fields.FieldsMap;
 import com.logsniffer.util.grok.Grok.TypeConverter;
 
 /**

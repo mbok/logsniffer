@@ -26,9 +26,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.logsniffer.fields.FieldBaseTypes;
+import com.logsniffer.fields.FieldsMap;
 import com.logsniffer.model.SeverityLevel;
-import com.logsniffer.model.fields.FieldBaseTypes;
-import com.logsniffer.model.fields.FieldsMap;
 import com.logsniffer.reader.filter.FieldsFilter;
 
 /**

@@ -42,7 +42,6 @@ import com.logsniffer.event.Sniffer;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogPointer;
-import com.logsniffer.model.LogPointerTransfer;
 import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.web.ViewController;
@@ -56,17 +55,16 @@ import com.logsniffer.web.controller.exception.ResourceNotFoundException;
  */
 @ViewController
 public class SnifferStatusController extends SniffersBaseController {
-	private static Logger logger = LoggerFactory
-			.getLogger(SnifferStatusController.class);
+	private static Logger logger = LoggerFactory.getLogger(SnifferStatusController.class);
 
 	public static class LogSniffingStatus {
 		private final LogPointer nextOffset;
 		private final long logSize;
 		private final Log log;
-		private final LogPointerTransfer pointerTpl;
+		private final LogPointer pointerTpl;
 
-		public LogSniffingStatus(final Log log, final LogPointer nextOffset,
-				final long logSize, final LogPointerTransfer pointerTpl) {
+		public LogSniffingStatus(final Log log, final LogPointer nextOffset, final long logSize,
+				final LogPointer pointerTpl) {
 			super();
 			this.nextOffset = nextOffset;
 			this.logSize = logSize;
@@ -98,66 +96,52 @@ public class SnifferStatusController extends SniffersBaseController {
 		/**
 		 * @return the pointerTpl
 		 */
-		public LogPointerTransfer getPointerTpl() {
+		public LogPointer getPointerTpl() {
 			return pointerTpl;
 		}
 
 	}
 
 	@RequestMapping(value = "/sniffers/{snifferId}/status", method = RequestMethod.GET)
-	String showState(@PathVariable("snifferId") final long snifferId,
-			final Model model) throws ResourceNotFoundException,
-			SchedulerException, IOException {
-		Sniffer activeSniffer = getAndBindActiveSniffer(model, snifferId);
-		LogSource<LogInputStream> logSource = getLogSource(activeSniffer
-				.getLogSourceId());
-		Map<Log, IncrementData> logsIncData = snifferPersistence
-				.getIncrementDataByLog(activeSniffer, logSource);
-		TreeMap<String, LogSniffingStatus> logsStatus = new TreeMap<String, LogSniffingStatus>();
-		for (Log log : logsIncData.keySet()) {
-			LogRawAccess<LogInputStream> logAccess = logSource
-					.getLogAccess(log);
-			IncrementData incData = logsIncData.get(log);
+	String showState(@PathVariable("snifferId") final long snifferId, final Model model)
+			throws ResourceNotFoundException, SchedulerException, IOException {
+		final Sniffer activeSniffer = getAndBindActiveSniffer(model, snifferId);
+		final LogSource<LogInputStream> logSource = getLogSource(activeSniffer.getLogSourceId());
+		final Map<Log, IncrementData> logsIncData = snifferPersistence.getIncrementDataByLog(activeSniffer, logSource);
+		final TreeMap<String, LogSniffingStatus> logsStatus = new TreeMap<String, LogSniffingStatus>();
+		for (final Log log : logsIncData.keySet()) {
+			final LogRawAccess<LogInputStream> logAccess = logSource.getLogAccess(log);
+			final IncrementData incData = logsIncData.get(log);
 			LogPointer nextOffset = null;
 			if (incData.getNextOffset() != null) {
-				nextOffset = logAccess.createRelative(logAccess
-						.getFromJSON(incData.getNextOffset().getJson()), 0);
+				nextOffset = logAccess.createRelative(logAccess.getFromJSON(incData.getNextOffset().getJson()), 0);
 			}
 			logsStatus.put(log.getPath(),
-					new LogSniffingStatus(log, nextOffset, log.getSize(),
-							logAccess.createRelative(null, 1)));
+					new LogSniffingStatus(log, nextOffset, log.getSize(), logAccess.createRelative(null, 1)));
 		}
-		model.addAttribute("scheduleInfo",
-				snifferScheduler.getScheduleInfo(snifferId));
+		model.addAttribute("scheduleInfo", snifferScheduler.getScheduleInfo(snifferId));
 		model.addAttribute("logsStatus", logsStatus);
 		return "sniffers/status";
 	}
 
 	@RequestMapping(value = "/sniffers/{snifferId}/startForm", method = RequestMethod.POST)
 	@Transactional(rollbackFor = Exception.class)
-	String start(@PathVariable("snifferId") final long snifferId,
-			final ServletRequest request, final Model model,
-			final RedirectAttributes redirectAttrs)
-			throws ResourceNotFoundException, SchedulerException,
-			ParseException, IOException, ServletRequestBindingException {
+	String start(@PathVariable("snifferId") final long snifferId, final ServletRequest request, final Model model,
+			final RedirectAttributes redirectAttrs) throws ResourceNotFoundException, SchedulerException,
+					ParseException, IOException, ServletRequestBindingException {
 		logger.info("Starting sniffer: {}", snifferId);
-		Sniffer activeSniffer = getAndBindActiveSniffer(model, snifferId);
-		LogSource<LogInputStream> source = sourceProvider
-				.getSourceById(activeSniffer.getLogSourceId());
-		for (Log log : source.getLogs()) {
-			String newPos = ServletRequestUtils.getStringParameter(request,
+		final Sniffer activeSniffer = getAndBindActiveSniffer(model, snifferId);
+		final LogSource<LogInputStream> source = sourceProvider.getSourceById(activeSniffer.getLogSourceId());
+		for (final Log log : source.getLogs()) {
+			final String newPos = ServletRequestUtils.getStringParameter(request,
 					"newPositions['" + log.getPath() + "']");
-			logger.debug("Received new position to start sniffing {} from: {}",
-					log.getPath(), newPos);
+			logger.debug("Received new position to start sniffing {} from: {}", log.getPath(), newPos);
 			if (StringUtils.isNotEmpty(newPos)) {
-				LogPointer p = source.getLogAccess(log).getFromJSON(newPos);
-				IncrementData incData = snifferPersistence.getIncrementData(
-						activeSniffer, source, log);
+				final LogPointer p = source.getLogAccess(log).getFromJSON(newPos);
+				final IncrementData incData = snifferPersistence.getIncrementData(activeSniffer, source, log);
 				incData.setNextOffset(p);
-				snifferPersistence.storeIncrementalData(activeSniffer, source,
-						log, incData);
-				logger.debug("Set new position to start sniffing {} from: {}",
-						log.getPath(), newPos);
+				snifferPersistence.storeIncrementalData(activeSniffer, source, log, incData);
+				logger.debug("Set new position to start sniffing {} from: {}", log.getPath(), newPos);
 			}
 		}
 
@@ -168,11 +152,10 @@ public class SnifferStatusController extends SniffersBaseController {
 	}
 
 	@RequestMapping(value = "/sniffers/{snifferId}/stopForm", method = RequestMethod.POST)
-	String stop(@PathVariable("snifferId") final long snifferId,
-			final Model model, final RedirectAttributes redirectAttrs)
-			throws ResourceNotFoundException, SchedulerException {
+	String stop(@PathVariable("snifferId") final long snifferId, final Model model,
+			final RedirectAttributes redirectAttrs) throws ResourceNotFoundException, SchedulerException {
 		logger.info("Stopping sniffer: {}", snifferId);
-		Sniffer activeSniffer = getAndBindActiveSniffer(model, snifferId);
+		final Sniffer activeSniffer = getAndBindActiveSniffer(model, snifferId);
 		snifferScheduler.stopSniffing(activeSniffer.getId());
 		logger.info("Stopped sniffer: {}", snifferId);
 		redirectAttrs.addFlashAttribute("stopped", true);

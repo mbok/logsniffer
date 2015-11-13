@@ -77,12 +77,15 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 			    return "UNKNOWN";
 			}
 		    };
-		    
+		    var ignoreFields = {
+		    	"_startOffset": true,
+		    	"_endOffset": true
+		    };
 		    angular.forEach($scope.fields, function(value, key) {
 			if (!$scope.rows) {
 			    $scope.rows = [];
 			}
-		        if (key.indexOf("@") !== 0 && !($scope.excludeRaw && key=="_raw")) {
+		        if (key.indexOf("@") !== 0 && !($scope.excludeRaw && key=="_raw") && !ignoreFields[key]) {
 		            $scope.rows.push({
 		        	name: key,
 		        	value: value,
@@ -580,7 +583,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 					$(element).find('.log-entries tbody').append($.LogSniffer.entriesRows(scope.fieldTypes, entries, renderPrefixCells));
 					$(element).find('#log-entries-frame').scrollTop(10);
 			    		if (entries.length>0) {
-			    		    scope.setPointer(entries[0].startOffset.json);
+			    		    scope.setPointer(entries[0]._startOffset.json);
 			    		}
 				}
 				updateLogControls(true);

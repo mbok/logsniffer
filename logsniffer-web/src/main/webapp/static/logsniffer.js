@@ -352,10 +352,10 @@ LogPosition.prototype.resetToEnd = function() {
 			var e = entries[i];
 			if (fLength > 0) {
 				html += '<tr class="severity '
-						+ getSeverityClass(e.fields._severity) + '" sof=\''
-						+ e.startOffset.sof + '\' start=\''
-						+ JSON.stringify(e.startOffset.json) + '\' eof=\'' + e.endOffset.eof
-						+ '\' end=\'' + JSON.stringify(e.endOffset.json) + '\'>';
+						+ getSeverityClass(e._severity) + '" sof=\''
+						+ e._endOffset.sof + '\' start=\''
+						+ JSON.stringify(e._startOffset.json) + '\' eof=\'' + e._endOffset.eof
+						+ '\' end=\'' + JSON.stringify(e._endOffset.json) + '\'>';
 				if (cellsBeforeCallback) {
 					html += cellsBeforeCallback(fieldsTypes, e);
 				}
@@ -366,19 +366,19 @@ LogPosition.prototype.resetToEnd = function() {
 					html += '<td class="text '
 							+ fieldsTypes[name]
 							+ '">'
-							+ (e.fields[name] != null ? printFieldValue(
-									fieldsTypes[name], e.fields[name]) : '')
+							+ (e[name] != null ? printFieldValue(
+									fieldsTypes[name], e[name]) : '')
 							+ '</td>';
 				}
 			} else {
-				html += '<tr sof="' + e.startOffset.sof + '" start=\''
-						+ JSON.stringify(e.startOffset.json) + '\' eof="' + e.endOffset.eof
-						+ '" end=\'' + JSON.stringify(e.endOffset.json) + '\'>';
+				html += '<tr sof="' + e._startOffset.sof + '" start=\''
+						+ JSON.stringify(e._startOffset.json) + '\' eof="' + e._endOffset.eof
+						+ '" end=\'' + JSON.stringify(e._endOffset.json) + '\'>';
 				if (cellsBeforeCallback) {
 					html += cellsBeforeCallback(fieldsTypes, e);
 				}
 				html += '<td colspan="' + fLength + '" class="text">'
-						+ e.fields._raw + '</td>';
+						+ e._raw + '</td>';
 			}
 			if (cellsAfterCallback) {
 				html += cellsAfterCallback(fieldsTypes, e);
@@ -418,7 +418,9 @@ LogPosition.prototype.resetToEnd = function() {
 		entriesIgnoreFields : {
 			"_raw" : true,
 			"_timestamp" : true,
-			"_severity" : true
+			"_severity" : true,
+			"_startOffset": true,
+			"_endOffset": true
 		},
 		entriesHead : entriesHead,
 		entriesRows : entriesRows,

@@ -52,9 +52,9 @@ import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.logsniffer.config.BeanConfigFactoryManager;
 import com.logsniffer.config.ConfiguredBean;
-import com.logsniffer.model.fields.FieldJsonMapper;
-import com.logsniffer.model.fields.FieldsMap;
-import com.logsniffer.model.fields.FieldsMap.FieldsMapMixInLikeSerializer;
+import com.logsniffer.fields.FieldJsonMapper;
+import com.logsniffer.fields.FieldsMap;
+import com.logsniffer.fields.FieldsMap.FieldsMapMixInLikeSerializer;
 
 /**
  * Core app config.

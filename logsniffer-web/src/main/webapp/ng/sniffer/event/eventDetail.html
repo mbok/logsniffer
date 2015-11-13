@@ -23,7 +23,7 @@
 				Occurrence of first entry: {{event.occurrence | date:'medium'}}
 				<div>
 					<h4>Fields</h4>
-					<lfs-fields-table fields="event.fields"></lfs-fields-table>
+					<lfs-fields-table fields="event"></lfs-fields-table>
 				</div>
 				<h4>Log entries</h4>
 				<div ng-repeat="entry in event.entries track by $index">

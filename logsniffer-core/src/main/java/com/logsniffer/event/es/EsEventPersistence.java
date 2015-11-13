@@ -75,13 +75,11 @@ import com.logsniffer.event.Sniffer;
 import com.logsniffer.event.SnifferPersistence;
 import com.logsniffer.event.SnifferPersistence.AspectSniffer;
 import com.logsniffer.event.SnifferPersistence.SnifferChangedEvent;
+import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.model.LogSourceProvider;
-import com.logsniffer.model.fields.FieldBaseTypes;
-import com.logsniffer.model.sql.FlatLogEntryPersistence.EntriesJoinType;
-import com.logsniffer.model.sql.FlatLogEntryPersistence.FieldsProjection;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.util.DataAccessException;
 
@@ -326,13 +324,6 @@ public class EsEventPersistence implements EventPersistence {
 
 		private Date from;
 		private Date to;
-
-		@Override
-		public EventQueryBuilder withEntryFieldsMapAspect(final FieldsProjection[] fields,
-				final EntriesJoinType joinType) {
-			// Not supported
-			return this;
-		}
 
 		@Override
 		protected SearchRequestBuilder adaptRequestBuilder(final Client esClient,

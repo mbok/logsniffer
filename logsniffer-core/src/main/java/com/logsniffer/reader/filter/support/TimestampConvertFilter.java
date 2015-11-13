@@ -26,8 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.logsniffer.model.LogEntryData;
-import com.logsniffer.model.fields.FieldBaseTypes;
+import com.logsniffer.fields.FieldBaseTypes;
+import com.logsniffer.model.LogEntry;
 import com.logsniffer.validators.SimpleDateFormatConstraint;
 
 /**
@@ -39,8 +39,7 @@ import com.logsniffer.validators.SimpleDateFormatConstraint;
  *
  */
 public class TimestampConvertFilter extends AbstractTransformationFilter<Date> {
-	private static final Logger logger = LoggerFactory
-			.getLogger(TimestampConvertFilter.class);
+	private static final Logger logger = LoggerFactory.getLogger(TimestampConvertFilter.class);
 	@JsonProperty
 	@NotEmpty
 	@SimpleDateFormatConstraint
@@ -49,7 +48,7 @@ public class TimestampConvertFilter extends AbstractTransformationFilter<Date> {
 	private SimpleDateFormat parsedPattern;
 
 	{
-		setTargetField(LogEntryData.FIELD_TIMESTAMP);
+		setTargetField(LogEntry.FIELD_TIMESTAMP);
 	}
 
 	@Override
@@ -58,7 +57,7 @@ public class TimestampConvertFilter extends AbstractTransformationFilter<Date> {
 	}
 
 	@Override
-	protected Date transform(String sourceValue) {
+	protected Date transform(final String sourceValue) {
 		try {
 			if (parsedPattern == null) {
 				parsedPattern = new SimpleDateFormat(pattern);
@@ -66,8 +65,7 @@ public class TimestampConvertFilter extends AbstractTransformationFilter<Date> {
 			return parsedPattern.parse(sourceValue);
 		} catch (ParseException | IllegalArgumentException e) {
 			if (logger.isDebugEnabled()) {
-				logger.debug("Failed to parse date in format '" + pattern
-						+ "' from string: " + sourceValue, e);
+				logger.debug("Failed to parse date in format '" + pattern + "' from string: " + sourceValue, e);
 			}
 		}
 		return null;
@@ -89,7 +87,7 @@ public class TimestampConvertFilter extends AbstractTransformationFilter<Date> {
 	 * @param pattern
 	 *            the pattern to set
 	 */
-	public void setPattern(String pattern) {
+	public void setPattern(final String pattern) {
 		this.pattern = pattern;
 		parsedPattern = null;
 	}

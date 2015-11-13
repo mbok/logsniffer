@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
-package com.logsniffer.model.fields;
+package com.logsniffer.fields;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -38,6 +38,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logsniffer.app.CoreAppConfig;
+import com.logsniffer.fields.FieldBaseTypes;
+import com.logsniffer.fields.FieldsMap;
 import com.logsniffer.model.SeverityLevel;
 import com.logsniffer.model.SeverityLevel.SeverityClassification;
 

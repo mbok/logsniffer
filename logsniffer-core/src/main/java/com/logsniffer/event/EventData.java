@@ -20,9 +20,8 @@ package com.logsniffer.event;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.logsniffer.model.LogEntryData;
-import com.logsniffer.model.fields.FieldsMap;
-import com.logsniffer.model.support.DefaultLogEntryData;
+import com.logsniffer.fields.FieldsMap;
+import com.logsniffer.model.LogEntry;
 
 /**
  * Pure log event data detected by a scanner.
@@ -31,14 +30,14 @@ import com.logsniffer.model.support.DefaultLogEntryData;
  * 
  */
 public class EventData {
-	private List<LogEntryData> entries;
+	private List<LogEntry> entries;
 	private FieldsMap fields = new FieldsMap();
 
 	/**
 	 * @return the entries
 	 */
-	@JsonDeserialize(contentAs = DefaultLogEntryData.class)
-	public List<LogEntryData> getEntries() {
+	@JsonDeserialize
+	public List<LogEntry> getEntries() {
 		return entries;
 	}
 
@@ -46,7 +45,7 @@ public class EventData {
 	 * @param entries
 	 *            the entries to set
 	 */
-	public void setEntries(final List<LogEntryData> entries) {
+	public void setEntries(final List<LogEntry> entries) {
 		this.entries = entries;
 	}
 

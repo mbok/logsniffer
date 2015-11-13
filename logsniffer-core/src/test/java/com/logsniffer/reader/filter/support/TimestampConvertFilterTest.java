@@ -23,8 +23,8 @@ import java.util.Date;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.logsniffer.model.LogEntryData;
-import com.logsniffer.model.fields.FieldsMap;
+import com.logsniffer.fields.FieldsMap;
+import com.logsniffer.model.LogEntry;
 
 /**
  * Test for {@link TimestampConvertFilter}.
@@ -35,30 +35,30 @@ import com.logsniffer.model.fields.FieldsMap;
 public class TimestampConvertFilterTest {
 	@Test
 	public void testOverrideWithNullDueToInvalidFormat() {
-		TimestampConvertFilter filter = new TimestampConvertFilter();
+		final TimestampConvertFilter filter = new TimestampConvertFilter();
 		filter.setOverride(true);
 		filter.setSourceField("abc");
 		filter.setPattern("sddse");
-		FieldsMap map = new FieldsMap();
-		map.put(LogEntryData.FIELD_TIMESTAMP, new Date());
+		final FieldsMap map = new FieldsMap();
+		map.put(LogEntry.FIELD_TIMESTAMP, new Date());
 		map.put("abc", "2015");
 		filter.filter(map);
-		Assert.assertNull(map.get(LogEntryData.FIELD_TIMESTAMP));
+		Assert.assertNull(map.get(LogEntry.FIELD_TIMESTAMP));
 	}
 
 	@Test
 	public void testYearFormat() {
-		TimestampConvertFilter filter = new TimestampConvertFilter();
+		final TimestampConvertFilter filter = new TimestampConvertFilter();
 		filter.setOverride(true);
 		filter.setSourceField("abc");
 		filter.setPattern("yyyy");
-		FieldsMap map=new FieldsMap();
-		map.put(LogEntryData.FIELD_TIMESTAMP, new Date());
+		final FieldsMap map = new FieldsMap();
+		map.put(LogEntry.FIELD_TIMESTAMP, new Date());
 		map.put("abc", "2015");
 		filter.filter(map);
-		Assert.assertNotNull(map.get(LogEntryData.FIELD_TIMESTAMP));
-		Calendar c=Calendar.getInstance();
-		c.setTime(((Date)map.get(LogEntryData.FIELD_TIMESTAMP)));
+		Assert.assertNotNull(map.get(LogEntry.FIELD_TIMESTAMP));
+		final Calendar c = Calendar.getInstance();
+		c.setTime(((Date) map.get(LogEntry.FIELD_TIMESTAMP)));
 		Assert.assertEquals(2015, c.get(Calendar.YEAR));
 	}
 }

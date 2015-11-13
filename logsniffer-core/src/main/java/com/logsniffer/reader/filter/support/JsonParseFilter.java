@@ -31,7 +31,7 @@ import com.logsniffer.config.BeanConfigFactoryManager;
 import com.logsniffer.config.BeanPostConstructor;
 import com.logsniffer.config.ConfigException;
 import com.logsniffer.config.PostConstructed;
-import com.logsniffer.model.fields.FieldBaseTypes;
+import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.validators.JsonStringConastraint;
 
 /**

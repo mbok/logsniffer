@@ -47,7 +47,6 @@ import com.logsniffer.config.BeanConfigFactoryManager;
 import com.logsniffer.event.Event;
 import com.logsniffer.event.Publisher.PublishException;
 import com.logsniffer.model.LogEntry;
-import com.logsniffer.model.LogEntryData;
 
 /**
  * Test for {@link MailPublisher}.
@@ -56,8 +55,7 @@ import com.logsniffer.model.LogEntryData;
  * 
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { MailAppConfig.class,
-		MailPublisherTest.HelperAppConfig.class, CoreAppConfig.class,
+@ContextConfiguration(classes = { MailAppConfig.class, MailPublisherTest.HelperAppConfig.class, CoreAppConfig.class,
 		ConfigValueAppConfig.class })
 public class MailPublisherTest {
 	@Configuration
@@ -95,16 +93,16 @@ public class MailPublisherTest {
 
 	@Test
 	public void testMailPublishing() throws PublishException {
-		Event event = new Event();
+		final Event event = new Event();
 		event.setId("3");
 		event.setLogPath("path.log");
 		event.setLogSourceId(7);
 		event.setSnifferId(5);
-		Map<String, Serializable> data = new HashMap<String, Serializable>();
+		final Map<String, Serializable> data = new HashMap<String, Serializable>();
 		data.put("key1", "abc");
 		data.put("key3", "def");
 		event.getFields().putAll(data);
-		List<LogEntryData> entries = new ArrayList<LogEntryData>();
+		final List<LogEntry> entries = new ArrayList<LogEntry>();
 		final LogEntry e1 = new LogEntry();
 		e1.setRawContent("e1");
 		final LogEntry e2 = new LogEntry();
@@ -117,40 +115,32 @@ public class MailPublisherTest {
 		mailPublisher.setFrom("fromme $event");
 		mailPublisher.setTo("tome$event,toyou");
 
-		MailPublisher clonePublisher = configManager.createBeanFromJSON(
-				MailPublisher.class,
+		final MailPublisher clonePublisher = configManager.createBeanFromJSON(MailPublisher.class,
 				configManager.saveBeanToJSON(mailPublisher));
 		clonePublisher.publish(event);
 
-		Mockito.verify(mailSender).send(
-				Mockito.argThat(new BaseMatcher<SimpleMailMessage>() {
+		Mockito.verify(mailSender).send(Mockito.argThat(new BaseMatcher<SimpleMailMessage>() {
 
-					@Override
-					public boolean matches(final Object arg0) {
-						SimpleMailMessage mail = (SimpleMailMessage) arg0;
-						if (!mail.getSubject().equals(
-								"Subject: " + e1.getRawContent())) {
-							return false;
-						}
-						Pattern textPattern = Pattern.compile(
-								"[^\n]+/c/sniffers/5/events/#/3\n\n"
-										+ "Log entries:\n" + "\\s*e1\n"
-										+ "\\s*e2\n\\s*",
-								Pattern.CASE_INSENSITIVE + Pattern.DOTALL
-										+ Pattern.MULTILINE);
-						if (!textPattern.matcher(mail.getText()).matches()) {
-							return false;
-						}
-						return mail.getFrom().equals("fromme $event")
-								&& mail.getTo().length == 2
-								&& mail.getTo()[0].equals("tome$event")
-								&& mail.getTo()[1].equals("toyou");
-					}
+			@Override
+			public boolean matches(final Object arg0) {
+				final SimpleMailMessage mail = (SimpleMailMessage) arg0;
+				if (!mail.getSubject().equals("Subject: " + e1.getRawContent())) {
+					return false;
+				}
+				final Pattern textPattern = Pattern.compile(
+						"[^\n]+/c/sniffers/5/events/#/3\n\n" + "Log entries:\n" + "\\s*e1\n" + "\\s*e2\n\\s*",
+						Pattern.CASE_INSENSITIVE + Pattern.DOTALL + Pattern.MULTILINE);
+				if (!textPattern.matcher(mail.getText()).matches()) {
+					return false;
+				}
+				return mail.getFrom().equals("fromme $event") && mail.getTo().length == 2
+						&& mail.getTo()[0].equals("tome$event") && mail.getTo()[1].equals("toyou");
+			}
 
-					@Override
-					public void describeTo(final Description arg0) {
-					}
-				}));
+			@Override
+			public void describeTo(final Description arg0) {
+			}
+		}));
 
 	}
 }

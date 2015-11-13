@@ -43,7 +43,6 @@ import com.logsniffer.event.Sniffer;
 import com.logsniffer.event.SnifferPersistence;
 import com.logsniffer.event.es.EsEventPersistenceTest.HelperAppConfig;
 import com.logsniffer.model.LogEntry;
-import com.logsniffer.model.LogEntryData;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.model.LogSourceProvider;
 import com.logsniffer.model.file.WildcardLogsSource;
@@ -118,7 +117,7 @@ public class EsEventPersistenceTest {
 		entry2.setStartOffset(new DefaultPointer(1, 2));
 		entry2.setEndOffset(new DefaultPointer(2, 2));
 		entry2.setRawContent("2");
-		final ArrayList<LogEntryData> entries = new ArrayList<LogEntryData>();
+		final ArrayList<LogEntry> entries = new ArrayList<LogEntry>();
 		entries.add(entry1);
 		entries.add(entry2);
 		e.setEntries(entries);

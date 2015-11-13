@@ -33,12 +33,11 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.logsniffer.fields.FieldBaseTypes;
+import com.logsniffer.fields.FieldsMap;
 import com.logsniffer.model.LogEntry;
-import com.logsniffer.model.LogEntryData;
 import com.logsniffer.model.SeverityLevel;
 import com.logsniffer.model.SeverityLevel.SeverityClassification;
-import com.logsniffer.model.fields.FieldBaseTypes;
-import com.logsniffer.model.fields.FieldsMap;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.support.DateFormatUtils;
 import com.logsniffer.reader.support.FormattedTextReader;
@@ -53,8 +52,7 @@ import com.logsniffer.reader.support.FormattedTextReader;
  */
 @Component
 public class Log4jTextReader extends FormattedTextReader {
-	private static final Logger logger = LoggerFactory
-			.getLogger(Log4jTextReader.class);
+	private static final Logger logger = LoggerFactory.getLogger(Log4jTextReader.class);
 
 	private static List<SeverityLevel> levelList;
 	private static final HashMap<String, SeverityLevel> LEVEL_MAP = new HashMap<String, SeverityLevel>();
@@ -70,23 +68,17 @@ public class Log4jTextReader extends FormattedTextReader {
 
 	static {
 		LEVEL_MAP.put(Level.TRACE.toString(),
-				new SeverityLevel(Level.TRACE.toString(), 1,
-						SeverityClassification.TRACE));
+				new SeverityLevel(Level.TRACE.toString(), 1, SeverityClassification.TRACE));
 		LEVEL_MAP.put(Level.DEBUG.toString(),
-				new SeverityLevel(Level.DEBUG.toString(), 2,
-						SeverityClassification.DEBUG));
+				new SeverityLevel(Level.DEBUG.toString(), 2, SeverityClassification.DEBUG));
 		LEVEL_MAP.put(Level.INFO.toString(),
-				new SeverityLevel(Level.INFO.toString(), 3,
-						SeverityClassification.INFORMATIONAL));
+				new SeverityLevel(Level.INFO.toString(), 3, SeverityClassification.INFORMATIONAL));
 		LEVEL_MAP.put(Level.WARN.toString(),
-				new SeverityLevel(Level.WARN.toString(), 4,
-						SeverityClassification.WARNING));
+				new SeverityLevel(Level.WARN.toString(), 4, SeverityClassification.WARNING));
 		LEVEL_MAP.put(Level.ERROR.toString(),
-				new SeverityLevel(Level.ERROR.toString(), 5,
-						SeverityClassification.ERROR));
+				new SeverityLevel(Level.ERROR.toString(), 5, SeverityClassification.ERROR));
 		LEVEL_MAP.put(Level.FATAL.toString(),
-				new SeverityLevel(Level.FATAL.toString(), 6,
-						SeverityClassification.EMERGENCY));
+				new SeverityLevel(Level.FATAL.toString(), 6, SeverityClassification.EMERGENCY));
 		levelList = new ArrayList<SeverityLevel>(LEVEL_MAP.values());
 		Collections.sort(levelList);
 		LEVEL_MAP.put("WARNING", LEVEL_MAP.get(Level.WARN.toString()));
@@ -119,7 +111,7 @@ public class Log4jTextReader extends FormattedTextReader {
 				entry.setSeverity(level);
 			} else {
 				// Substring
-				for (String key : LEVEL_MAP.keySet()) {
+				for (final String key : LEVEL_MAP.keySet()) {
 					if (key.startsWith(match)) {
 						level = LEVEL_MAP.get(key);
 						break;
@@ -161,27 +153,23 @@ public class Log4jTextReader extends FormattedTextReader {
 			} else if (StringUtils.isEmpty(getModifier())) {
 				// ISO8601: yyyy-MM-dd HH:mm:ss,SSS
 				dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS");
-				return "[1-9]\\d{3}-\\d{2}-\\d{2} "
-						+ "\\d{1,2}:\\d{1,2}:\\d{1,2},\\d{1,3}";
+				return "[1-9]\\d{3}-\\d{2}-\\d{2} " + "\\d{1,2}:\\d{1,2}:\\d{1,2},\\d{1,3}";
 			} else {
 				try {
 					dateFormat = new SimpleDateFormat(getModifier());
 					return DateFormatUtils.getRegexPattern(dateFormat);
-				} catch (IllegalArgumentException e) {
-					throw new FormatException(
-							"Not valid simple formate date format: "
-									+ getModifier());
+				} catch (final IllegalArgumentException e) {
+					throw new FormatException("Not valid simple formate date format: " + getModifier());
 				}
 			}
 		}
 
 		@Override
-		protected void set(final LogEntry entry, final String match)
-				throws FormatException {
+		protected void set(final LogEntry entry, final String match) throws FormatException {
 			try {
 				entry.getFields().put(getFieldName(), match);
 				entry.setTimeStamp(dateFormat.parse(match));
-			} catch (ParseException e) {
+			} catch (final ParseException e) {
 				throw new FormatException("Failed to parse date: " + match, e);
 			}
 		}
@@ -218,8 +206,7 @@ public class Log4jTextReader extends FormattedTextReader {
 
 	@Override
 	protected Specifier[] createSupportedSpecifiers() {
-		return new Specifier[] { new LevelSpecifier("p"),
-				new TimeSpecifier("d"), new MessageSpecifier("m", true),
+		return new Specifier[] { new LevelSpecifier("p"), new TimeSpecifier("d"), new MessageSpecifier("m", true),
 				new IgnoreSpecifier("n") };
 	}
 
@@ -234,7 +221,7 @@ public class Log4jTextReader extends FormattedTextReader {
 		timeSpecifier = null;
 		levelSpecifier = null;
 		super.initPattern();
-		for (Specifier s : parsingSpecifiers) {
+		for (final Specifier s : parsingSpecifiers) {
 			if (s instanceof MessageSpecifier) {
 				messageSpecifier = (MessageSpecifier) s;
 			} else if (s instanceof TimeSpecifier) {
@@ -247,12 +234,11 @@ public class Log4jTextReader extends FormattedTextReader {
 	}
 
 	@Override
-	protected void attachOverflowLine(final LogEntry entry,
-			final String overflowLine) {
+	protected void attachOverflowLine(final LogEntry entry, final String overflowLine) {
 		if (messageSpecifier != null) {
-			FieldsMap fMap = entry.getFields();
-			String mfName = messageSpecifier.getFieldName();
-			String oldMsg = (String) fMap.get(mfName);
+			final FieldsMap fMap = entry.getFields();
+			final String mfName = messageSpecifier.getFieldName();
+			final String oldMsg = (String) fMap.get(mfName);
 			if (oldMsg == null) {
 				fMap.put(mfName, overflowLine);
 			} else {
@@ -262,16 +248,14 @@ public class Log4jTextReader extends FormattedTextReader {
 	}
 
 	@Override
-	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes()
-			throws FormatException {
+	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
 		initPattern();
-		LinkedHashMap<String, FieldBaseTypes> types = super.getFieldTypes();
+		final LinkedHashMap<String, FieldBaseTypes> types = super.getFieldTypes();
 		if (timeSpecifier != null) {
-			types.put(LogEntryData.FIELD_TIMESTAMP, FieldBaseTypes.DATE);
+			types.put(LogEntry.FIELD_TIMESTAMP, FieldBaseTypes.DATE);
 		}
 		if (levelSpecifier != null) {
-			types.put(LogEntryData.FIELD_SEVERITY_LEVEL,
-					FieldBaseTypes.SEVERITY);
+			types.put(LogEntry.FIELD_SEVERITY_LEVEL, FieldBaseTypes.SEVERITY);
 		}
 		return types;
 	}

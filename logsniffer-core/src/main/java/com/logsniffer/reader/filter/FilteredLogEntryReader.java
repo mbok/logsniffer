@@ -26,6 +26,7 @@ import javax.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogInputStream;
@@ -33,7 +34,6 @@ import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.LogPointerFactory;
 import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.SeverityLevel;
-import com.logsniffer.model.fields.FieldBaseTypes;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.LogEntryReader;
 import com.logsniffer.util.json.Views;

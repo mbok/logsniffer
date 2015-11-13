@@ -11,7 +11,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.logsniffer.app.CoreAppConfig;
-import com.logsniffer.model.fields.FieldsMap;
+import com.logsniffer.fields.FieldsMap;
 
 /**
  * Conversion test for Groks.

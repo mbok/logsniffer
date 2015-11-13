@@ -17,10 +17,11 @@
  *******************************************************************************/
 package com.logsniffer.model;
 
+import java.util.Date;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize.Typing;
-import com.logsniffer.model.support.JsonLogPointer;
+import com.logsniffer.fields.FieldsMap;
+import com.logsniffer.model.LogEntry.LogEntryTypeSafeDeserializer;
 
 /**
  * Represents an entry in a log with native pointers.
@@ -28,20 +29,48 @@ import com.logsniffer.model.support.JsonLogPointer;
  * @author mbok
  * 
  */
-public final class LogEntry extends LogEntryData {
-	@JsonSerialize(typing = Typing.STATIC)
-	@JsonDeserialize(as = JsonLogPointer.class)
-	private LogPointer startOffset;
-	@JsonSerialize(typing = Typing.STATIC)
-	@JsonDeserialize(as = JsonLogPointer.class)
-	private LogPointer endOffset;
+@JsonDeserialize(using = LogEntryTypeSafeDeserializer.class)
+public final class LogEntry extends FieldsMap {
+
+	private static final long serialVersionUID = 6930083682998388113L;
+
+	/**
+	 * Field key for convenient method {@link #getStartOffset()}.
+	 */
+	public static final String FIELD_START_OFFSET = "_startOffset";
+
+	/**
+	 * Field key for convenient method {@link #getEndOffset()}.
+	 */
+	public static final String FIELD_END_OFFSET = "_endOffset";
+
+	/**
+	 * Field key for convenient method {@link #getSeverity()}.
+	 */
+	public static final String FIELD_SEVERITY_LEVEL = "_severity";
+
+	/**
+	 * Field key for convenient method {@link #getTimeStamp()}.
+	 */
+	public static final String FIELD_TIMESTAMP = "_timestamp";
+
+	/**
+	 * Field key for convenient method {@link #getRawContent()}.
+	 */
+	public static final String FIELD_RAW_CONTENT = "_raw";
+
+	// @JsonSerialize(typing = Typing.STATIC)
+	// @JsonDeserialize(as = JsonLogPointer.class)
+	// private LogPointer startOffset;
+	// @JsonSerialize(typing = Typing.STATIC)
+	// @JsonDeserialize(as = JsonLogPointer.class)
+	// private LogPointer endOffset;
 
 	/**
 	 * @return the startOffset
 	 */
-	@Override
 	public LogPointer getStartOffset() {
-		return startOffset;
+		return (LogPointer) super.get(FIELD_START_OFFSET);
 	}
 
 	/**
@@ -49,15 +78,14 @@ public final class LogEntry extends LogEntryData {
 	 *            the startOffset to set
 	 */
 	public void setStartOffset(final LogPointer startOffset) {
-		this.startOffset = startOffset;
+		super.put(FIELD_START_OFFSET, startOffset);
 	}
 
 	/**
 	 * @return the endOffset
 	 */
-	@Override
 	public LogPointer getEndOffset() {
-		return endOffset;
+		return (LogPointer) super.get(FIELD_END_OFFSET);
 	}
 
 	/**
@@ -65,6 +93,77 @@ public final class LogEntry extends LogEntryData {
 	 *            the endOffset to set
 	 */
 	public void setEndOffset(final LogPointer endOffset) {
-		this.endOffset = endOffset;
+		super.put(FIELD_END_OFFSET, endOffset);
+	}
+
+	/**
+	 * 
+	 * @return the fields extracted from {@link #getRawContent()}. Values
+	 *         {@link Object#toString()} method reflects the unchanged text part
+	 *         as extracted from {@link #getRawContent()}.
+	 */
+	@Deprecated
+	public final FieldsMap getFields() {
+		return this;
+	}
+
+	/**
+	 * @return the content
+	 */
+	public String getRawContent() {
+		return (String) super.get(FIELD_RAW_CONTENT);
+	}
+
+	/**
+	 * @param content
+	 *            the content to set
+	 */
+	public void setRawContent(final String content) {
+		super.put(FIELD_RAW_CONTENT, content);
+	}
+
+	/**
+	 * @return the level
+	 */
+	public final SeverityLevel getSeverity() {
+		return (SeverityLevel) super.get(FIELD_SEVERITY_LEVEL);
+	}
+
+	/**
+	 * @param level
+	 *            the severity level to set
+	 */
+	public void setSeverity(final SeverityLevel level) {
+		super.put(FIELD_SEVERITY_LEVEL, level);
+	}
+
+	/**
+	 * @return the timeStamp
+	 */
+	public final Date getTimeStamp() {
+		return (Date) super.get(FIELD_TIMESTAMP);
+	}
+
+	/**
+	 * @param timeStamp
+	 *            the timeStamp to set
+	 */
+	public void setTimeStamp(final Date timeStamp) {
+		super.put(FIELD_TIMESTAMP, timeStamp);
+	}
+
+	/**
+	 * Type safe deserializer for {@link LogEntry}s.
+	 * 
+	 * @author mbok
+	 *
+	 */
+	public static class LogEntryTypeSafeDeserializer extends FieldsMapTypeSafeDeserializer {
+
+		@Override
+		protected FieldsMap create() {
+			return new LogEntry();
+		}
+
 	}
 }

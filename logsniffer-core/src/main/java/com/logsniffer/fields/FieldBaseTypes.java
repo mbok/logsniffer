@@ -15,12 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
-package com.logsniffer.model.fields;
+package com.logsniffer.fields;
 
 import java.util.Date;
 
 import com.google.common.primitives.Primitives;
+import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.SeverityLevel;
+import com.logsniffer.model.support.JsonLogPointer;
 
 /**
  * Field type enum.
@@ -29,27 +31,34 @@ import com.logsniffer.model.SeverityLevel;
  * 
  */
 public enum FieldBaseTypes {
-	BYTE(byte.class), BOOLEAN(boolean.class), STRING(String.class), DATE(
-			Date.class), SEVERITY(SeverityLevel.class), INTEGER(int.class), LONG(
-			long.class), FLOAT(float.class), DOUBLE(double.class), FIELDS_MAP(
-			FieldsMap.class), OBJECT(null);
+	BYTE(byte.class), BOOLEAN(boolean.class), STRING(String.class), DATE(Date.class), SEVERITY(
+			SeverityLevel.class), INTEGER(int.class), LONG(long.class), FLOAT(float.class), DOUBLE(
+					double.class), FIELDS_MAP(FieldsMap.class), OBJECT(null), LPOINTER(LogPointer.class,
+							JsonLogPointer.class);
 
 	private Class<?> deserializationType;
+	private Class<?> serializationType;
 
 	FieldBaseTypes(final Class<?> javaType) {
 		this.deserializationType = javaType;
+		this.serializationType = javaType;
+	}
+
+	FieldBaseTypes(final Class<?> serializationType, final Class<?> deserializationType) {
+		this.serializationType = serializationType;
+		this.deserializationType = deserializationType;
 	}
 
 	public static FieldBaseTypes resolveType(final Object v) {
-		for (FieldBaseTypes t : values()) {
-			if (t.deserializationType == null) {
+		for (final FieldBaseTypes t : values()) {
+			if (t.serializationType == null) {
 				continue;
 			}
 			Class<?> vc = v.getClass();
 			if (Primitives.isWrapperType(vc)) {
 				vc = Primitives.unwrap(vc);
 			}
-			if (t.deserializationType.isAssignableFrom(vc)) {
+			if (t.serializationType.isAssignableFrom(vc)) {
 				return t;
 			}
 		}
@@ -62,6 +71,14 @@ public enum FieldBaseTypes {
 	@SuppressWarnings("unchecked")
 	public <T> Class<? super T> getDeserializationType() {
 		return (Class<? super T>) deserializationType;
+	}
+
+	/**
+	 * @return the deserializationType
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> Class<? super T> getSerializationType() {
+		return (Class<? super T>) serializationType;
 	}
 
 }

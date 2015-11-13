@@ -17,13 +17,15 @@
  *******************************************************************************/
 package com.logsniffer.model;
 
+import com.fasterxml.jackson.annotation.JsonRawValue;
+
 /**
  * Abstraction of pointing a byte position inside a log.
  * 
  * @author mbok
  * 
  */
-public interface LogPointer extends LogPointerTransfer {
+public interface LogPointer {
 	/**
 	 * @return true if this pointer represents the start of log
 	 */
@@ -34,4 +36,11 @@ public interface LogPointer extends LogPointerTransfer {
 	 */
 	public boolean isEOF();
 
+	/**
+	 * Returns an JSON serialized representation of this pointer.
+	 * 
+	 * @return an JSON serialized representation of this pointer
+	 */
+	@JsonRawValue
+	public String getJson();
 }

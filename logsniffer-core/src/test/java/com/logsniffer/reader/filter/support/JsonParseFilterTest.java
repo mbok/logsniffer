@@ -33,8 +33,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.logsniffer.app.CoreAppConfig;
 import com.logsniffer.config.BeanConfigFactoryManager;
-import com.logsniffer.model.fields.FieldBaseTypes;
-import com.logsniffer.model.fields.FieldsMap;
+import com.logsniffer.fields.FieldBaseTypes;
+import com.logsniffer.fields.FieldsMap;
 import com.logsniffer.reader.filter.support.JsonParseFilter;
 import com.logsniffer.reader.filter.support.JsonParseFilter.JsonParseFilterBuilder;
 

@@ -29,7 +29,6 @@ import com.logsniffer.event.LogEntryReaderStrategy;
 import com.logsniffer.event.Scanner;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
-import com.logsniffer.model.LogEntryData;
 import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogPointerFactory;
 import com.logsniffer.model.LogRawAccess;
@@ -60,12 +59,12 @@ public abstract class SingleEntryIncrementalMatcher implements Scanner {
 					EventData event;
 					try {
 						event = matches(entry);
-					} catch (FormatException e) {
+					} catch (final FormatException e) {
 						throw new IOException(e);
 					}
 					if (event != null) {
 						logger.debug("Entry matches the interest: {}", entry);
-						ArrayList<LogEntryData> entries = new ArrayList<LogEntryData>();
+						final ArrayList<LogEntry> entries = new ArrayList<LogEntry>();
 						entries.add(entry);
 						event.setEntries(entries);
 						eventConsumer.consume(event);
@@ -73,7 +72,7 @@ public abstract class SingleEntryIncrementalMatcher implements Scanner {
 					return readerStrategy.continueReading(log, pointerFactory, entry);
 				}
 			});
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			if (e.getCause() instanceof FormatException) {
 				throw (FormatException) e.getCause();
 			} else {

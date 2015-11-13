@@ -23,8 +23,6 @@ import java.util.List;
 import com.logsniffer.aspect.AspectHost;
 import com.logsniffer.aspect.AspectProvider;
 import com.logsniffer.event.SnifferPersistence.AspectSniffer;
-import com.logsniffer.model.sql.FlatLogEntryPersistence.EntriesJoinType;
-import com.logsniffer.model.sql.FlatLogEntryPersistence.FieldsProjection;
 import com.logsniffer.util.ListQueryBuilder;
 import com.logsniffer.util.PageableResult;
 
@@ -173,8 +171,6 @@ public interface EventPersistence {
 	}
 
 	public static interface EventQueryBuilder extends BaseEventQueryBuilder<EventQueryBuilder> {
-		@Deprecated
-		EventQueryBuilder withEntryFieldsMapAspect(FieldsProjection[] fields, EntriesJoinType joinType);
 
 		EventQueryBuilder sortByEntryTimestamp(boolean desc);
 

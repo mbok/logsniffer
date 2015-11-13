@@ -29,11 +29,10 @@ import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.model.LogEntry;
-import com.logsniffer.model.LogEntryData;
 import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.SeverityLevel.SeverityClassification;
-import com.logsniffer.model.fields.FieldBaseTypes;
 import com.logsniffer.model.support.ByteArrayLog;
 import com.logsniffer.model.support.ByteLogInputStream;
 import com.logsniffer.model.support.LineInputStream;
@@ -50,11 +49,11 @@ import com.logsniffer.reader.support.BufferedConsumer;
 public class Log4jTextReaderTest {
 	@Test
 	public void testParsingConversionPattern() throws FormatException {
-		Log4jTextReader r = new Log4jTextReader();
+		final Log4jTextReader r = new Log4jTextReader();
 		r.setFormatPattern("%d{ABSOLUTE} %-5p [%c] %m%n");
 		r.setCharset("UTF-8");
 		r.setSpecifiersFieldMapping(Collections.singletonMap("m", "Message"));
-		String[] fieldNames = r.getFieldTypes().keySet().toArray(new String[0]);
+		final String[] fieldNames = r.getFieldTypes().keySet().toArray(new String[0]);
 		Assert.assertEquals(7, fieldNames.length);
 		Assert.assertEquals("_raw", fieldNames[0]);
 		Assert.assertEquals("d", fieldNames[1]);
@@ -64,7 +63,7 @@ public class Log4jTextReaderTest {
 		Assert.assertEquals("_timestamp", fieldNames[5]);
 		Assert.assertEquals("_severity", fieldNames[6]);
 
-		Assert.assertEquals(FieldBaseTypes.DATE, r.getFieldTypes().get(LogEntryData.FIELD_TIMESTAMP));
+		Assert.assertEquals(FieldBaseTypes.DATE, r.getFieldTypes().get(LogEntry.FIELD_TIMESTAMP));
 		Assert.assertEquals(FieldBaseTypes.STRING, r.getFieldTypes().get(fieldNames[0]));
 		Assert.assertEquals(FieldBaseTypes.STRING, r.getFieldTypes().get(fieldNames[1]));
 		Assert.assertEquals(FieldBaseTypes.STRING, r.getFieldTypes().get(fieldNames[2]));
@@ -76,18 +75,18 @@ public class Log4jTextReaderTest {
 
 	public static LogEntry[] readEntries(final LogEntryReader<ByteLogInputStream> reader, final ByteArrayLog log,
 			final LogPointer start, final int size) throws IOException, FormatException {
-		BufferedConsumer c = new BufferedConsumer(size);
+		final BufferedConsumer c = new BufferedConsumer(size);
 		reader.readEntries(log, log, start, c);
 		return c.getBuffer().toArray(new LogEntry[0]);
 	}
 
 	@Test
 	public void testParsingOneLine() throws FormatException, UnsupportedEncodingException, IOException, ParseException {
-		Log4jTextReader reader = new Log4jTextReader("%d{ABSOLUTE} %-5p [%c] %m%n", "UTF-8");
-		String logLine1 = "00:27:29,456 DEBUG [com.logsniffer.parser.log4j.Log4jParser] Prepared parsing pattern";
-		ByteArrayLog log = createLog(0, logLine1);
-		LogPointer start = log.getInputStream(null).getPointer();
-		LogEntry[] entries = readEntries(reader, log, null, 1);
+		final Log4jTextReader reader = new Log4jTextReader("%d{ABSOLUTE} %-5p [%c] %m%n", "UTF-8");
+		final String logLine1 = "00:27:29,456 DEBUG [com.logsniffer.parser.log4j.Log4jParser] Prepared parsing pattern";
+		final ByteArrayLog log = createLog(0, logLine1);
+		final LogPointer start = log.getInputStream(null).getPointer();
+		final LogEntry[] entries = readEntries(reader, log, null, 1);
 
 		Assert.assertEquals(1, entries.length);
 		Assert.assertEquals(logLine1, entries[0].getRawContent());
@@ -101,11 +100,11 @@ public class Log4jTextReaderTest {
 	@Test
 	public void testISO8601DateFormat()
 			throws FormatException, UnsupportedEncodingException, IOException, ParseException {
-		Log4jTextReader reader = new Log4jTextReader("%d %-5p [%c] %m%n", "UTF-8");
-		String logLine1 = "2013-03-24 00:27:29,456 DEBUG [com.logsniffer.parser.log4j.Log4jParser] Prepared parsing pattern";
-		ByteArrayLog log = createLog(0, logLine1);
-		LogPointer start = log.getInputStream(null).getPointer();
-		LogEntry[] entries = readEntries(reader, log, null, 1);
+		final Log4jTextReader reader = new Log4jTextReader("%d %-5p [%c] %m%n", "UTF-8");
+		final String logLine1 = "2013-03-24 00:27:29,456 DEBUG [com.logsniffer.parser.log4j.Log4jParser] Prepared parsing pattern";
+		final ByteArrayLog log = createLog(0, logLine1);
+		final LogPointer start = log.getInputStream(null).getPointer();
+		final LogEntry[] entries = readEntries(reader, log, null, 1);
 		Assert.assertEquals(1, entries.length);
 		Assert.assertEquals(logLine1, entries[0].getRawContent());
 		Assert.assertEquals(SeverityClassification.DEBUG, entries[0].getSeverity().getClassification());
@@ -118,16 +117,16 @@ public class Log4jTextReaderTest {
 	@Test
 	public void testParsingOneLineWithException()
 			throws ParseException, UnsupportedEncodingException, IOException, FormatException {
-		Log4jTextReader reader = new Log4jTextReader("%d{ABSOLUTE} %-5p [%c] %m%n", "UTF-8");
-		String[] logLines = new String[] {
+		final Log4jTextReader reader = new Log4jTextReader("%d{ABSOLUTE} %-5p [%c] %m%n", "UTF-8");
+		final String[] logLines = new String[] {
 				"00:27:29,456 ERROR [com.logsniffer.parser.log4j.Log4jParser] Prepared parsing pattern",
 				"java.lang.Exception: kll",
 				"at com.logsniffer.parser.log4j.Log4jParser.setConversionPattern(Log4jParser.java:280)",
 				"at com.logsniffer.parser.log4j.Log4jParserTest.testParsingOneLineWithException(Log4jParserTest.java:44",
 				"22:27:29,456 INFO  [com.logsniffer.parser.log4j.Log4jParser] Finished" };
-		ByteArrayLog log = createLog(0, StringUtils.join(logLines, "\n"));
-		LogPointer start = log.getInputStream(null).getPointer();
-		LogEntry[] entries = readEntries(reader, log, null, 2);
+		final ByteArrayLog log = createLog(0, StringUtils.join(logLines, "\n"));
+		final LogPointer start = log.getInputStream(null).getPointer();
+		final LogEntry[] entries = readEntries(reader, log, null, 2);
 
 		// Check error entry
 		Assert.assertEquals(2, entries.length);
@@ -153,14 +152,14 @@ public class Log4jTextReaderTest {
 
 	@Test
 	public void testOnlyOverflow() throws ParseException, UnsupportedEncodingException, IOException, FormatException {
-		Log4jTextReader reader = new Log4jTextReader("%d{ABSOLUTE} %-5p [%c] %m%n", "UTF-8");
-		String[] logLines = new String[] { "java.lang.Exception: kll",
+		final Log4jTextReader reader = new Log4jTextReader("%d{ABSOLUTE} %-5p [%c] %m%n", "UTF-8");
+		final String[] logLines = new String[] { "java.lang.Exception: kll",
 				"at com.logsniffer.parser.log4j.Log4jParser.setConversionPattern(Log4jParser.java:280)",
 				"at com.logsniffer.parser.log4j.Log4jParserTest.testParsingOneLineWithException(Log4jParserTest.java:44",
 				"22:27:29,456 INFO  [com.logsniffer.parser.log4j.Log4jParser] Finished" };
-		ByteArrayLog log = createLog(0, StringUtils.join(logLines, "\n"));
-		LogPointer start = log.getInputStream(null).getPointer();
-		LogEntry[] entries = readEntries(reader, log, null, 2);
+		final ByteArrayLog log = createLog(0, StringUtils.join(logLines, "\n"));
+		final LogPointer start = log.getInputStream(null).getPointer();
+		final LogEntry[] entries = readEntries(reader, log, null, 2);
 
 		// Check error entry
 		Assert.assertEquals(2, entries.length);
@@ -173,12 +172,12 @@ public class Log4jTextReaderTest {
 
 	@Test
 	public void testInvalidPattern() throws UnsupportedEncodingException, IOException, FormatException {
-		Log4jTextReader reader = new Log4jTextReader("%d %-5p [%c] (%t) %m%n", "UTF-8");
-		String[] logLines = {
+		final Log4jTextReader reader = new Log4jTextReader("%d %-5p [%c] (%t) %m%n", "UTF-8");
+		final String[] logLines = {
 				"2013-09-28 01:28:27,145 INFO  [org.jboss.resource.deployers.RARDeployment] (main) Required license terms exist, view vfszip:/D:/work/scaleborn3/selunit-cloud-backend-jboss/dev/jboss-5.1.0.GA/server/default/deploy/jboss-local-jdbc.rar/META-INF/ra.xml",
 				"2013-09-28 01:28:27,193 INFO  [org.jboss.resource.deployers.RARDeployment] (main) Required license terms exist, view vfszip:/D:/work/scaleborn3/selunit-cloud-backend-jboss/dev/jboss-5.1.0.GA/server/default/deploy/jboss-xa-jdbc.rar/META-INF/ra.xml" };
-		ByteArrayLog log = createLog(0, StringUtils.join(logLines, "\n"));
-		LogEntry[] entries = readEntries(reader, log, null, 2);
+		final ByteArrayLog log = createLog(0, StringUtils.join(logLines, "\n"));
+		final LogEntry[] entries = readEntries(reader, log, null, 2);
 
 		// Check error entry
 		Assert.assertEquals(2, entries.length);
@@ -192,9 +191,9 @@ public class Log4jTextReaderTest {
 	 */
 	@Test
 	public void testInvalidPatternFromFile() throws UnsupportedEncodingException, IOException, FormatException {
-		Log4jTextReader reader = new Log4jTextReader("%d %-5p [%c] (%t) %m%n", "UTF-8");
-		File f = new File("src/test/resources/logs/nl-triming.txt");
-		LogEntry[] entries = readEntries(reader, new ByteArrayLog(FileUtils.readFileToByteArray(f)), null, 2000);
+		final Log4jTextReader reader = new Log4jTextReader("%d %-5p [%c] (%t) %m%n", "UTF-8");
+		final File f = new File("src/test/resources/logs/nl-triming.txt");
+		final LogEntry[] entries = readEntries(reader, new ByteArrayLog(FileUtils.readFileToByteArray(f)), null, 2000);
 
 		Assert.assertEquals(46, entries.length);
 	}

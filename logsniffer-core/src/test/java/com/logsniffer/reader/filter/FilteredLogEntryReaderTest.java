@@ -30,6 +30,7 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogInputStream;
@@ -37,7 +38,6 @@ import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.LogPointerFactory;
 import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.SeverityLevel;
-import com.logsniffer.model.fields.FieldBaseTypes;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.LogEntryReader;
 import com.logsniffer.reader.LogEntryReader.LogEntryConsumer;

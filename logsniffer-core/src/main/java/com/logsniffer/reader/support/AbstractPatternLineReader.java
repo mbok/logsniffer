@@ -26,12 +26,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
-import com.logsniffer.model.LogEntryData;
 import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.LogRawAccess;
-import com.logsniffer.model.fields.FieldBaseTypes;
 import com.logsniffer.model.support.ByteLogInputStream;
 import com.logsniffer.model.support.LineInputStream;
 import com.logsniffer.reader.FormatException;
@@ -108,10 +107,10 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 	protected abstract String getPatternInfo();
 
 	@Override
-	public final void readEntries(Log log, LogRawAccess<ByteLogInputStream> logAccess, LogPointer startOffset,
-			LogEntryConsumer consumer) throws IOException, FormatException {
+	public final void readEntries(final Log log, final LogRawAccess<ByteLogInputStream> logAccess,
+			final LogPointer startOffset, final LogEntryConsumer consumer) throws IOException, FormatException {
 		initPattern();
-		LinkedHashMap<String, FieldBaseTypes> fieldTypes = getFieldTypes();
+		final LinkedHashMap<String, FieldBaseTypes> fieldTypes = getFieldTypes();
 		LineInputStream lis = null;
 		try {
 			boolean patternAware = true;
@@ -126,7 +125,7 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 			}
 			LogPointer currentOffset = null;
 			while ((line = lis.readNextLine()) != null && (currentOffset = lis.getPointer()) != null) {
-				MatcherContext ctx = matches(line);
+				final MatcherContext ctx = matches(line);
 				if (ctx != null || !patternAware) {
 					linesWithoutPattern = -1;
 					if (entry != null) {
@@ -178,8 +177,8 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 
 	@Override
 	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
-		LinkedHashMap<String, FieldBaseTypes> fields = new LinkedHashMap<String, FieldBaseTypes>();
-		fields.put(LogEntryData.FIELD_RAW_CONTENT, FieldBaseTypes.STRING);
+		final LinkedHashMap<String, FieldBaseTypes> fields = new LinkedHashMap<String, FieldBaseTypes>();
+		fields.put(LogEntry.FIELD_RAW_CONTENT, FieldBaseTypes.STRING);
 		return fields;
 	}
 }

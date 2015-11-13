@@ -9,8 +9,8 @@
 </div>
 <div class="modal-body" class="zoom-entry-modal">
 	<tabset>
-    	<tab heading="Fields"><lfs-fields-table fields="entry.fields" exclude-raw="true"></lfs-fields-table></tab>
-    	<tab heading="Raw content"><div class="log"><div class="text nowrap"><div class="raw">{{entry.fields._raw}}</div></div></div></tab>
+    	<tab heading="Fields"><lfs-fields-table fields="entry" exclude-raw="true"></lfs-fields-table></tab>
+    	<tab heading="Raw content"><div class="log"><div class="text nowrap"><div class="raw">{{entry._raw}}</div></div></div></tab>
     	<tab heading="JSON"><json-formatter json="entry" open="2"></json-formatter></tab>
     </tabset>
 </div>

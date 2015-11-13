@@ -19,13 +19,12 @@ package com.logsniffer.event;
 
 import java.io.IOException;
 
-import net.sf.json.JSONObject;
-
 import org.apache.commons.lang3.StringUtils;
 
 import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.LogPointerFactory;
-import com.logsniffer.model.LogPointerTransfer;
+
+import net.sf.json.JSONObject;
 
 /**
  * Increment data container for continuous event scanning process.
@@ -34,13 +33,13 @@ import com.logsniffer.model.LogPointerTransfer;
  * 
  */
 public final class IncrementData {
-	private LogPointerTransfer nextOffset;
+	private LogPointer nextOffset;
 	private JSONObject data = new JSONObject();
 
 	/**
 	 * @return the nextOffset
 	 */
-	public LogPointerTransfer getNextOffset() {
+	public LogPointer getNextOffset() {
 		return nextOffset;
 	}
 
@@ -51,18 +50,16 @@ public final class IncrementData {
 	 * 
 	 * @throws IOException
 	 */
-	public LogPointer getNextOffset(final LogPointerFactory pointerFactory)
-			throws IOException {
-		return nextOffset != null
-				&& StringUtils.isNotBlank(nextOffset.getJson()) ? pointerFactory
-				.getFromJSON(nextOffset.getJson()) : null;
+	public LogPointer getNextOffset(final LogPointerFactory pointerFactory) throws IOException {
+		return nextOffset != null && StringUtils.isNotBlank(nextOffset.getJson())
+				? pointerFactory.getFromJSON(nextOffset.getJson()) : null;
 	}
 
 	/**
 	 * @param nextOffset
 	 *            the nextOffset to set
 	 */
-	public void setNextOffset(final LogPointerTransfer nextOffset) {
+	public void setNextOffset(final LogPointer nextOffset) {
 		this.nextOffset = nextOffset;
 	}
 

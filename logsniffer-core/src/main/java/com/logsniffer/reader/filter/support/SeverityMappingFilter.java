@@ -25,9 +25,9 @@ import java.util.Map;
 import javax.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.logsniffer.model.LogEntryData;
+import com.logsniffer.fields.FieldBaseTypes;
+import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.SeverityLevel;
-import com.logsniffer.model.fields.FieldBaseTypes;
 
 /**
  * Maps a source string field to a severity object.
@@ -35,8 +35,7 @@ import com.logsniffer.model.fields.FieldBaseTypes;
  * @author mbok
  *
  */
-public final class SeverityMappingFilter extends
-		AbstractTransformationFilter<SeverityLevel> {
+public final class SeverityMappingFilter extends AbstractTransformationFilter<SeverityLevel> {
 	@JsonProperty
 	@Valid
 	private Map<String, SeverityLevel> severityLevels = new HashMap<>();
@@ -51,18 +50,18 @@ public final class SeverityMappingFilter extends
 	private SeverityLevel fallback;
 
 	{
-		setTargetField(LogEntryData.FIELD_SEVERITY_LEVEL);
+		setTargetField(LogEntry.FIELD_SEVERITY_LEVEL);
 	}
 
 	private void resetInternalLevels() {
 		_levels = new HashMap<>();
 		if (severityLevels != null) {
 			if (ignoreCase) {
-				for (String s : severityLevels.keySet()) {
+				for (final String s : severityLevels.keySet()) {
 					_levels.put(s.toLowerCase().trim(), severityLevels.get(s));
 				}
 			} else {
-				for (String s : severityLevels.keySet()) {
+				for (final String s : severityLevels.keySet()) {
 					_levels.put(s.trim(), severityLevels.get(s));
 				}
 			}
@@ -80,8 +79,7 @@ public final class SeverityMappingFilter extends
 	 * @param severityLevels
 	 *            the severityLevels to set
 	 */
-	public void setSeverityLevels(
-			final Map<String, SeverityLevel> severityLevels) {
+	public void setSeverityLevels(final Map<String, SeverityLevel> severityLevels) {
 		this.severityLevels = severityLevels;
 		resetInternalLevels();
 	}
@@ -132,7 +130,7 @@ public final class SeverityMappingFilter extends
 	}
 
 	@Override
-	protected SeverityLevel transform(String sourceValue) {
+	protected SeverityLevel transform(final String sourceValue) {
 		if (_levels == null) {
 			resetInternalLevels();
 		}
@@ -140,7 +138,7 @@ public final class SeverityMappingFilter extends
 		if (ignoreCase) {
 			strSource = strSource.toLowerCase();
 		}
-		SeverityLevel mapping = _levels.get(strSource);
+		final SeverityLevel mapping = _levels.get(strSource);
 		return mapping;
 	}
 

@@ -24,13 +24,13 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.SeverityLevel;
-import com.logsniffer.model.fields.FieldBaseTypes;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.LogEntryReader;
 
