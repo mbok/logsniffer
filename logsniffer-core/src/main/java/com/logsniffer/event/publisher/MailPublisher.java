@@ -81,8 +81,8 @@ public class MailPublisher implements Publisher, BeanPostConstructor<MailPublish
 
 	@NotNull
 	@JsonProperty
-	private String textMessage = "Event link: $eventLink\n\nLog entries:\n" + "#foreach( $entry in $event._entries )"
-			+ "\n  $entry._raw\n" + "#end";
+	private String textMessage = "Event link: $eventLink\n\nLog entries:\n" + "#foreach( $entry in $event['_entries'] )"
+			+ "\n  $entry['_raw']\n" + "#end";
 
 	@Override
 	public void publish(final Event event) throws PublishException {
