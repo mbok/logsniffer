@@ -63,7 +63,8 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	   replace: true,
 	   scope: {
 	       fields: '=',
-	       excludeRaw: '='
+	       excludeRaw: '=',
+	       excludeFields: '='
 	   },
 	   controller: function($scope) {
 		    $scope.rows = null;
@@ -81,6 +82,11 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		    	"_startOffset": true,
 		    	"_endOffset": true
 		    };
+		    if ($scope.excludeFields) {
+		    	for (var i=0; i<$scope.excludeFields.length; i++) {
+		    		ignoreFields[$scope.excludeFields[i]] = true;
+		    	}
+		    }
 		    angular.forEach($scope.fields, function(value, key) {
 			if (!$scope.rows) {
 			    $scope.rows = [];
@@ -97,7 +103,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	   template: 
 	      '<div><div class="panel panel-default" ng-if="rows">'+
 	      	'<table class="attributes table table-condensed table-striped table-bordered entries">'+
-	      		'<tr ng-repeat="row in rows">'+
+	      		'<tr ng-repeat="row in rows | orderBy:\'name\'">'+
 	      			'<th class="text">{{row.name}}</th>'+
 	      			'<td ng-class="row.type" ng-switch="row.type">'+
 	      				'<div ng-switch-when="SEVERITY" class="text"><span class="label label-default severity sc-{{row.value.c}}">{{row.value.n}}</span></div>'+

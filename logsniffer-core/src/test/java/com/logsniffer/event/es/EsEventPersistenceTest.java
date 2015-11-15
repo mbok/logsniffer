@@ -25,6 +25,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +35,7 @@ import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logsniffer.app.CoreAppConfig;
 import com.logsniffer.app.ElasticSearchAppConfig;
 import com.logsniffer.app.ElasticSearchAppConfig.ClientCallback;
@@ -58,6 +61,8 @@ import com.logsniffer.model.support.DefaultPointer;
 @ContextConfiguration(classes = { HelperAppConfig.class, CoreAppConfig.class, QaDataSourceAppConfig.class,
 		ElasticSearchAppConfig.class })
 public class EsEventPersistenceTest {
+
+	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	@Configuration
 	public static class HelperAppConfig {
@@ -94,13 +99,16 @@ public class EsEventPersistenceTest {
 	@Autowired
 	private SnifferPersistence snifferPersistence;
 
+	@Autowired
+	private ObjectMapper objectMapper;
+
 	private final WildcardLogsSource source1 = new WildcardLogsSource();
 
 	private final Sniffer sniffer1 = new Sniffer();
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
-	public void testPersist() {
+	public void testPersist() throws Exception {
 		// Assert.assertEquals(0,
 		// persister.getEventsQueryBuilder(sniffer1.getId(), 0, 10).list()
 		// .size());
@@ -112,7 +120,7 @@ public class EsEventPersistenceTest {
 		entry1.setRawContent("1");
 		entry1.setStartOffset(new DefaultPointer(0, 1));
 		entry1.setEndOffset(new DefaultPointer(1, 1));
-		entry1.getFields().put("f1", new Date(0));
+		entry1.put("f1", new Date(0));
 		final LogEntry entry2 = new LogEntry();
 		entry2.setStartOffset(new DefaultPointer(1, 2));
 		entry2.setEndOffset(new DefaultPointer(2, 2));
@@ -122,8 +130,10 @@ public class EsEventPersistenceTest {
 		entries.add(entry2);
 		e.setEntries(entries);
 		e.setPublished(new Date(1000 * 100));
-		e.getFields().put("my", "value");
+		e.put("my", "value");
 		final String eventId = persister.persist(e);
+
+		logger.info("Serialized event as: {}", objectMapper.writeValueAsString(e));
 
 		clientTpl.executeWithClient(new ClientCallback<Object>() {
 			@Override
@@ -142,12 +152,11 @@ public class EsEventPersistenceTest {
 		Assert.assertEquals(1000 * 100, checkEvent.getPublished().getTime());
 		Assert.assertEquals(2, checkEvent.getEntries().size());
 		Assert.assertEquals("1", checkEvent.getEntries().get(0).getRawContent());
-		Assert.assertEquals(new Date(0), checkEvent.getEntries().get(0).getFields().get("f1"));
+		Assert.assertEquals(new Date(0), checkEvent.getEntries().get(0).get("f1"));
 		Assert.assertEquals(entry1.getStartOffset().getJson(),
 				checkEvent.getEntries().get(0).getStartOffset().getJson());
 		Assert.assertEquals("2", checkEvent.getEntries().get(1).getRawContent());
-		Assert.assertEquals(1, checkEvent.getFields().size());
-		Assert.assertEquals("value", checkEvent.getFields().get("my"));
+		Assert.assertEquals("value", checkEvent.get("my"));
 
 		// Check offset
 		Assert.assertEquals(0, persister.getEventsQueryBuilder(sniffer1.getId(), 1, 10).list().getItems().size());

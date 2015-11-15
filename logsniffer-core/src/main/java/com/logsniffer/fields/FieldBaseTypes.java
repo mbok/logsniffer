@@ -20,6 +20,7 @@ package com.logsniffer.fields;
 import java.util.Date;
 
 import com.google.common.primitives.Primitives;
+import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.SeverityLevel;
 import com.logsniffer.model.support.JsonLogPointer;
@@ -33,8 +34,8 @@ import com.logsniffer.model.support.JsonLogPointer;
 public enum FieldBaseTypes {
 	BYTE(byte.class), BOOLEAN(boolean.class), STRING(String.class), DATE(Date.class), SEVERITY(
 			SeverityLevel.class), INTEGER(int.class), LONG(long.class), FLOAT(float.class), DOUBLE(
-					double.class), FIELDS_MAP(FieldsMap.class), OBJECT(null), LPOINTER(LogPointer.class,
-							JsonLogPointer.class);
+					double.class), LPOINTER(LogPointer.class,
+							JsonLogPointer.class), LENTRY(LogEntry.class), FIELDS_MAP(FieldsMap.class), OBJECT(null);
 
 	private Class<?> deserializationType;
 	private Class<?> serializationType;

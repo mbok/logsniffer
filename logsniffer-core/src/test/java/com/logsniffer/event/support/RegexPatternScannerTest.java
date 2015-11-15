@@ -11,7 +11,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.logsniffer.app.CoreAppConfig;
-import com.logsniffer.event.EventData;
+import com.logsniffer.event.Event;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.util.grok.GrokAppConfig;
@@ -47,8 +47,8 @@ public class RegexPatternScannerTest {
 	public void testNullSource() throws FormatException {
 		scanner.setSourceField("source");
 		scanner.getGrokBean().setPattern("(?<MyField>abcd.*)");
-		LogEntry entry = new LogEntry();
-		EventData event = scanner.matches(entry);
+		final LogEntry entry = new LogEntry();
+		final Event event = scanner.matches(entry);
 		// Asserts
 		Assert.assertNull(event);
 	}
@@ -57,27 +57,27 @@ public class RegexPatternScannerTest {
 	public void testNamedCaptures() throws FormatException {
 		scanner.setSourceField("source");
 		scanner.getGrokBean().setPattern("(?<MyField>abcd).*");
-		LogEntry entry = new LogEntry();
-		entry.getFields().put("source", "abcdef");
-		EventData event = scanner.matches(entry);
+		final LogEntry entry = new LogEntry();
+		entry.put("source", "abcdef");
+		final Event event = scanner.matches(entry);
 		// Asserts
 		Assert.assertNotNull(event);
-		Assert.assertEquals(1, event.getFields().size());
-		Assert.assertEquals("abcd", event.getFields().get("MyField"));
+		Assert.assertEquals(1, event.size());
+		Assert.assertEquals("abcd", event.get("MyField"));
 	}
 
 	@Test
 	public void testMultipleNamedCaptures() throws FormatException {
 		scanner.setSourceField("source");
 		scanner.getGrokBean().setPattern("(?<MyField>abcd)(?<RestField>.+)");
-		LogEntry entry = new LogEntry();
-		entry.getFields().put("source", "abcdef");
-		EventData event = scanner.matches(entry);
+		final LogEntry entry = new LogEntry();
+		entry.put("source", "abcdef");
+		final Event event = scanner.matches(entry);
 		// Asserts
 		Assert.assertNotNull(event);
-		Assert.assertEquals(2, event.getFields().size());
-		Assert.assertEquals("abcd", event.getFields().get("MyField"));
-		Assert.assertEquals("ef", event.getFields().get("RestField"));
+		Assert.assertEquals(2, event.size());
+		Assert.assertEquals("abcd", event.get("MyField"));
+		Assert.assertEquals("ef", event.get("RestField"));
 	}
 
 	@Test
@@ -85,13 +85,13 @@ public class RegexPatternScannerTest {
 		scanner.setSourceField("source");
 		scanner.getGrokBean().setPattern("(?<MyField>abcd)");
 		scanner.getGrokBean().setSubStringSearch(true);
-		LogEntry entry = new LogEntry();
-		entry.getFields().put("source", "wabcdef");
-		EventData event = scanner.matches(entry);
+		final LogEntry entry = new LogEntry();
+		entry.put("source", "wabcdef");
+		final Event event = scanner.matches(entry);
 		// Asserts
 		Assert.assertNotNull(event);
-		Assert.assertEquals(1, event.getFields().size());
-		Assert.assertEquals("abcd", event.getFields().get("MyField"));
+		Assert.assertEquals(1, event.size());
+		Assert.assertEquals("abcd", event.get("MyField"));
 	}
 
 	@Test
@@ -99,12 +99,12 @@ public class RegexPatternScannerTest {
 		scanner.setSourceField("source");
 		scanner.getGrokBean().setPattern("%{INT:MyIntField:int}");
 		scanner.getGrokBean().setSubStringSearch(false);
-		LogEntry entry = new LogEntry();
-		entry.getFields().put("source", "777");
-		EventData event = scanner.matches(entry);
+		final LogEntry entry = new LogEntry();
+		entry.put("source", "777");
+		final Event event = scanner.matches(entry);
 		// Asserts
 		Assert.assertNotNull(event);
-		Assert.assertEquals(1, event.getFields().size());
-		Assert.assertEquals(777, event.getFields().get("MyIntField"));
+		Assert.assertEquals(1, event.size());
+		Assert.assertEquals(777, event.get("MyIntField"));
 	}
 }

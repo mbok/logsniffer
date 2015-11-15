@@ -37,7 +37,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.logsniffer.event.Event;
-import com.logsniffer.event.EventData;
 import com.logsniffer.event.Publisher;
 import com.logsniffer.event.Publisher.PublishException;
 import com.logsniffer.web.controller.sniffer.SniffersResourceController;
@@ -50,8 +49,7 @@ import com.logsniffer.web.controller.sniffer.SniffersResourceController;
  */
 @RestController
 public class PublishersResourceController {
-	private static Logger logger = LoggerFactory
-			.getLogger(SniffersResourceController.class);
+	private static Logger logger = LoggerFactory.getLogger(SniffersResourceController.class);
 
 	/**
 	 * Request bean for publisher test.
@@ -61,7 +59,7 @@ public class PublishersResourceController {
 	 */
 	public static class PublisherTestRequest {
 		private Publisher publisher;
-		private EventData event;
+		private Event event;
 		private long snifferId;
 		private long logSourceId;
 		private String logPath;
@@ -84,7 +82,7 @@ public class PublishersResourceController {
 		/**
 		 * @return the event
 		 */
-		public EventData getEvent() {
+		public Event getEvent() {
 			return event;
 		}
 
@@ -92,7 +90,7 @@ public class PublishersResourceController {
 		 * @param event
 		 *            the event to set
 		 */
-		public void setEvent(final EventData event) {
+		public void setEvent(final Event event) {
 			this.event = event;
 		}
 
@@ -145,27 +143,24 @@ public class PublishersResourceController {
 
 	@RequestMapping(value = "/publishers/test", method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
-	void testPublishing(@RequestBody final PublisherTestRequest request)
-			throws PublishException {
-		Event event = new Event(request.getEvent());
+	void testPublishing(@RequestBody final PublisherTestRequest request) throws PublishException {
+		final Event event = request.getEvent();
 		event.setId("publisherTest");
 		event.setPublished(new Date());
 		event.setSnifferId(request.getSnifferId());
 		event.setLogPath(request.getLogPath());
 		event.setLogSourceId(request.getLogSourceId());
-		logger.info("Test publishing by {} of : {}", request.getPublisher(),
-				event);
+		logger.info("Test publishing by {} of : {}", request.getPublisher(), event);
 		request.getPublisher().publish(event);
 	}
 
 	@ExceptionHandler(value = Throwable.class)
 	@ResponseBody
-	public void handleAllExceptions(final Throwable ex,
-			final HttpServletResponse response) throws IOException {
+	public void handleAllExceptions(final Throwable ex, final HttpServletResponse response) throws IOException {
 		logger.info("Failed to test event publishing", ex);
 		response.setStatus(HttpStatus.CONFLICT.value());
 		response.setContentType(MediaType.TEXT_PLAIN_VALUE);
-		String stackTrace = ExceptionUtils.getStackTrace(ex);
+		final String stackTrace = ExceptionUtils.getStackTrace(ex);
 		IOUtils.write(stackTrace, response.getOutputStream());
 	}
 }

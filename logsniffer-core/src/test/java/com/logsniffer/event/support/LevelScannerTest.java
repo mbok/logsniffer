@@ -19,16 +19,15 @@ package com.logsniffer.event.support;
 
 import java.io.IOException;
 
-import junit.framework.Assert;
-
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
+import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import com.logsniffer.event.EventData;
+import com.logsniffer.event.Event;
 import com.logsniffer.event.IncrementData;
 import com.logsniffer.event.LogEntryReaderStrategy;
 import com.logsniffer.event.Scanner.EventConsumer;
@@ -54,61 +53,47 @@ public class LevelScannerTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testMatching() throws IOException, FormatException {
-		LevelScanner m = new LevelScanner();
+		final LevelScanner m = new LevelScanner();
 		m.setSeverityNumber(5); // e.g. WARN
 
-		DefaultPointer p = new DefaultPointer(0, 4);
+		final DefaultPointer p = new DefaultPointer(0, 4);
 
 		final Log log = Mockito.mock(Log.class);
-		final LogRawAccess<LogInputStream> logAccess = Mockito
-				.mock(LogRawAccess.class);
-		LogInputStream lis = Mockito.mock(LogInputStream.class);
-		Mockito.when(logAccess.getFromJSON(Mockito.anyString())).thenAnswer(
-				new Answer<LogPointer>() {
-					@Override
-					public LogPointer answer(final InvocationOnMock invocation)
-							throws IOException {
-						return DefaultPointer.fromJSON(invocation
-								.getArguments()[0].toString());
-					}
-				});
+		final LogRawAccess<LogInputStream> logAccess = Mockito.mock(LogRawAccess.class);
+		final LogInputStream lis = Mockito.mock(LogInputStream.class);
+		Mockito.when(logAccess.getFromJSON(Mockito.anyString())).thenAnswer(new Answer<LogPointer>() {
+			@Override
+			public LogPointer answer(final InvocationOnMock invocation) throws IOException {
+				return DefaultPointer.fromJSON(invocation.getArguments()[0].toString());
+			}
+		});
 		Mockito.when(lis.getPointer()).thenReturn(p);
 		Mockito.when(logAccess.getInputStream(null)).thenReturn(lis);
 		Mockito.when(log.getSize()).thenReturn(3l);
-		LogEntryReader<LogInputStream> reader = Mockito
-				.mock(LogEntryReader.class);
+		final LogEntryReader<LogInputStream> reader = Mockito.mock(LogEntryReader.class);
 		final LogEntry entry1 = new LogEntry();
-		entry1.setSeverity(new SeverityLevel("INFO", 3,
-				SeverityClassification.INFORMATIONAL));
+		entry1.setSeverity(new SeverityLevel("INFO", 3, SeverityClassification.INFORMATIONAL));
 		entry1.setEndOffset(new DefaultPointer(2, 4));
 		final LogEntry entry2 = new LogEntry();
 		entry2.setRawContent("entry2-content");
-		entry2.setSeverity(new SeverityLevel("WARN", 5,
-				SeverityClassification.NOTICE));
+		entry2.setSeverity(new SeverityLevel("WARN", 5, SeverityClassification.NOTICE));
 		entry2.setStartOffset(new DefaultPointer(2, 4));
 		entry2.setEndOffset(new DefaultPointer(3, 4));
 		final LogEntry entry3 = new LogEntry();
-		entry3.setSeverity(new SeverityLevel("ERROR", 6,
-				SeverityClassification.ERROR));
+		entry3.setSeverity(new SeverityLevel("ERROR", 6, SeverityClassification.ERROR));
 		entry3.setEndOffset(new DefaultPointer(4, 4));
 
 		Mockito.doAnswer(new Answer<Object>() {
 			@Override
-			public Object answer(final InvocationOnMock invocation)
-					throws IOException {
-				((LogEntryConsumer) invocation.getArguments()[3]).consume(log,
-						logAccess, entry1);
+			public Object answer(final InvocationOnMock invocation) throws IOException {
+				((LogEntryConsumer) invocation.getArguments()[3]).consume(log, logAccess, entry1);
 				return null;
 			}
-		})
-				.when(reader)
-				.readEntries(Mockito.eq(log), Mockito.eq(logAccess),
-						Mockito.isNull(LogPointer.class),
-						Mockito.any(LogEntryConsumer.class));
-		IncrementData idata = new IncrementData();
+		}).when(reader).readEntries(Mockito.eq(log), Mockito.eq(logAccess), Mockito.isNull(LogPointer.class),
+				Mockito.any(LogEntryConsumer.class));
+		final IncrementData idata = new IncrementData();
 		EventConsumer eventConsumer = Mockito.mock(EventConsumer.class);
-		m.find(reader, Mockito.mock(LogEntryReaderStrategy.class), log,
-				logAccess, idata, eventConsumer);
+		m.find(reader, Mockito.mock(LogEntryReaderStrategy.class), log, logAccess, idata, eventConsumer);
 		Mockito.verifyZeroInteractions(eventConsumer);
 		Assert.assertEquals(new DefaultPointer(2, 4), idata.getNextOffset());
 		Assert.assertEquals(false, idata.getNextOffset(logAccess).isEOF());
@@ -116,43 +101,32 @@ public class LevelScannerTest {
 		// Verify minBytesToRead
 		Mockito.doAnswer(new Answer<Object>() {
 			@Override
-			public Object answer(final InvocationOnMock invocation)
-					throws IOException {
-				((LogEntryConsumer) invocation.getArguments()[3]).consume(log,
-						logAccess, entry2);
+			public Object answer(final InvocationOnMock invocation) throws IOException {
+				((LogEntryConsumer) invocation.getArguments()[3]).consume(log, logAccess, entry2);
 				return null;
 			}
-		})
-				.when(reader)
-				.readEntries(Mockito.eq(log), Mockito.eq(logAccess),
-						Mockito.eq(new DefaultPointer(2, 4)),
-						Mockito.any(LogEntryConsumer.class));
+		}).when(reader).readEntries(Mockito.eq(log), Mockito.eq(logAccess), Mockito.eq(new DefaultPointer(2, 4)),
+				Mockito.any(LogEntryConsumer.class));
 
 		eventConsumer = Mockito.mock(EventConsumer.class);
-		LogEntryReaderStrategy readerStrategy = Mockito
-				.mock(LogEntryReaderStrategy.class);
-		Mockito.when(readerStrategy.continueReading(log, logAccess, entry1))
-				.thenReturn(true);
-		Mockito.when(readerStrategy.continueReading(log, logAccess, entry2))
-				.thenReturn(false);
+		final LogEntryReaderStrategy readerStrategy = Mockito.mock(LogEntryReaderStrategy.class);
+		Mockito.when(readerStrategy.continueReading(log, logAccess, entry1)).thenReturn(true);
+		Mockito.when(readerStrategy.continueReading(log, logAccess, entry2)).thenReturn(false);
 		m.find(reader, readerStrategy, log, logAccess, idata, eventConsumer);
-		Mockito.verify(eventConsumer, Mockito.times(1)).consume(
-				Mockito.any(EventData.class));
-		Mockito.verify(eventConsumer, Mockito.times(1)).consume(
-				Mockito.argThat(new BaseMatcher<EventData>() {
-					@Override
-					public boolean matches(final Object arg0) {
-						EventData event = (EventData) arg0;
-						return event.getEntries().size() == 1
-								&& event.getEntries().get(0).equals(entry2);
-					}
+		Mockito.verify(eventConsumer, Mockito.times(1)).consume(Mockito.any(Event.class));
+		Mockito.verify(eventConsumer, Mockito.times(1)).consume(Mockito.argThat(new BaseMatcher<Event>() {
+			@Override
+			public boolean matches(final Object arg0) {
+				final Event event = (Event) arg0;
+				return event.getEntries().size() == 1 && event.getEntries().get(0).equals(entry2);
+			}
 
-					@Override
-					public void describeTo(final Description arg0) {
-						// TODO Auto-generated method stub
+			@Override
+			public void describeTo(final Description arg0) {
+				// TODO Auto-generated method stub
 
-					}
-				}));
+			}
+		}));
 		Assert.assertEquals(false, idata.getNextOffset(logAccess).isEOF());
 	}
 }

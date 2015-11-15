@@ -19,25 +19,23 @@
 	<tabset ng-if="event">
 		<tab heading="Event">
 			<div class="event log" ng-init="logMsgCharLimit=1024">
-				Published: {{event.published | date:'medium'}}<br>
-				Occurrence of first entry: {{event.occurrence | date:'medium'}}
 				<div>
 					<h4>Fields</h4>
-					<lfs-fields-table fields="event"></lfs-fields-table>
+					<lfs-fields-table fields="event" exclude-fields="['_entries']"></lfs-fields-table>
 				</div>
 				<h4>Log entries</h4>
-				<div ng-repeat="entry in event.entries track by $index">
-					<div class="thumbnail desc" ng-if="entry.fields._raw">
-						<div class="text severity sc-{{entry.fields._severity.c}}">{{entry.fields._raw | cut:false:logMsgCharLimit:'...':expanded}}<div ng-show="entry.fields._raw.length>logMsgCharLimit"><a href="#" ng-click="expanded=!expanded" onclick="return false"><i class="glyphicon" ng-class="{'glyphicon-chevron-down':!expanded,'glyphicon-chevron-up':expanded}"></i> <span ng-if="!expanded">show more</span><span ng-if="expanded">show less</span></a></div></div>
+				<div ng-repeat="entry in event._entries track by $index">
+					<div class="thumbnail desc" ng-if="entry._raw">
+						<div class="text severity sc-{{entry._severity.c}}">{{entry._raw | cut:false:logMsgCharLimit:'...':expanded}}<div ng-show="entry._raw.length>logMsgCharLimit"><a href="#" ng-click="expanded=!expanded" onclick="return false"><i class="glyphicon" ng-class="{'glyphicon-chevron-down':!expanded,'glyphicon-chevron-up':expanded}"></i> <span ng-if="!expanded">show more</span><span ng-if="expanded">show less</span></a></div></div>
 					</div>
 					<div class="well well-sm post-desc">
 						<div class="clearfix">
 							<div class="pull-left" style="position:absolute">
 								<a class="btn btn-default btn-xs" href="#" ng-click="zoomEntry(entry)" onclick="return false"><i class="glyphicon glyphicon-zoom-in"></i> Show entry details</a>
-								<a class="btn btn-default btn-xs" href="{{contextPath}}/c/sources/{{event.logSourceId}}/show?log={{event.logPath | escape}}#?pointer={{event.entries[0].startOffset.json | json:0 | escape}}"><i class="glyphicon glyphicon-list"></i> Open in log</a>
+								<a class="btn btn-default btn-xs" href="{{contextPath}}/c/sources/{{event._logSourceId}}/show?log={{event._logPath | escape}}#?pointer={{entry._startOffset.json | json:0 | escape}}"><i class="glyphicon glyphicon-list"></i> Open in log</a>
 							</div>
 							<div class="pull-right text-muted">
-								{{event.logPath}}
+								{{event._logPath}}
 							</div>
 						</div>
 					</div>

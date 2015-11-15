@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.logsniffer.event.EventData;
+import com.logsniffer.event.Event;
 import com.logsniffer.event.IncrementData;
 import com.logsniffer.event.LogEntryReaderStrategy;
 import com.logsniffer.event.Scanner;
@@ -56,7 +56,7 @@ public abstract class SingleEntryIncrementalMatcher implements Scanner {
 				public boolean consume(final Log log, final LogPointerFactory pointerFactory, final LogEntry entry)
 						throws IOException {
 					incrementData.setNextOffset(entry.getEndOffset());
-					EventData event;
+					Event event;
 					try {
 						event = matches(entry);
 					} catch (final FormatException e) {
@@ -90,6 +90,6 @@ public abstract class SingleEntryIncrementalMatcher implements Scanner {
 	 * @return the event data if given entry matches the scanner criteria and
 	 *         null otherwise
 	 */
-	public abstract EventData matches(LogEntry entry) throws IOException, FormatException;
+	public abstract Event matches(LogEntry entry) throws IOException, FormatException;
 
 }

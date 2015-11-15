@@ -11,7 +11,7 @@
 <%@attribute name="disabled" required="true" type="java.lang.Boolean"%>
 <%@attribute name="active" required="true" type="java.lang.Boolean"%>
 <%@attribute name="posPath" required="false" type="java.lang.String"%>
-<%@attribute name="pointerTpl" required="true" type="com.logsniffer.model.LogPointerTransfer"%>
+<%@attribute name="pointerTpl" required="true" type="com.logsniffer.model.LogPointer"%>
 
 
 

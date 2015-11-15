@@ -18,9 +18,12 @@
 package com.logsniffer.fields;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -34,15 +37,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.deser.std.UntypedObjectDeserializer;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.logsniffer.app.ContextProvider;
 import com.logsniffer.fields.FieldsMap.FieldsMapTypeSafeDeserializer;
@@ -155,21 +161,53 @@ public class FieldsMap extends LinkedHashMap<String, Object> implements FieldsMa
 						final Object v = value.get(key);
 						final Pair<String, Class<Object>> typeInfo = getTypeMapper().resolveSerializationType(v);
 						if (v != null) {
-							jgen.writeStringField(key, typeInfo.getLeft());
+							if (v instanceof Collection) {
+								jgen.writeArrayFieldStart(key);
+								final Pair<String, Class<Object>>[] colElementTypeInfos = new Pair[((Collection<Object>) v)
+										.size()];
+								int z = 0;
+								for (final Object cv : ((Collection<Object>) v)) {
+									if (cv != null) {
+										final Pair<String, Class<Object>> colElementTypeInfo = getTypeMapper()
+												.resolveSerializationType(cv);
+										jgen.writeString(colElementTypeInfo.getLeft());
+										colElementTypeInfos[z++] = colElementTypeInfo;
+									}
+								}
+								jgen.writeEndArray();
+								values[i++] = new Object[] { key, v, colElementTypeInfos };
+							} else {
+								jgen.writeStringField(key, typeInfo.getLeft());
+								values[i++] = new Object[] { key, v, typeInfo };
+							}
 						}
-						values[i++] = new Object[] { key, v, typeInfo };
 					}
 				}
 				jgen.writeEndObject();
 				for (int z = 0; z < values.length; z++) {
 					final String key = (String) values[z][0];
 					final Object v = values[z][1];
-					final Class<Object> serializeAs = ((Pair<String, Class<Object>>) values[z][2]).getRight();
 					jgen.writeFieldName(key);
-					if (serializeAs != null) {
-						provider.findValueSerializer(serializeAs).serialize(v, jgen, provider);
+					if (v instanceof Collection) {
+						final Pair<String, Class<Object>>[] colElementTypeInfos = (Pair<String, Class<Object>>[]) values[z][2];
+						int y = 0;
+						jgen.writeStartArray();
+						for (final Object cv : ((Collection<Object>) v)) {
+							final Class<Object> serializeAs = colElementTypeInfos[y++].getRight();
+							if (serializeAs != null) {
+								provider.findValueSerializer(serializeAs).serialize(cv, jgen, provider);
+							} else {
+								provider.defaultSerializeValue(cv, jgen);
+							}
+						}
+						jgen.writeEndArray();
 					} else {
-						provider.defaultSerializeValue(value.get(key), jgen);
+						final Class<Object> serializeAs = ((Pair<String, Class<Object>>) values[z][2]).getRight();
+						if (serializeAs != null) {
+							provider.findValueSerializer(serializeAs).serialize(v, jgen, provider);
+						} else {
+							provider.defaultSerializeValue(v, jgen);
+						}
 					}
 				}
 			}
@@ -206,7 +244,7 @@ public class FieldsMap extends LinkedHashMap<String, Object> implements FieldsMa
 				throws IOException, JsonProcessingException {
 			final FieldsMap fields = create();
 			// @types
-			final Map<String, Class<?>> types = new HashMap<String, Class<?>>();
+			final Map<String, Class<?>[]> types = new HashMap<String, Class<?>[]>();
 			final TreeNode readTree = jp.getCodec().readTree(jp);
 			final TreeNode typesNodes = readTree.get("@types");
 			if (typesNodes != null) {
@@ -217,7 +255,22 @@ public class FieldsMap extends LinkedHashMap<String, Object> implements FieldsMa
 					if (typeNode instanceof TextNode) {
 						final String type = ((TextNode) typeNode).textValue();
 						final Class<?> deserType = getTypeMapper().resolveDeserializationType(type);
-						types.put(key, deserType);
+						types.put(key, new Class<?>[] { deserType });
+					} else if (typeNode instanceof ArrayNode) {
+						final Class<?>[] nestedTypes = new Class<?>[((ArrayNode) typeNode).size()];
+						final Iterator<JsonNode> elements = ((ArrayNode) typeNode).elements();
+						int i = 0;
+						while (elements.hasNext()) {
+							final JsonNode nestedTypeNode = elements.next();
+							if (nestedTypeNode instanceof TextNode) {
+								final String type = ((TextNode) nestedTypeNode).textValue();
+								final Class<?> deserType = getTypeMapper().resolveDeserializationType(type);
+								nestedTypes[i++] = deserType;
+							} else {
+								nestedTypes[i++] = null;
+							}
+						}
+						types.put(key, nestedTypes);
 					}
 				}
 			} else {
@@ -230,18 +283,38 @@ public class FieldsMap extends LinkedHashMap<String, Object> implements FieldsMa
 			while (fieldNames.hasNext()) {
 				final String key = fieldNames.next();
 				if (!key.equals("@types")) {
-					final Class<?> targetType = types.get(key);
 					final TreeNode fieldNode = readTree.get(key);
 					final JsonParser fieldValueParser = fieldNode.traverse();
+					fieldValueParser.setCodec(jp.getCodec());
 					// Start
-					fieldValueParser.nextToken();
-					if (targetType != null) {
-						final Object o = getContextualValueDeserializer(targetType, ctxt).deserialize(fieldValueParser,
-								ctxt);
-						fields.put(key, o);
+					JsonToken nextToken = fieldValueParser.nextToken();
+					if (nextToken == JsonToken.START_ARRAY) {
+						final List<Object> collection = new ArrayList<>();
+						int i = 0;
+						while ((nextToken = fieldValueParser.nextToken()) != null && nextToken != JsonToken.END_ARRAY) {
+							final Class<?>[] nestedTypes = types.get(key);
+							final Class<?> targetType = i < nestedTypes.length ? nestedTypes[i] : null;
+							if (targetType != null) {
+								final Object o = getContextualValueDeserializer(targetType, ctxt)
+										.deserialize(fieldValueParser, ctxt);
+								collection.add(o);
+							} else {
+								// Unknown type, let Jackson do it
+								collection.add(primitiveDeserializer.deserialize(fieldValueParser, ctxt));
+							}
+							i++;
+						}
+						fields.put(key, collection);
 					} else {
-						// Unknown type, let Jackson do it
-						fields.put(key, primitiveDeserializer.deserialize(fieldValueParser, ctxt));
+						final Class<?>[] targetType = types.get(key);
+						if (targetType != null) {
+							final Object o = getContextualValueDeserializer(targetType[0], ctxt)
+									.deserialize(fieldValueParser, ctxt);
+							fields.put(key, o);
+						} else {
+							// Unknown type, let Jackson do it
+							fields.put(key, primitiveDeserializer.deserialize(fieldValueParser, ctxt));
+						}
 					}
 				}
 			}

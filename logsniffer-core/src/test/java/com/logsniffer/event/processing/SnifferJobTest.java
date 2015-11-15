@@ -33,10 +33,9 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 
-import junit.framework.Assert;
-
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -55,7 +54,6 @@ import com.logsniffer.app.CoreAppConfig;
 import com.logsniffer.app.QaDataSourceAppConfig;
 import com.logsniffer.app.SchedulerAppConfig;
 import com.logsniffer.event.Event;
-import com.logsniffer.event.EventData;
 import com.logsniffer.event.EventPersistence;
 import com.logsniffer.event.IncrementData;
 import com.logsniffer.event.LogEntryReaderStrategy;
@@ -85,8 +83,8 @@ import com.logsniffer.util.sql.TxExecutor;
  * 
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { SnifferJobTest.class, CoreAppConfig.class,
-		SchedulerAppConfig.class, QaDataSourceAppConfig.class })
+@ContextConfiguration(classes = { SnifferJobTest.class, CoreAppConfig.class, SchedulerAppConfig.class,
+		QaDataSourceAppConfig.class })
 @Configuration
 public class SnifferJobTest {
 	@Bean
@@ -148,12 +146,12 @@ public class SnifferJobTest {
 	@Test
 	@DirtiesContext
 	public void testStoppingJobWhenResourcesNotFound() throws Exception {
-		Sniffer sniffer = new Sniffer();
+		final Sniffer sniffer = new Sniffer();
 		sniffer.setId(23);
 		sniffer.setScheduleCronExpression("*/15 * * ? * * */50");
 		sniffer.setLogSourceId(77);
 		when(snifferPersistence.getSniffer(23)).thenReturn(sniffer);
-		ScheduleInfo info = new ScheduleInfo();
+		final ScheduleInfo info = new ScheduleInfo();
 		when(scheduleInfoAccess.getScheduleInfo(23)).thenReturn(info);
 		jobManager.startSniffing(sniffer.getId());
 		Assert.assertEquals(true, info.isScheduled());
@@ -167,8 +165,7 @@ public class SnifferJobTest {
 		// Should be stopped
 		verify(snifferPersistence, times(2)).getSniffer(23);
 		verifyZeroInteractions(sourceProvider);
-		Assert.assertFalse(scheduler.checkExists(jobManager.getJobKey(sniffer,
-				77)));
+		Assert.assertFalse(scheduler.checkExists(jobManager.getJobKey(sniffer, 77)));
 
 		Assert.assertEquals(false, info.isScheduled());
 		Assert.assertNotNull(info.getLastFireTime());
@@ -191,73 +188,59 @@ public class SnifferJobTest {
 		sniffer.setId(23);
 		sniffer.setScheduleCronExpression("*/15 * * ? * * */50");
 		sniffer.setLogSourceId(77);
-		Scanner scanner = mock(Scanner.class);
+		final Scanner scanner = mock(Scanner.class);
 		sniffer.setScanner(scanner);
 		sniffer.setReaderStrategy(mock(LogEntryReaderStrategy.class));
-		when(
-				sniffer.getReaderStrategy().continueReading(any(Log.class),
-						any(LogPointerFactory.class), any(LogEntry.class)))
-				.thenReturn(true);
-		Publisher publisher = mock(Publisher.class);
+		when(sniffer.getReaderStrategy().continueReading(any(Log.class), any(LogPointerFactory.class),
+				any(LogEntry.class))).thenReturn(true);
+		final Publisher publisher = mock(Publisher.class);
 		sniffer.setPublishers(Collections.singletonList(publisher));
 
 		when(snifferPersistence.getSniffer(23)).thenReturn(sniffer);
 		final Log log1 = mock(Log.class);
-		LogRawAccess<LogInputStream> logAccess1 = mock(LogRawAccess.class);
+		final LogRawAccess<LogInputStream> logAccess1 = mock(LogRawAccess.class);
 		when(log1.getPath()).thenReturn("log1.log");
-		Log log2 = mock(Log.class);
-		LogRawAccess<LogInputStream> logAccess2 = mock(LogRawAccess.class);
+		final Log log2 = mock(Log.class);
+		final LogRawAccess<LogInputStream> logAccess2 = mock(LogRawAccess.class);
 		when(log2.getPath()).thenReturn("log2.log");
 		final LogSource<LogInputStream> source = mock(LogSource.class);
 		when(source.getId()).thenReturn(77L);
 		when(sourceProvider.getSourceById(77)).thenReturn(source);
 		when(source.getLogAccess(log1)).thenReturn(logAccess1);
 		when(source.getLogAccess(log2)).thenReturn(logAccess2);
-		LogEntryReader<LogInputStream> reader = mock(LogEntryReader.class);
-		when(source.getReader()).thenReturn(
-				new FilteredLogEntryReader<LogInputStream>(reader, null));
-		when(source.getLogs()).thenReturn(
-				Arrays.asList(new Log[] { log1, log2 }));
+		final LogEntryReader<LogInputStream> reader = mock(LogEntryReader.class);
+		when(source.getReader()).thenReturn(new FilteredLogEntryReader<LogInputStream>(reader, null));
+		when(source.getLogs()).thenReturn(Arrays.asList(new Log[] { log1, log2 }));
 
-		IncrementData log1idata = new IncrementData();
-		IncrementData log2idata = new IncrementData();
-		when(snifferPersistence.getIncrementData(sniffer, source, log1))
-				.thenReturn(log1idata);
-		when(snifferPersistence.getIncrementData(sniffer, source, log2))
-				.thenReturn(log2idata);
+		final IncrementData log1idata = new IncrementData();
+		final IncrementData log2idata = new IncrementData();
+		when(snifferPersistence.getIncrementData(sniffer, source, log1)).thenReturn(log1idata);
+		when(snifferPersistence.getIncrementData(sniffer, source, log2)).thenReturn(log2idata);
 
-		when(scheduleInfoAccess.getScheduleInfo(23)).thenReturn(
-				new ScheduleInfo());
+		when(scheduleInfoAccess.getScheduleInfo(23)).thenReturn(new ScheduleInfo());
 		jobManager.startSniffing(sniffer.getId());
 		doAnswer(new Answer<Object>() {
 			@Override
-			public Object answer(final InvocationOnMock invocation)
-					throws Throwable {
-				EventConsumer eConsumer = (EventConsumer) invocation
-						.getArguments()[5];
-				EventData e = new EventData();
+			public Object answer(final InvocationOnMock invocation) throws Throwable {
+				final EventConsumer eConsumer = (EventConsumer) invocation.getArguments()[5];
+				final Event e = new Event();
 				eConsumer.consume(e);
-				IncrementData incData = (IncrementData) invocation
-						.getArguments()[4];
+				final IncrementData incData = (IncrementData) invocation.getArguments()[4];
 				incData.setNextOffset(Mockito.mock(LogPointer.class));
-				when(incData.getNextOffset().getJson()).thenReturn(
-						"last-pointer");
+				when(incData.getNextOffset().getJson()).thenReturn("last-pointer");
 				return null;
 			}
-		}).when(scanner).find(any(FilteredLogEntryReader.class),
-				any(LogEntryReaderStrategy.class), eq(log2), eq(logAccess2),
-				eq(log2idata), any(EventConsumer.class));
+		}).when(scanner).find(any(FilteredLogEntryReader.class), any(LogEntryReaderStrategy.class), eq(log2),
+				eq(logAccess2), eq(log2idata), any(EventConsumer.class));
 		scheduler.triggerJob(jobManager.getJobKey(sniffer, 77));
 		Thread.sleep(2000);
 		verify(publisher).publish(argThat(new BaseMatcher<Event>() {
 			@Override
 			public boolean matches(final Object arg0) {
-				Event event = (Event) arg0;
+				final Event event = (Event) arg0;
 				return event.getLogPath().equals("log2.log")
-						&& System.currentTimeMillis()
-								- event.getPublished().getTime() <= 5000
-						&& event.getSnifferId() == sniffer.getId()
-						&& event.getLogSourceId() == source.getId();
+						&& System.currentTimeMillis() - event.getPublished().getTime() <= 5000
+						&& event.getSnifferId() == sniffer.getId() && event.getLogSourceId() == source.getId();
 			}
 
 			@Override
@@ -267,20 +250,15 @@ public class SnifferJobTest {
 			}
 		}));
 		verifyNoMoreInteractions(publisher);
-		verify(snifferPersistence, times(1)).storeIncrementalData(sniffer,
-				source, log1, log1idata);
-		verify(snifferPersistence, times(2)).storeIncrementalData(sniffer,
-				source, log2, log2idata);
+		verify(snifferPersistence, times(1)).storeIncrementalData(sniffer, source, log1, log1idata);
+		verify(snifferPersistence, times(2)).storeIncrementalData(sniffer, source, log2, log2idata);
 		Assert.assertEquals("last-pointer", log2idata.getNextOffset().getJson());
-		verify(sniffer.getReaderStrategy(), times(1)).reset(eq(log1),
-				eq(logAccess1), any(LogPointer.class));
-		verify(sniffer.getReaderStrategy(), times(1)).reset(eq(log2),
-				eq(logAccess2), any(LogPointer.class));
+		verify(sniffer.getReaderStrategy(), times(1)).reset(eq(log1), eq(logAccess1), any(LogPointer.class));
+		verify(sniffer.getReaderStrategy(), times(1)).reset(eq(log2), eq(logAccess2), any(LogPointer.class));
 
 		// Fail sniffing log1 to check continuous sniffing on log2
-		doThrow(new IOException()).when(sniffer.getScanner()).find(eq(reader),
-				any(LogEntryReaderStrategy.class), eq(log1), eq(logAccess1),
-				eq(log1idata), any(EventConsumer.class));
+		doThrow(new IOException()).when(sniffer.getScanner()).find(eq(reader), any(LogEntryReaderStrategy.class),
+				eq(log1), eq(logAccess1), eq(log1idata), any(EventConsumer.class));
 		scheduler.triggerJob(jobManager.getJobKey(sniffer, 77));
 		Thread.sleep(2000);
 		verify(publisher, times(2)).publish(any(Event.class));
@@ -289,8 +267,7 @@ public class SnifferJobTest {
 		jobManager.startSniffing(sniffer.getId());
 		// Stop sniffing
 		jobManager.stopSniffing(sniffer.getId());
-		Assert.assertEquals(false,
-				scheduler.checkExists(jobManager.getJobKey(sniffer, 77)));
+		Assert.assertEquals(false, scheduler.checkExists(jobManager.getJobKey(sniffer, 77)));
 
 	}
 }

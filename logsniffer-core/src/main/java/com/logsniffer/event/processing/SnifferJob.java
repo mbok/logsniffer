@@ -35,7 +35,6 @@ import org.springframework.stereotype.Component;
 
 import com.logsniffer.app.ContextProvider;
 import com.logsniffer.event.Event;
-import com.logsniffer.event.EventData;
 import com.logsniffer.event.EventPersistence;
 import com.logsniffer.event.IncrementData;
 import com.logsniffer.event.LogEntryReaderStrategy;
@@ -72,16 +71,13 @@ import com.logsniffer.util.sql.TxExecutor.TxNestedException;
 public class SnifferJob implements ContextAwareJob, InterruptableJob {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
-	private final static Logger statisticsLogger = LoggerFactory
-			.getLogger(StatisticsLogger.class);
+	private final static Logger statisticsLogger = LoggerFactory.getLogger(StatisticsLogger.class);
 
 	private final InterruptionStatus interruption = new InterruptionStatus();
 
 	@Override
-	public final void execute(final JobExecutionContext jobCtx)
-			throws JobExecutionException {
-		ContextProvider.getContext().getBean(SnifferJob.class)
-				.executeInContext(jobCtx, interruption);
+	public final void execute(final JobExecutionContext jobCtx) throws JobExecutionException {
+		ContextProvider.getContext().getBean(SnifferJob.class).executeInContext(jobCtx, interruption);
 
 	}
 
@@ -104,69 +100,51 @@ public class SnifferJob implements ContextAwareJob, InterruptableJob {
 	private ScheduleInfoAccess scheduleInfoAccess;
 
 	@Override
-	public void executeInContext(final JobExecutionContext jobCtx,
-			final InterruptionStatus interruption) throws JobExecutionException {
-		long snifferId = SnifferJobManager.getSnifferId(jobCtx.getJobDetail()
-				.getKey());
-		long logSourceId = SnifferJobManager.getLogSourceId(jobCtx
-				.getJobDetail().getKey());
-		ScheduleInfo scheduleInfo = scheduleInfoAccess
-				.getScheduleInfo(snifferId);
+	public void executeInContext(final JobExecutionContext jobCtx, final InterruptionStatus interruption)
+			throws JobExecutionException {
+		final long snifferId = SnifferJobManager.getSnifferId(jobCtx.getJobDetail().getKey());
+		final long logSourceId = SnifferJobManager.getLogSourceId(jobCtx.getJobDetail().getKey());
+		final ScheduleInfo scheduleInfo = scheduleInfoAccess.getScheduleInfo(snifferId);
 		scheduleInfo.setLastFireTime(new Date());
 		scheduleInfoAccess.updateScheduleInfo(snifferId, scheduleInfo);
-		logger.debug(
-				"Start sniffing job processing for sniffer with id {} and log source {}",
-				snifferId, logSourceId);
-		Sniffer sniffer = snifferPersistence.getSniffer(snifferId);
+		logger.debug("Start sniffing job processing for sniffer with id {} and log source {}", snifferId, logSourceId);
+		final Sniffer sniffer = snifferPersistence.getSniffer(snifferId);
 		if (sniffer == null) {
-			logger.error(
-					"Sniffer not found for id {}, stopping cron job for log source {}",
-					snifferId, logSourceId);
+			logger.error("Sniffer not found for id {}, stopping cron job for log source {}", snifferId, logSourceId);
 			deleteJob(jobCtx.getScheduler(), snifferId);
 			return;
 		}
-		LogSource<LogInputStream> logSource = logSourceProvider
-				.getSourceById(logSourceId);
+		final LogSource<LogInputStream> logSource = logSourceProvider.getSourceById(logSourceId);
 		if (logSource == null) {
-			logger.error(
-					"Log source not found for id {}, stopping cron job for sniffer {}",
-					logSourceId, snifferId);
+			logger.error("Log source not found for id {}, stopping cron job for sniffer {}", logSourceId, snifferId);
 			deleteJob(jobCtx.getScheduler(), snifferId);
 			return;
 		}
 		try {
 			sniff(sniffer, logSource, interruption);
-		} catch (Exception e) {
-			logger.error(
-					"Failed sniffing in context of sniffer={} and log source={}",
-					sniffer, logSource);
+		} catch (final Exception e) {
+			logger.error("Failed sniffing in context of sniffer={} and log source={}", sniffer, logSource);
 			throw new JobExecutionException("Failed sniffing", e, false);
 		} finally {
-			logger.debug(
-					"Stopped sniffing job processing for sniffer with id {} and log source {}",
-					snifferId, logSourceId);
+			logger.debug("Stopped sniffing job processing for sniffer with id {} and log source {}", snifferId,
+					logSourceId);
 		}
 	}
 
-	protected void deleteJob(final Scheduler scheduler, final long snifferId)
-			throws JobExecutionException {
+	protected void deleteJob(final Scheduler scheduler, final long snifferId) throws JobExecutionException {
 		try {
 			snifferManager.stopSniffing(snifferId);
-		} catch (SchedulerException e) {
-			throw new JobExecutionException(
-					"Failed to stop cron job for sniffer " + snifferId, e,
-					false);
+		} catch (final SchedulerException e) {
+			throw new JobExecutionException("Failed to stop cron job for sniffer " + snifferId, e, false);
 		}
 	}
 
-	protected void sniff(final Sniffer sniffer,
-			final LogSource<LogInputStream> source,
-			final InterruptionStatus interruption) throws IOException,
-			ParseException, PublishException {
-		for (Log log : source.getLogs()) {
+	protected void sniff(final Sniffer sniffer, final LogSource<LogInputStream> source,
+			final InterruptionStatus interruption) throws IOException, ParseException, PublishException {
+		for (final Log log : source.getLogs()) {
 			try {
 				sniff(sniffer, source, log, interruption);
-			} catch (Exception e) {
+			} catch (final Exception e) {
 				logger.error(
 						"Failed sniffing log={} in context of sniffer={} and log source={}, continue with further logs",
 						log, sniffer, source, e);
@@ -185,102 +163,73 @@ public class SnifferJob implements ContextAwareJob, InterruptableJob {
 		long eventsCount = 0;
 	}
 
-	protected void sniff(final Sniffer sniffer,
-			final LogSource<LogInputStream> source, final Log log,
-			final InterruptionStatus interruption) throws IOException,
-			FormatException, PublishException {
-		logger.debug(
-				"Sniffing log={} in context of sniffer={} and log source={}",
-				log, sniffer, source);
-		final IncrementData incData = snifferPersistence.getIncrementData(
-				sniffer, source, log);
-		long startTime = System.currentTimeMillis();
+	protected void sniff(final Sniffer sniffer, final LogSource<LogInputStream> source, final Log log,
+			final InterruptionStatus interruption) throws IOException, FormatException, PublishException {
+		logger.debug("Sniffing log={} in context of sniffer={} and log source={}", log, sniffer, source);
+		final IncrementData incData = snifferPersistence.getIncrementData(sniffer, source, log);
+		final long startTime = System.currentTimeMillis();
 		final SniffStatistics stats = new SniffStatistics();
-		LogRawAccess<LogInputStream> logAccess = source.getLogAccess(log);
-		LogPointer startPointer = incData.getNextOffset(logAccess);
+		final LogRawAccess<LogInputStream> logAccess = source.getLogAccess(log);
+		final LogPointer startPointer = incData.getNextOffset(logAccess);
 		sniffer.getReaderStrategy().reset(log, logAccess, startPointer);
-		sniffer.getScanner().find(source.getReader(),
-				new LogEntryReaderStrategy() {
+		sniffer.getScanner().find(source.getReader(), new LogEntryReaderStrategy() {
 
-					@Override
-					public void reset(final Log log,
-							final LogPointerFactory pointerFactory,
-							final LogPointer start) throws IOException {
-						sniffer.getReaderStrategy().reset(log, pointerFactory,
-								start);
-					}
+			@Override
+			public void reset(final Log log, final LogPointerFactory pointerFactory, final LogPointer start)
+					throws IOException {
+				sniffer.getReaderStrategy().reset(log, pointerFactory, start);
+			}
 
-					@Override
-					public boolean continueReading(final Log log,
-							final LogPointerFactory pointerFactory,
-							final LogEntry currentReadEntry) throws IOException {
-						stats.entriesCount++;
-						if (interruption.isInterrupted()) {
-							logger.info(
-									"Interrupted reader for sniffer {} and log {}",
-									sniffer, log);
-							return false;
-						}
-						return sniffer.getReaderStrategy().continueReading(log,
-								pointerFactory, currentReadEntry);
-					}
-				}, log, logAccess, incData, new EventConsumer() {
-					@Override
-					public void consume(final EventData eventData)
-							throws IOException {
-						stats.eventsCount++;
-						final Event event = new Event(eventData);
-						event.setSnifferId(sniffer.getId());
-						event.setLogSourceId(source.getId());
-						event.setLogPath(log.getPath());
-						event.setPublished(new Date());
-						try {
-							txExecutor.execute(new Execution<Object>() {
-								@Override
-								public Object execute()
-										throws TxNestedException {
-									eventPersister.persist(event);
-									snifferPersistence.storeIncrementalData(
-											sniffer, source, log, incData);
-									for (Publisher publisher : sniffer
-											.getPublishers()) {
-										logger.debug(
-												"Publishing event={} to publisher: {}",
-												event, publisher);
-										try {
-											publisher.publish(event);
-										} catch (PublishException e) {
-											logger.error(
-													"Failed to publish event={} to publisher: {}",
-													event, publisher, e);
-										}
-									}
-									return null;
+			@Override
+			public boolean continueReading(final Log log, final LogPointerFactory pointerFactory,
+					final LogEntry currentReadEntry) throws IOException {
+				stats.entriesCount++;
+				if (interruption.isInterrupted()) {
+					logger.info("Interrupted reader for sniffer {} and log {}", sniffer, log);
+					return false;
+				}
+				return sniffer.getReaderStrategy().continueReading(log, pointerFactory, currentReadEntry);
+			}
+		}, log, logAccess, incData, new EventConsumer() {
+			@Override
+			public void consume(final Event event) throws IOException {
+				stats.eventsCount++;
+				event.setSnifferId(sniffer.getId());
+				event.setLogSourceId(source.getId());
+				event.setLogPath(log.getPath());
+				event.setPublished(new Date());
+				try {
+					txExecutor.execute(new Execution<Object>() {
+						@Override
+						public Object execute() throws TxNestedException {
+							eventPersister.persist(event);
+							snifferPersistence.storeIncrementalData(sniffer, source, log, incData);
+							for (final Publisher publisher : sniffer.getPublishers()) {
+								logger.debug("Publishing event={} to publisher: {}", event, publisher);
+								try {
+									publisher.publish(event);
+								} catch (final PublishException e) {
+									logger.error("Failed to publish event={} to publisher: {}", event, publisher, e);
 								}
-							});
-						} catch (TxNestedException e) {
-							throw new IOException(
-									"Failed to store sniffing data", e);
+							}
+							return null;
 						}
-					}
-				});
+					});
+				} catch (final TxNestedException e) {
+					throw new IOException("Failed to store sniffing data", e);
+				}
+			}
+		});
 		snifferPersistence.storeIncrementalData(sniffer, source, log, incData);
 		if (statisticsLogger.isInfoEnabled()) {
-			long duration = System.currentTimeMillis() - startTime;
-			long amount = logAccess.getDifference(startPointer,
-					incData.getNextOffset(logAccess));
-			statisticsLogger
-					.info("Statistics for sniffer '{}': {}ms, {} bytes, {} KB/s, {} entries, {} events",
-							sniffer.getName(),
-							duration,
-							amount,
-							duration > 0 ? ((double) amount / 1024 / duration * 1000)
-									: "-", stats.entriesCount,
-							stats.eventsCount);
+			final long duration = System.currentTimeMillis() - startTime;
+			final long amount = logAccess.getDifference(startPointer, incData.getNextOffset(logAccess));
+			statisticsLogger.info("Statistics for sniffer '{}': {}ms, {} bytes, {} KB/s, {} entries, {} events",
+					sniffer.getName(), duration, amount,
+					duration > 0 ? ((double) amount / 1024 / duration * 1000) : "-", stats.entriesCount,
+					stats.eventsCount);
 		}
-		logger.debug(
-				"Sniffing log={} in context of sniffer={} and log source={} finished",
-				logAccess, sniffer, source);
+		logger.debug("Sniffing log={} in context of sniffer={} and log source={} finished", logAccess, sniffer, source);
 	}
 
 	@Override

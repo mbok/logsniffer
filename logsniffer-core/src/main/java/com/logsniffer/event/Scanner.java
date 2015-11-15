@@ -45,7 +45,7 @@ public interface Scanner extends ConfiguredBean {
 	 * 
 	 */
 	public static interface EventConsumer {
-		void consume(EventData eventData) throws IOException;
+		void consume(Event eventData) throws IOException;
 	}
 
 	/**
@@ -66,32 +66,27 @@ public interface Scanner extends ConfiguredBean {
 	 * @param eventConsumer
 	 *            event consumer
 	 */
-	public void find(LogEntryReader<LogInputStream> reader,
-			LogEntryReaderStrategy readerStrategy, Log log,
-			LogRawAccess<LogInputStream> logAccess,
-			IncrementData incrementData, EventConsumer eventConsumer)
-			throws IOException, FormatException;
+	public void find(LogEntryReader<LogInputStream> reader, LogEntryReaderStrategy readerStrategy, Log log,
+			LogRawAccess<LogInputStream> logAccess, IncrementData incrementData, EventConsumer eventConsumer)
+					throws IOException, FormatException;
 
 	/**
 	 * Wrapper for delegated strategy e.g. to allow lazy initiation.
 	 * 
 	 * @author mbok
 	 */
-	public static abstract class LogEntryReaderStrategyWrapper implements
-			LogEntryReaderStrategy, WrappedBean<LogEntryReaderStrategy> {
+	public static abstract class LogEntryReaderStrategyWrapper
+			implements LogEntryReaderStrategy, WrappedBean<LogEntryReaderStrategy> {
 		private LogEntryReaderStrategy wrapped;
 
-		public static final LogEntryReaderStrategy unwrap(
-				final LogEntryReaderStrategy possiblyWrapped) {
+		public static final LogEntryReaderStrategy unwrap(final LogEntryReaderStrategy possiblyWrapped) {
 			if (possiblyWrapped instanceof LogEntryReaderStrategyWrapper) {
-				return ((LogEntryReaderStrategyWrapper) possiblyWrapped)
-						.getWrappedStrategy();
+				return ((LogEntryReaderStrategyWrapper) possiblyWrapped).getWrappedStrategy();
 			}
 			return possiblyWrapped;
 		}
 
-		public final LogEntryReaderStrategy getWrappedStrategy()
-				throws ConfigException {
+		public final LogEntryReaderStrategy getWrappedStrategy() throws ConfigException {
 			if (wrapped == null) {
 				wrapped = getWrapped();
 			}
@@ -99,18 +94,15 @@ public interface Scanner extends ConfiguredBean {
 		}
 
 		@Override
-		public void reset(final Log log,
-				final LogPointerFactory pointerFactory, final LogPointer start)
+		public void reset(final Log log, final LogPointerFactory pointerFactory, final LogPointer start)
 				throws IOException {
 			getWrappedStrategy().reset(log, pointerFactory, start);
 		}
 
 		@Override
-		public boolean continueReading(final Log log,
-				final LogPointerFactory pointerFactory,
+		public boolean continueReading(final Log log, final LogPointerFactory pointerFactory,
 				final LogEntry currentReadEntry) throws IOException {
-			return getWrappedStrategy().continueReading(log, pointerFactory,
-					currentReadEntry);
+			return getWrappedStrategy().continueReading(log, pointerFactory, currentReadEntry);
 		}
 
 	}
@@ -120,8 +112,7 @@ public interface Scanner extends ConfiguredBean {
 	 * 
 	 * @author mbok
 	 */
-	public static abstract class ScannerWrapper implements Scanner,
-			WrappedBean<Scanner> {
+	public static abstract class ScannerWrapper implements Scanner, WrappedBean<Scanner> {
 		private Scanner wrapped;
 
 		public static final Scanner unwrap(final Scanner possiblyWrapped) {
@@ -139,16 +130,12 @@ public interface Scanner extends ConfiguredBean {
 		}
 
 		@Override
-		public void find(final LogEntryReader<LogInputStream> reader,
-				final LogEntryReaderStrategy readerStrategy, final Log log,
-				final LogRawAccess<LogInputStream> logAccess,
-				final IncrementData incrementData,
-				final EventConsumer eventConsumer) throws IOException,
-				FormatException {
+		public void find(final LogEntryReader<LogInputStream> reader, final LogEntryReaderStrategy readerStrategy,
+				final Log log, final LogRawAccess<LogInputStream> logAccess, final IncrementData incrementData,
+				final EventConsumer eventConsumer) throws IOException, FormatException {
 			try {
-				getWrappedScanner().find(reader, readerStrategy, log,
-						logAccess, incrementData, eventConsumer);
-			} catch (ConfigException e) {
+				getWrappedScanner().find(reader, readerStrategy, log, logAccess, incrementData, eventConsumer);
+			} catch (final ConfigException e) {
 				throw new IOException("Failed to create configured scanner", e);
 			}
 		}

@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.logsniffer.event.EventData;
+import com.logsniffer.event.Event;
 import com.logsniffer.event.IncrementData;
 import com.logsniffer.event.Scanner;
 import com.logsniffer.event.Scanner.EventConsumer;
@@ -206,7 +206,7 @@ public class LogEntriesRestController {
 		private LogPointer lastPointer;
 		private long scannedSize;
 		private long scannedTime;
-		private EventData event;
+		private Event event;
 
 		/**
 		 * @return the entries
@@ -239,7 +239,7 @@ public class LogEntriesRestController {
 		/**
 		 * @return the event
 		 */
-		public EventData getEvent() {
+		public Event getEvent() {
 			return event;
 		}
 
@@ -285,7 +285,7 @@ public class LogEntriesRestController {
 			}
 		}, log, logAccess, incData, new EventConsumer() {
 			@Override
-			public void consume(final EventData eventData) throws IOException {
+			public void consume(final Event eventData) throws IOException {
 				searchResult.event = eventData;
 				searchResult.lastPointer = eventData.getEntries().get(0).getStartOffset();
 			}

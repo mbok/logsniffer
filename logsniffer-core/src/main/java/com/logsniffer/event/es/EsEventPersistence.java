@@ -65,6 +65,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.logsniffer.app.ElasticSearchAppConfig.ClientCallback;
 import com.logsniffer.app.ElasticSearchAppConfig.ElasticClientTemplate;
 import com.logsniffer.aspect.AspectProvider;
@@ -75,7 +76,9 @@ import com.logsniffer.event.Sniffer;
 import com.logsniffer.event.SnifferPersistence;
 import com.logsniffer.event.SnifferPersistence.AspectSniffer;
 import com.logsniffer.event.SnifferPersistence.SnifferChangedEvent;
+import com.logsniffer.event.es.EsEventPersistence.AspectEventImpl.AspectEventImplTypeSafeDeserializer;
 import com.logsniffer.fields.FieldBaseTypes;
+import com.logsniffer.fields.FieldsMap;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogSource;
@@ -239,7 +242,7 @@ public class EsEventPersistence implements EventPersistence {
 			final SearchRequestBuilder requestBuilder = esClient.prepareSearch(indexName)
 					.setTypes(getSnifferIdAsType(snifferId));
 			requestBuilder.setFrom(offset).setSize(size)
-					.addSort(SortBuilders.fieldSort("occurrence").order(SortOrder.ASC).ignoreUnmapped(true));
+					.addSort(SortBuilders.fieldSort(Event.FIELD_OCCURRENCE).order(SortOrder.ASC).ignoreUnmapped(true));
 			return requestBuilder;
 		}
 
@@ -252,7 +255,7 @@ public class EsEventPersistence implements EventPersistence {
 			requestBuilder = adaptRequestBuilder(esClient, requestBuilder);
 			EventsCountHistogram histogram = null;
 			if (maxHistogramIntervalSlots > 0) {
-				final StatsBuilder timeRangeAgg = AggregationBuilders.stats("timeRange").field("occurrence");
+				final StatsBuilder timeRangeAgg = AggregationBuilders.stats("timeRange").field(Event.FIELD_OCCURRENCE);
 				final SearchRequestBuilder timeRangeQuery = adaptRequestBuilder(esClient,
 						getBaseRequestBuilder(esClient).setSize(0).addAggregation(timeRangeAgg));
 				try {
@@ -265,7 +268,7 @@ public class EsEventPersistence implements EventPersistence {
 					histogram = new EventsCountHistogram();
 					final Interval interval = getInterval(timeRange, maxHistogramIntervalSlots, histogram);
 					requestBuilder.addAggregation(AggregationBuilders.dateHistogram("eventsCount").interval(interval)
-							.field("occurrence").order(Order.KEY_ASC));
+							.field(Event.FIELD_OCCURRENCE).order(Order.KEY_ASC));
 				} catch (final SearchPhaseExecutionException e) {
 					logger.warn("Events histogram disabled because of exceptions (probably no events?)", e);
 				}
@@ -330,7 +333,7 @@ public class EsEventPersistence implements EventPersistence {
 				final SearchRequestBuilder requestBuilder) {
 			FilterBuilder filter = null;
 			if (from != null || to != null) {
-				final RangeFilterBuilder occRange = FilterBuilders.rangeFilter("occurrence");
+				final RangeFilterBuilder occRange = FilterBuilders.rangeFilter(Event.FIELD_OCCURRENCE);
 				if (from != null) {
 					occRange.gte(from.getTime());
 				}
@@ -424,7 +427,9 @@ public class EsEventPersistence implements EventPersistence {
 		});
 	}
 
+	@JsonDeserialize(using = AspectEventImplTypeSafeDeserializer.class)
 	public static class AspectEventImpl extends Event implements AspectEvent {
+		private static final long serialVersionUID = 255582842708979089L;
 		@JsonIgnore
 		private final HashMap<String, Object> aspects = new HashMap<String, Object>();
 
@@ -437,6 +442,21 @@ public class EsEventPersistence implements EventPersistence {
 		@Override
 		public <AspectType> AspectType getAspect(final String aspectKey, final Class<AspectType> aspectType) {
 			return (AspectType) aspects.get(aspectKey);
+		}
+
+		/**
+		 * Type safe deserializer for {@link AspectEventImpl}s.
+		 * 
+		 * @author mbok
+		 *
+		 */
+		public static class AspectEventImplTypeSafeDeserializer extends FieldsMapTypeSafeDeserializer {
+
+			@Override
+			protected FieldsMap create() {
+				return new AspectEventImpl();
+			}
+
 		}
 	}
 
@@ -464,8 +484,9 @@ public class EsEventPersistence implements EventPersistence {
 					@Override
 					public TermsFacet execute(final Client client) {
 						final SearchRequestBuilder requestBuilder = client.prepareSearch(indexName).setSize(0)
-								.addFacet(FacetBuilders.termsFacet("eventsCounter").allTerms(true).field("snifferId")
-										.facetFilter(FilterBuilders.termsFilter("snifferId", hostIds)));
+								.addFacet(FacetBuilders.termsFacet("eventsCounter").allTerms(true)
+										.field(Event.FIELD_SNIFFER_ID)
+										.facetFilter(FilterBuilders.termsFilter(Event.FIELD_SNIFFER_ID, hostIds)));
 						final SearchResponse response = requestBuilder.execute().actionGet();
 						logger.debug("Performed events counting search {} in {}ms", requestBuilder,
 								System.currentTimeMillis() - start);

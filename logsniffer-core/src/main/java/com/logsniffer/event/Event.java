@@ -18,7 +18,11 @@
 package com.logsniffer.event;
 
 import java.util.Date;
+import java.util.List;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.logsniffer.event.Event.EventTypeSafeDeserializer;
+import com.logsniffer.fields.FieldsMap;
 import com.logsniffer.model.LogEntry;
 
 /**
@@ -28,28 +32,69 @@ import com.logsniffer.model.LogEntry;
  * @author mbok
  * 
  */
-public class Event extends EventData implements EventAbstract {
-	private String id;
-	private long snifferId;
-	private long logSourceId;
-	private String logPath;
-	private Date published;
-	private Date occurrence;
+@JsonDeserialize(using = EventTypeSafeDeserializer.class)
+public class Event extends FieldsMap implements EventAbstract {
+
+	private static final long serialVersionUID = 3694008717847809694L;
 
 	/**
-	 * Default constructor.
+	 * Field key for convenient method {@link #getEntries()}.
 	 */
-	public Event() {
-		super();
+	public static final String FIELD_ENTRIES = "_entries";
+
+	/**
+	 * Field key for convenient method {@link #getId()}.
+	 */
+	public static final String FIELD_ID = "_id";
+
+	/**
+	 * Field key for convenient method {@link #getSnifferId()}.
+	 */
+	public static final String FIELD_SNIFFER_ID = "_snifferId";
+
+	/**
+	 * Field key for convenient method {@link #getLogSourceId()}.
+	 */
+	public static final String FIELD_SOURCE_ID = "_logSourceId";
+
+	/**
+	 * Field key for convenient method {@link #getLogPath()}.
+	 */
+	public static final String FIELD_LOG_PATH = "_logPath";
+
+	/**
+	 * Field key for convenient method {@link #getOccurrence()}.
+	 */
+	public static final String FIELD_OCCURRENCE = "_occurrence";
+
+	/**
+	 * Field key for convenient method {@link #getPublished()}.
+	 */
+	public static final String FIELD_PUBLISHED = "_published";
+
+	/**
+	 * @return the entries
+	 */
+	@SuppressWarnings("unchecked")
+	public List<LogEntry> getEntries() {
+		return (List<LogEntry>) super.get(FIELD_ENTRIES);
 	}
 
 	/**
-	 * Copies event data.
+	 * @param entries
+	 *            the entries to set
 	 */
-	public Event(final EventData ed) {
-		super();
-		super.setFields(ed.getFields());
-		super.setEntries(ed.getEntries());
+	public void setEntries(final List<LogEntry> entries) {
+		super.put(FIELD_ENTRIES, entries);
+		getAndSetOccurenceFromEntries();
+	}
+
+	/**
+	 * @return the data
+	 */
+	@Deprecated
+	public FieldsMap getFields() {
+		return this;
 	}
 
 	/**
@@ -57,7 +102,7 @@ public class Event extends EventData implements EventAbstract {
 	 */
 	@Override
 	public String getId() {
-		return id;
+		return (String) super.get(FIELD_ID);
 	}
 
 	/**
@@ -65,7 +110,7 @@ public class Event extends EventData implements EventAbstract {
 	 *            the id to set
 	 */
 	public void setId(final String id) {
-		this.id = id;
+		super.put(FIELD_ID, id);
 	}
 
 	/**
@@ -73,7 +118,7 @@ public class Event extends EventData implements EventAbstract {
 	 */
 	@Override
 	public long getSnifferId() {
-		return snifferId;
+		return (long) super.get(FIELD_SNIFFER_ID);
 	}
 
 	/**
@@ -81,7 +126,7 @@ public class Event extends EventData implements EventAbstract {
 	 *            the snifferId to set
 	 */
 	public void setSnifferId(final long snifferId) {
-		this.snifferId = snifferId;
+		super.put(FIELD_SNIFFER_ID, snifferId);
 	}
 
 	/**
@@ -89,7 +134,7 @@ public class Event extends EventData implements EventAbstract {
 	 */
 	@Override
 	public long getLogSourceId() {
-		return logSourceId;
+		return (long) super.get(FIELD_SOURCE_ID);
 	}
 
 	/**
@@ -97,7 +142,7 @@ public class Event extends EventData implements EventAbstract {
 	 *            the logSourceId to set
 	 */
 	public void setLogSourceId(final long logSourceId) {
-		this.logSourceId = logSourceId;
+		super.put(FIELD_SOURCE_ID, logSourceId);
 	}
 
 	/**
@@ -105,7 +150,7 @@ public class Event extends EventData implements EventAbstract {
 	 */
 	@Override
 	public String getLogPath() {
-		return logPath;
+		return (String) super.get(FIELD_LOG_PATH);
 	}
 
 	/**
@@ -113,7 +158,7 @@ public class Event extends EventData implements EventAbstract {
 	 *            the logPath to set
 	 */
 	public void setLogPath(final String logPath) {
-		this.logPath = logPath;
+		super.put(FIELD_LOG_PATH, logPath);
 	}
 
 	/**
@@ -121,7 +166,7 @@ public class Event extends EventData implements EventAbstract {
 	 */
 	@Override
 	public Date getPublished() {
-		return published;
+		return (Date) super.get(FIELD_PUBLISHED);
 	}
 
 	/**
@@ -129,7 +174,7 @@ public class Event extends EventData implements EventAbstract {
 	 *            the published to set
 	 */
 	public void setPublished(final Date published) {
-		this.published = published;
+		super.put(FIELD_PUBLISHED, published);
 	}
 
 	/**
@@ -140,13 +185,23 @@ public class Event extends EventData implements EventAbstract {
 	 * @return the occurrence start point for this event
 	 */
 	public Date getOccurrence() {
+		final Date occurrence = (Date) super.get(FIELD_OCCURRENCE);
 		if (occurrence == null) {
-			if (getEntries() != null && getEntries().size() > 0) {
-				occurrence = getEntries().get(0).getTimeStamp();
-			}
-			if (occurrence == null) {
-				return getPublished();
-			}
+			return getAndSetOccurenceFromEntries();
+		}
+		return occurrence;
+	}
+
+	private Date getAndSetOccurenceFromEntries() {
+		Date occurrence = null;
+		if (getEntries() != null && getEntries().size() > 0) {
+			occurrence = getEntries().get(0).getTimeStamp();
+		}
+		if (occurrence == null) {
+			return getPublished();
+		}
+		if (occurrence != null) {
+			setOccurrence(occurrence);
 		}
 		return occurrence;
 	}
@@ -156,7 +211,22 @@ public class Event extends EventData implements EventAbstract {
 	 *            the occurrence to set
 	 */
 	public void setOccurrence(final Date occurrence) {
-		this.occurrence = occurrence;
+		super.put(FIELD_OCCURRENCE, occurrence);
+	}
+
+	/**
+	 * Type safe deserializer for {@link Event}s.
+	 * 
+	 * @author mbok
+	 *
+	 */
+	public static class EventTypeSafeDeserializer extends FieldsMapTypeSafeDeserializer {
+
+		@Override
+		protected FieldsMap create() {
+			return new Event();
+		}
+
 	}
 
 }

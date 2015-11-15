@@ -22,7 +22,7 @@ import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.logsniffer.event.EventData;
+import com.logsniffer.event.Event;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.SeverityLevel;
 import com.logsniffer.validators.NotDefaultPrimitiveValue;
@@ -44,8 +44,7 @@ public class LevelScanner extends SingleEntryIncrementalMatcher {
 	public enum LevelComparatorType {
 		EQ, EQ_OR_GREATER;
 
-		public boolean matches(final int severityOrdinalNumber,
-				final SeverityLevel check) {
+		public boolean matches(final int severityOrdinalNumber, final SeverityLevel check) {
 			if (this == EQ) {
 				return severityOrdinalNumber == check.getOrdinalNumber();
 			} else {
@@ -64,10 +63,9 @@ public class LevelScanner extends SingleEntryIncrementalMatcher {
 	private LevelComparatorType comparator = LevelComparatorType.EQ_OR_GREATER;
 
 	@Override
-	public EventData matches(final LogEntry entry) {
-		if (entry.getSeverity() != null
-				&& comparator.matches(severityNumber, entry.getSeverity())) {
-			EventData event = new EventData();
+	public Event matches(final LogEntry entry) {
+		if (entry.getSeverity() != null && comparator.matches(severityNumber, entry.getSeverity())) {
+			final Event event = new Event();
 			return event;
 		}
 		return null;

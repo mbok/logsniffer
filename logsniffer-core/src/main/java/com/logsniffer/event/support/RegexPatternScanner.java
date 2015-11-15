@@ -28,8 +28,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.logsniffer.config.PostConstructed;
-import com.logsniffer.event.EventData;
-import com.logsniffer.fields.FieldsMap;
+import com.logsniffer.event.Event;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.util.grok.Grok;
@@ -61,17 +60,16 @@ public class RegexPatternScanner extends SingleEntryIncrementalMatcher implement
 	private String sourceField;
 
 	@Override
-	public EventData matches(LogEntry entry) throws FormatException {
-		Object value = entry.getFields().get(sourceField);
+	public Event matches(final LogEntry entry) throws FormatException {
+		final Object value = entry.get(sourceField);
 		if (value instanceof String) {
-			Grok grok = grokBean.getGrok(groksRegistry);
-			GrokMatcher matcher = grok.matcher((String) value);
+			final Grok grok = grokBean.getGrok(groksRegistry);
+			final GrokMatcher matcher = grok.matcher((String) value);
 			if (matcher.matches()) {
-				EventData event = new EventData();
-				FieldsMap fields = event.getFields();
-				LinkedHashMap<String, Integer> groups = grok.getGroupNames();
-				for (String attrName : groups.keySet()) {
-					matcher.setToField(attrName, fields);
+				final Event event = new Event();
+				final LinkedHashMap<String, Integer> groups = grok.getGroupNames();
+				for (final String attrName : groups.keySet()) {
+					matcher.setToField(attrName, event);
 				}
 				return event;
 			}
@@ -90,12 +88,12 @@ public class RegexPatternScanner extends SingleEntryIncrementalMatcher implement
 	 * @param grokBean
 	 *            the grokBean to set
 	 */
-	public void setGrokBean(GrokPatternBean grokBean) {
+	public void setGrokBean(final GrokPatternBean grokBean) {
 		this.grokBean = grokBean;
 	}
 
 	@Override
-	public void initGrokFactory(GroksRegistry groksRegistry) {
+	public void initGrokFactory(final GroksRegistry groksRegistry) {
 		this.groksRegistry = groksRegistry;
 	}
 
@@ -110,7 +108,7 @@ public class RegexPatternScanner extends SingleEntryIncrementalMatcher implement
 	 * @param sourceField
 	 *            the sourceField to set
 	 */
-	public void setSourceField(String sourceField) {
+	public void setSourceField(final String sourceField) {
 		this.sourceField = sourceField;
 	}
 
