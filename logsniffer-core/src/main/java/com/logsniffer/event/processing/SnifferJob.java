@@ -202,7 +202,7 @@ public class SnifferJob implements ContextAwareJob, InterruptableJob {
 					txExecutor.execute(new Execution<Object>() {
 						@Override
 						public Object execute() throws TxNestedException {
-							eventPersister.persist(event);
+							event.setId(eventPersister.persist(event));
 							snifferPersistence.storeIncrementalData(sniffer, source, log, incData);
 							for (final Publisher publisher : sniffer.getPublishers()) {
 								logger.debug("Publishing event={} to publisher: {}", event, publisher);
