@@ -103,7 +103,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	   template: 
 	      '<div><div class="panel panel-default" ng-if="rows">'+
 	      	'<table class="attributes table table-condensed table-striped table-bordered entries">'+
-	      		'<tr ng-repeat="row in rows | orderBy:\'name\'">'+
+	      		'<tr ng-repeat="row in rows | orderBy: \'name\'">'+
 	      			'<th class="text">{{row.name}}</th>'+
 	      			'<td ng-class="row.type" ng-switch="row.type">'+
 	      				'<div ng-switch-when="SEVERITY" class="text"><span class="label label-default severity sc-{{row.value.c}}">{{row.value.n}}</span></div>'+
