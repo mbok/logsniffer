@@ -50,8 +50,7 @@ import com.logsniffer.validators.MailListConstraint;
  */
 @Component
 @PostConstructed(constructor = MailPublisher.class)
-public class MailPublisher implements Publisher,
-		BeanPostConstructor<MailPublisher> {
+public class MailPublisher implements Publisher, BeanPostConstructor<MailPublisher> {
 	private static Logger logger = LoggerFactory.getLogger(MailPublisher.class);
 
 	@Autowired
@@ -82,26 +81,23 @@ public class MailPublisher implements Publisher,
 
 	@NotNull
 	@JsonProperty
-	private String textMessage = "Event link: $eventLink\n\nLog entries:\n"
-			+ "#foreach( $entry in $event.entries )"
-			+ "\n  $entry.fields['_raw']\n" + "#end";
+	private String textMessage = "Event link: $eventLink\n\nLog entries:\n" + "#foreach( $entry in $event._entries )"
+			+ "\n  $entry._raw\n" + "#end";
 
 	@Override
 	public void publish(final Event event) throws PublishException {
 		try {
-			VelocityContext context = velocityRenderer.getContext(event);
-			SimpleMailMessage email = new SimpleMailMessage();
+			final VelocityContext context = velocityRenderer.getContext(event);
+			final SimpleMailMessage email = new SimpleMailMessage();
 			email.setFrom(getFrom());
 			email.setSubject(velocityRenderer.render(getSubject(), context));
-			email.setText(velocityRenderer.render(getTextMessage(), context)
-					+ " ");
-			String to2 = getTo();
+			email.setText(velocityRenderer.render(getTextMessage(), context) + " ");
+			final String to2 = getTo();
 			email.setTo(to2.split(",|\\s"));
 			mailSender.send(email);
 			logger.info("Sent event notification to: {}", to2);
-		} catch (MailException e) {
-			throw new PublishException(
-					"Failed to send event notification to mail: " + getTo(), e);
+		} catch (final MailException e) {
+			throw new PublishException("Failed to send event notification to mail: " + getTo(), e);
 		}
 	}
 
@@ -166,8 +162,7 @@ public class MailPublisher implements Publisher,
 	}
 
 	@Override
-	public void postConstruct(final MailPublisher bean,
-			final BeanConfigFactoryManager configManager)
+	public void postConstruct(final MailPublisher bean, final BeanConfigFactoryManager configManager)
 			throws ConfigException {
 		bean.mailSender = mailSender;
 		bean.velocityEngine = velocityEngine;
