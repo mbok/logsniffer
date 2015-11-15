@@ -78,8 +78,8 @@ public enum FieldBaseTypes {
 	 * @return the deserializationType
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> Class<? super T> getSerializationType() {
-		return (Class<? super T>) serializationType;
+	public Class<Object> getSerializationType() {
+		return (Class<Object>) serializationType;
 	}
 
 }
