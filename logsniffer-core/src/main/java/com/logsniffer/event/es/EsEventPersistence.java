@@ -274,7 +274,7 @@ public class EsEventPersistence implements EventPersistence {
 				}
 			}
 			final SearchResponse response = requestBuilder.execute().actionGet();
-			final List<AspectEvent> events = new ArrayList<>();
+			final List<EventPersistence.AspectEvent> events = new ArrayList<>();
 			for (final SearchHit h : response.getHits().getHits()) {
 				try {
 					final AspectEventImpl event = jsonMapper.readValue(h.getSourceAsString(), AspectEventImpl.class);
@@ -428,7 +428,7 @@ public class EsEventPersistence implements EventPersistence {
 	}
 
 	@JsonDeserialize(using = AspectEventImplTypeSafeDeserializer.class)
-	public static class AspectEventImpl extends Event implements AspectEvent {
+	public static class AspectEventImpl extends Event implements EventPersistence.AspectEvent {
 		private static final long serialVersionUID = 255582842708979089L;
 		@JsonIgnore
 		private final HashMap<String, Object> aspects = new HashMap<String, Object>();
