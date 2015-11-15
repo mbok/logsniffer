@@ -274,7 +274,7 @@ public class EsEventPersistence implements EventPersistence {
 				}
 			}
 			final SearchResponse response = requestBuilder.execute().actionGet();
-			final ArrayList<AspectEvent> events = new ArrayList<EventPersistence.AspectEvent>();
+			final ArrayList<AspectEvent> events = new ArrayList<>();
 			for (final SearchHit h : response.getHits().getHits()) {
 				try {
 					final AspectEventImpl event = jsonMapper.readValue(h.getSourceAsString(), AspectEventImpl.class);
