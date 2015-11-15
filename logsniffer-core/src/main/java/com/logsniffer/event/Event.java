@@ -175,6 +175,9 @@ public class Event extends FieldsMap implements EventAbstract {
 	 */
 	public void setPublished(final Date published) {
 		super.put(FIELD_PUBLISHED, published);
+		if (super.get(FIELD_OCCURRENCE) == null) {
+			setOccurrence(published);
+		}
 	}
 
 	/**
