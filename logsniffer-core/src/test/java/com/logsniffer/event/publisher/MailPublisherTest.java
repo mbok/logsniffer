@@ -101,7 +101,7 @@ public class MailPublisherTest {
 		final Map<String, Serializable> data = new HashMap<String, Serializable>();
 		data.put("key1", "abc");
 		data.put("key3", "def");
-		event.getFields().putAll(data);
+		event.putAll(data);
 		final List<LogEntry> entries = new ArrayList<LogEntry>();
 		final LogEntry e1 = new LogEntry();
 		e1.setRawContent("e1");
@@ -111,7 +111,7 @@ public class MailPublisherTest {
 		entries.add(e2);
 		event.setEntries(entries);
 
-		mailPublisher.setSubject("Subject: $event.entries[0].fields['_raw']");
+		mailPublisher.setSubject("Subject: $event.lf_entries[0].lf_raw");
 		mailPublisher.setFrom("fromme $event");
 		mailPublisher.setTo("tome$event,toyou");
 

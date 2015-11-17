@@ -55,13 +55,13 @@ public class Log4jTextReaderTest {
 		r.setSpecifiersFieldMapping(Collections.singletonMap("m", "Message"));
 		final String[] fieldNames = r.getFieldTypes().keySet().toArray(new String[0]);
 		Assert.assertEquals(7, fieldNames.length);
-		Assert.assertEquals("_raw", fieldNames[0]);
+		Assert.assertEquals(LogEntry.FIELD_RAW_CONTENT, fieldNames[0]);
 		Assert.assertEquals("d", fieldNames[1]);
 		Assert.assertEquals("p", fieldNames[2]);
 		Assert.assertEquals("c", fieldNames[3]);
 		Assert.assertEquals("Message", fieldNames[4]);
-		Assert.assertEquals("_timestamp", fieldNames[5]);
-		Assert.assertEquals("_severity", fieldNames[6]);
+		Assert.assertEquals(LogEntry.FIELD_TIMESTAMP, fieldNames[5]);
+		Assert.assertEquals(LogEntry.FIELD_SEVERITY_LEVEL, fieldNames[6]);
 
 		Assert.assertEquals(FieldBaseTypes.DATE, r.getFieldTypes().get(LogEntry.FIELD_TIMESTAMP));
 		Assert.assertEquals(FieldBaseTypes.STRING, r.getFieldTypes().get(fieldNames[0]));
