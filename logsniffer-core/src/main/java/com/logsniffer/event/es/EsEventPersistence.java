@@ -534,11 +534,11 @@ public class EsEventPersistence implements EventPersistence {
 							.key("properties").object();
 
 					// TODO: Map sniffer fields dynamically
-					props.key("occurrence").object().key("type").value("date").endObject();
-					props.key("published").object().key("type").value("date").endObject();
+					props.key(Event.FIELD_OCCURRENCE).object().key("type").value("date").endObject();
+					props.key(Event.FIELD_PUBLISHED).object().key("type").value("date").endObject();
 
 					for (final String key : entriesTypes.keySet()) {
-						mapField(props, "entries.fields." + key, entriesTypes.get(key));
+						mapField(props, Event.FIELD_ENTRIES + "." + key, entriesTypes.get(key));
 					}
 
 					mappingBuilder.endObject().endObject().endObject();

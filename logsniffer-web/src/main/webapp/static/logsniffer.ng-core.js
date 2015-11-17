@@ -66,7 +66,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	       excludeRaw: '=',
 	       excludeFields: '='
 	   },
-	   controller: function($scope) {
+	   controller: function($scope, $log) {
 		    $scope.rows = null;
 
 		    $scope.getFieldType = function (fieldName) {
@@ -79,8 +79,8 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 			}
 		    };
 		    var ignoreFields = {
-		    	"_startOffset": true,
-		    	"_endOffset": true
+		    	"lf_startOffset": true,
+		    	"lf_endOffset": true
 		    };
 		    if ($scope.excludeFields) {
 		    	for (var i=0; i<$scope.excludeFields.length; i++) {
@@ -91,7 +91,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 			if (!$scope.rows) {
 			    $scope.rows = [];
 			}
-		        if (key.indexOf("@") !== 0 && !($scope.excludeRaw && key=="_raw") && !ignoreFields[key]) {
+		        if (key.indexOf("@") !== 0 && !($scope.excludeRaw && key=="lf_raw") && !ignoreFields[key]) {
 		            $scope.rows.push({
 		        	name: key,
 		        	value: value,
@@ -589,7 +589,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 					$(element).find('.log-entries tbody').append($.LogSniffer.entriesRows(scope.fieldTypes, entries, renderPrefixCells));
 					$(element).find('#log-entries-frame').scrollTop(10);
 			    		if (entries.length>0) {
-			    		    scope.setPointer(entries[0]._startOffset.json);
+			    		    scope.setPointer(entries[0].lf_startOffset.json);
 			    		}
 				}
 				updateLogControls(true);

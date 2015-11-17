@@ -40,7 +40,7 @@ public class Event extends FieldsMap implements EventAbstract {
 	/**
 	 * Field key for convenient method {@link #getEntries()}.
 	 */
-	public static final String FIELD_ENTRIES = "_entries";
+	public static final String FIELD_ENTRIES = "lf_entries";
 
 	/**
 	 * Field key for convenient method {@link #getId()}.
@@ -50,27 +50,27 @@ public class Event extends FieldsMap implements EventAbstract {
 	/**
 	 * Field key for convenient method {@link #getSnifferId()}.
 	 */
-	public static final String FIELD_SNIFFER_ID = "_snifferId";
+	public static final String FIELD_SNIFFER_ID = "lf_snifferId";
 
 	/**
 	 * Field key for convenient method {@link #getLogSourceId()}.
 	 */
-	public static final String FIELD_SOURCE_ID = "_logSourceId";
+	public static final String FIELD_SOURCE_ID = "lf_logSourceId";
 
 	/**
 	 * Field key for convenient method {@link #getLogPath()}.
 	 */
-	public static final String FIELD_LOG_PATH = "_logPath";
+	public static final String FIELD_LOG_PATH = "lf_logPath";
 
 	/**
 	 * Field key for convenient method {@link #getOccurrence()}.
 	 */
-	public static final String FIELD_OCCURRENCE = "_occurrence";
+	public static final String FIELD_OCCURRENCE = "lf_occurrence";
 
 	/**
 	 * Field key for convenient method {@link #getPublished()}.
 	 */
-	public static final String FIELD_PUBLISHED = "_published";
+	public static final String FIELD_PUBLISHED = "lf_published";
 
 	/**
 	 * @return the entries

@@ -37,27 +37,27 @@ public final class LogEntry extends FieldsMap {
 	/**
 	 * Field key for convenient method {@link #getStartOffset()}.
 	 */
-	public static final String FIELD_START_OFFSET = "_startOffset";
+	public static final String FIELD_START_OFFSET = "lf_startOffset";
 
 	/**
 	 * Field key for convenient method {@link #getEndOffset()}.
 	 */
-	public static final String FIELD_END_OFFSET = "_endOffset";
+	public static final String FIELD_END_OFFSET = "lf_endOffset";
 
 	/**
 	 * Field key for convenient method {@link #getSeverity()}.
 	 */
-	public static final String FIELD_SEVERITY_LEVEL = "_severity";
+	public static final String FIELD_SEVERITY_LEVEL = "lf_severity";
 
 	/**
 	 * Field key for convenient method {@link #getTimeStamp()}.
 	 */
-	public static final String FIELD_TIMESTAMP = "_timestamp";
+	public static final String FIELD_TIMESTAMP = "lf_timestamp";
 
 	/**
 	 * Field key for convenient method {@link #getRawContent()}.
 	 */
-	public static final String FIELD_RAW_CONTENT = "_raw";
+	public static final String FIELD_RAW_CONTENT = "lf_raw";
 
 	// @JsonSerialize(typing = Typing.STATIC)
 	// @JsonDeserialize(as = JsonLogPointer.class)

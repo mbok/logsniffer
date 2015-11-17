@@ -180,6 +180,8 @@ public class FieldsMap extends LinkedHashMap<String, Object> implements FieldsMa
 								jgen.writeStringField(key, typeInfo.getLeft());
 								values[i++] = new Object[] { key, v, typeInfo };
 							}
+						} else {
+							values[i++] = new Object[] { key, v, typeInfo };
 						}
 					}
 				}

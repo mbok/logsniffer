@@ -56,7 +56,7 @@
 			<lsf-info-label label="Overflow attribute" for="overflowAttribute">
 				In case of lines not matching the pattern these can be attached to a field of last well parsed log line.
 				 The overflow field can reference an existing or a new field. If not set, the not matching lines will be attached (as default)
-				 to the <code>_raw</code> field of the last well parsed log entry.
+				 to the <code>lf_raw</code> field of the last well parsed log entry.
 			</lsf-info-label>
 			<input type="text" class="form-control pattern" ng-model="bean.overflowAttribute" id="overflowAttribute" name="overflowAttribute" />
 		</t:ngFormFieldWrapper>		

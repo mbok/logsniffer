@@ -352,10 +352,10 @@ LogPosition.prototype.resetToEnd = function() {
 			var e = entries[i];
 			if (fLength > 0) {
 				html += '<tr class="severity '
-						+ getSeverityClass(e._severity) + '" sof=\''
-						+ e._endOffset.sof + '\' start=\''
-						+ JSON.stringify(e._startOffset.json) + '\' eof=\'' + e._endOffset.eof
-						+ '\' end=\'' + JSON.stringify(e._endOffset.json) + '\'>';
+						+ getSeverityClass(e.lf_severity) + '" sof=\''
+						+ e.lf_endOffset.sof + '\' start=\''
+						+ JSON.stringify(e.lf_startOffset.json) + '\' eof=\'' + e.lf_endOffset.eof
+						+ '\' end=\'' + JSON.stringify(e.lf_endOffset.json) + '\'>';
 				if (cellsBeforeCallback) {
 					html += cellsBeforeCallback(fieldsTypes, e);
 				}
@@ -371,14 +371,14 @@ LogPosition.prototype.resetToEnd = function() {
 							+ '</td>';
 				}
 			} else {
-				html += '<tr sof="' + e._startOffset.sof + '" start=\''
-						+ JSON.stringify(e._startOffset.json) + '\' eof="' + e._endOffset.eof
-						+ '" end=\'' + JSON.stringify(e._endOffset.json) + '\'>';
+				html += '<tr sof="' + e.lf_startOffset.sof + '" start=\''
+						+ JSON.stringify(e.lf_startOffset.json) + '\' eof="' + e.lf_endOffset.eof
+						+ '" end=\'' + JSON.stringify(e.lf_endOffset.json) + '\'>';
 				if (cellsBeforeCallback) {
 					html += cellsBeforeCallback(fieldsTypes, e);
 				}
 				html += '<td colspan="' + fLength + '" class="text">'
-						+ e._raw + '</td>';
+						+ e.lf_raw + '</td>';
 			}
 			if (cellsAfterCallback) {
 				html += cellsAfterCallback(fieldsTypes, e);
@@ -416,11 +416,11 @@ LogPosition.prototype.resetToEnd = function() {
 
 	$.LogSniffer = {
 		entriesIgnoreFields : {
-			"_raw" : true,
-			"_timestamp" : true,
-			"_severity" : true,
-			"_startOffset": true,
-			"_endOffset": true
+			"lf_raw" : true,
+			"lf_timestamp" : true,
+			"lf_severity" : true,
+			"lf_startOffset": true,
+			"lf_endOffset": true
 		},
 		entriesHead : entriesHead,
 		entriesRows : entriesRows,

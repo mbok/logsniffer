@@ -66,7 +66,7 @@
 					To assign the extracted log parts to fields with legible names define for each used log4j conversion specifier
 					a mapping to the desired field name. For example: &lt;br/&gt;&lt;code&gt;%c=category&lt;/code&gt;&lt;br/&gt;
 					&lt;code&gt;%t=thread&lt;/code&gt;&lt;br/&gt;
-					&lt;small&gt;Note: &lt;code&gt;%d=_timestamp&lt;/code&gt; and &lt;code&gt;%p=_severity&lt;/code&gt; are interpreted and
+					&lt;small&gt;Note: &lt;code&gt;%d=lf_timestamp&lt;/code&gt; and &lt;code&gt;%p=lf_severity&lt;/code&gt; are interpreted and
 					mapped to these internal fields by default.&lt;/small&gt;"
 					 data-title="Conversion Specifier Mapping"></i></label>
 			<div class="row form-group form-horizontal" ng-repeat="c in getUsedSpecifiers(bean.formatPattern)" ng-if="c!='n'">

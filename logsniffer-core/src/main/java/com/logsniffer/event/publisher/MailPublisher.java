@@ -39,6 +39,7 @@ import com.logsniffer.config.ConfigException;
 import com.logsniffer.config.PostConstructed;
 import com.logsniffer.event.Event;
 import com.logsniffer.event.Publisher;
+import com.logsniffer.model.LogEntry;
 import com.logsniffer.validators.MailListConstraint;
 
 /**
@@ -81,8 +82,8 @@ public class MailPublisher implements Publisher, BeanPostConstructor<MailPublish
 
 	@NotNull
 	@JsonProperty
-	private String textMessage = "Event link: $eventLink\n\nLog entries:\n" + "#foreach( $entry in $event['_entries'] )"
-			+ "\n  $entry['_raw']\n" + "#end";
+	private String textMessage = "Event link: $eventLink\n\nLog entries:\n" + "#foreach( $entry in $event['"
+			+ Event.FIELD_ENTRIES + "'] )" + "\n  $entry['" + LogEntry.FIELD_RAW_CONTENT + "']\n" + "#end";
 
 	@Override
 	public void publish(final Event event) throws PublishException {
