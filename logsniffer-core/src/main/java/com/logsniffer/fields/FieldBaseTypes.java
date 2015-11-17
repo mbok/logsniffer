@@ -51,16 +51,18 @@ public enum FieldBaseTypes {
 	}
 
 	public static FieldBaseTypes resolveType(final Object v) {
-		for (final FieldBaseTypes t : values()) {
-			if (t.serializationType == null) {
-				continue;
-			}
-			Class<?> vc = v.getClass();
-			if (Primitives.isWrapperType(vc)) {
-				vc = Primitives.unwrap(vc);
-			}
-			if (t.serializationType.isAssignableFrom(vc)) {
-				return t;
+		if (v != null) {
+			for (final FieldBaseTypes t : values()) {
+				if (t.serializationType == null) {
+					continue;
+				}
+				Class<?> vc = v.getClass();
+				if (Primitives.isWrapperType(vc)) {
+					vc = Primitives.unwrap(vc);
+				}
+				if (t.serializationType.isAssignableFrom(vc)) {
+					return t;
+				}
 			}
 		}
 		return OBJECT;
