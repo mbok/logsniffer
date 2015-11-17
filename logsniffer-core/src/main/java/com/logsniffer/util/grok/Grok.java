@@ -103,7 +103,7 @@ public final class Grok {
 			boolean closeQuoteFound = false;
 
 			// find last non-escaped open-quote
-			String s2 = s.substring(0, pos);
+			final String s2 = s.substring(0, pos);
 			int posOpen = pos;
 			while ((posOpen = s2.lastIndexOf("\\Q", posOpen - 1)) != -1) {
 				if (!isSlashEscapedChar(s2, posOpen)) {
@@ -142,7 +142,7 @@ public final class Grok {
 			boolean closeBracketFound = false;
 
 			// find last non-escaped open-bracket
-			String s2 = s.substring(0, pos);
+			final String s2 = s.substring(0, pos);
 			int posOpen = pos;
 			while ((posOpen = s2.lastIndexOf('[', posOpen - 1)) != -1) {
 				if (!isEscapedChar(s2, posOpen)) {
@@ -154,7 +154,7 @@ public final class Grok {
 			if (openBracketFound) {
 				// search remainder of string (after open-bracket) for a
 				// close-bracket
-				String s3 = s.substring(posOpen, pos);
+				final String s3 = s.substring(posOpen, pos);
 				int posClose = -1;
 				while ((posClose = s3.indexOf(']', posClose + 1)) != -1) {
 					if (!isEscapedChar(s3, posClose)) {
@@ -183,7 +183,7 @@ public final class Grok {
 		 */
 		static private boolean isNoncapturingParen(final String s, final int pos) {
 
-			int len = s.length();
+			final int len = s.length();
 			boolean isLookbehind = false;
 
 			// code-coverage reports show that pos and the text to
@@ -192,7 +192,7 @@ public final class Grok {
 			// in Cobertura
 
 			if (pos >= 0 && pos + 4 < len) {
-				String pre = s.substring(pos, pos + 4);
+				final String pre = s.substring(pos, pos + 4);
 				isLookbehind = pre.equals("(?<=") || pre.equals("(?<!");
 			}
 			return pos >= 0 && pos + 2 < len && s.charAt(pos + 1) == '?' && (isLookbehind || s.charAt(pos + 2) != '<');
@@ -210,8 +210,8 @@ public final class Grok {
 		 * @return number of open parentheses
 		 */
 		static private int countOpenParens(final String s, final int pos) {
-			java.util.regex.Pattern p = java.util.regex.Pattern.compile("\\(");
-			java.util.regex.Matcher m = p.matcher(s.subSequence(0, pos));
+			final java.util.regex.Pattern p = java.util.regex.Pattern.compile("\\(");
+			final java.util.regex.Matcher m = p.matcher(s.subSequence(0, pos));
 
 			int numParens = 0;
 
@@ -255,7 +255,7 @@ public final class Grok {
 	}
 
 	private Map<Integer, TypeConverter<Object>> typeConverters;
-	private LinkedHashMap<String, Integer> groupNames = new LinkedHashMap<String, Integer>();
+	private final LinkedHashMap<String, Integer> groupNames = new LinkedHashMap<String, Integer>();
 	private Pattern regexPattern;
 	@JsonProperty
 	private String grokPattern;
@@ -267,11 +267,11 @@ public final class Grok {
 	static {
 		supportedTypeConverters.put("int", new TypeConverter<Integer>() {
 			@Override
-			public Integer convert(String input) {
+			public Integer convert(final String input) {
 				if (!StringUtils.isEmpty(input)) {
 					try {
 						return Integer.parseInt(input.trim());
-					} catch (NumberFormatException e) {
+					} catch (final NumberFormatException e) {
 					}
 				}
 				return null;
@@ -279,11 +279,11 @@ public final class Grok {
 		});
 		supportedTypeConverters.put("long", new TypeConverter<Long>() {
 			@Override
-			public Long convert(String input) {
+			public Long convert(final String input) {
 				if (!StringUtils.isEmpty(input)) {
 					try {
 						return Long.parseLong(input.trim());
-					} catch (NumberFormatException e) {
+					} catch (final NumberFormatException e) {
 					}
 				}
 				return null;
@@ -291,11 +291,11 @@ public final class Grok {
 		});
 		supportedTypeConverters.put("float", new TypeConverter<Float>() {
 			@Override
-			public Float convert(String input) {
+			public Float convert(final String input) {
 				if (!StringUtils.isEmpty(input)) {
 					try {
 						return Float.parseFloat(input.trim());
-					} catch (NumberFormatException e) {
+					} catch (final NumberFormatException e) {
 					}
 				}
 				return null;
@@ -303,11 +303,11 @@ public final class Grok {
 		});
 		supportedTypeConverters.put("double", new TypeConverter<Double>() {
 			@Override
-			public Double convert(String input) {
+			public Double convert(final String input) {
 				if (!StringUtils.isEmpty(input)) {
 					try {
 						return Double.parseDouble(input.trim());
-					} catch (NumberFormatException e) {
+					} catch (final NumberFormatException e) {
 					}
 				}
 				return null;
@@ -315,7 +315,7 @@ public final class Grok {
 		});
 		supportedTypeConverters.put("boolean", new TypeConverter<Boolean>() {
 			@Override
-			public Boolean convert(String input) {
+			public Boolean convert(final String input) {
 				if (!StringUtils.isEmpty(input)) {
 					return Boolean.parseBoolean(input.trim());
 				}
@@ -379,21 +379,21 @@ public final class Grok {
 	@SuppressWarnings("unchecked")
 	public static Grok compile(final GroksRegistry registry, final String pattern, final int flags)
 			throws GrokException {
-		Grok g = new Grok();
+		final Grok g = new Grok();
 		g.grokPattern = pattern;
-		StringBuilder compiledPattern = new StringBuilder();
-		Matcher m = PATTERN_SUBGROK.matcher(pattern);
+		final StringBuilder compiledPattern = new StringBuilder();
+		final Matcher m = PATTERN_SUBGROK.matcher(pattern);
 		int lastPos = 0;
 		g.typeConverters = new HashMap<>();
 		while (m.find()) {
-			String left = pattern.substring(lastPos, m.start());
+			final String left = pattern.substring(lastPos, m.start());
 			lastPos = m.end();
 			compiledPattern.append(left);
 			int groupsCount = PatternHelper.countOpenParens(compiledPattern.toString(), compiledPattern.length());
-			String subGrokName = m.group(1);
-			String subGrokAttr = m.group(2);
+			final String subGrokName = m.group(1);
+			final String subGrokAttr = m.group(2);
 			String subGrokType = m.group(3);
-			Grok subGrok = registry.getGroks().get(subGrokName);
+			final Grok subGrok = registry.getGroks().get(subGrokName);
 			if (subGrok == null) {
 				throw new GrokException(
 						"No predefined Grok pattern for name '" + subGrokName + "' found used in pattern: " + pattern);
@@ -415,8 +415,8 @@ public final class Grok {
 			if (subGrokAttr != null) {
 				compiledPattern.append(")");
 			}
-			for (String subGrokSubAttr : subGrok.groupNames.keySet()) {
-				int subGrokGroup = subGrok.groupNames.get(subGrokSubAttr);
+			for (final String subGrokSubAttr : subGrok.groupNames.keySet()) {
+				final int subGrokGroup = subGrok.groupNames.get(subGrokSubAttr);
 				g.groupNames.put(subGrokSubAttr, groupsCount + subGrokGroup);
 				if (subGrok.typeConverters.get(subGrokGroup) != null) {
 					g.typeConverters.put(groupsCount + subGrokGroup, subGrok.typeConverters.get(subGrokGroup));
@@ -425,12 +425,13 @@ public final class Grok {
 		}
 		compiledPattern.append(pattern.substring(lastPos));
 		// g.regexPattern = Pattern.compile(compiledPattern.toString(), flags);
-		com.google.code.regexp.Pattern namedPattern = com.google.code.regexp.Pattern.compile(compiledPattern.toString(),
-				flags);
+		final com.google.code.regexp.Pattern namedPattern = com.google.code.regexp.Pattern
+				.compile(compiledPattern.toString(), flags);
 		g.regexPattern = namedPattern.pattern();
-		for (String name : namedPattern.groupInfo().keySet()) {
+		for (final String name : namedPattern.groupInfo().keySet()) {
 			g.groupNames.put(name, namedPattern.groupInfo().get(name).get(0).groupIndex() + 1);
 		}
+		LOGGER.debug("Compiled grok: {}", g);
 		return g;
 	}
 
@@ -447,5 +448,11 @@ public final class Grok {
 	 */
 	public static Grok compile(final GroksRegistry registry, final String pattern) throws GrokException {
 		return compile(registry, pattern, 0);
+	}
+
+	@Override
+	public String toString() {
+		return "Grok [grokPattern=" + grokPattern + ", regexPattern=" + regexPattern + ", groupNames=" + groupNames
+				+ "]";
 	}
 }

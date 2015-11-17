@@ -20,27 +20,25 @@ package com.logsniffer.reader.grok;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.logsniffer.config.PostConstructed;
 import com.logsniffer.fields.FieldBaseTypes;
-import com.logsniffer.fields.FieldsMap;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.SeverityLevel;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.support.AbstractPatternLineReader;
-import com.logsniffer.util.grok.Grok;
 import com.logsniffer.util.grok.GrokConsumerConstructor;
 import com.logsniffer.util.grok.GrokConsumerConstructor.GrokConsumer;
-import com.logsniffer.util.grok.GrokException;
 import com.logsniffer.util.grok.GrokMatcher;
 import com.logsniffer.util.grok.GrokPatternBean;
 import com.logsniffer.util.grok.GroksRegistry;
@@ -54,6 +52,8 @@ import com.logsniffer.util.grok.GroksRegistry;
 @PostConstructed(constructor = GrokConsumerConstructor.class)
 public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> implements GrokConsumer {
 
+	private static final Logger logger = LoggerFactory.getLogger(GrokTextReader.class);
+
 	@JsonIgnore
 	private GroksRegistry groksRegistry;
 
@@ -66,9 +66,6 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> imple
 	@JsonProperty
 	private String overflowAttribute;
 
-	@JsonIgnore
-	private Grok grok;
-
 	@Override
 	public List<SeverityLevel> getSupportedSeverities() {
 		return Collections.emptyList();
@@ -77,8 +74,8 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> imple
 	@Override
 	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
 		initPattern();
-		LinkedHashMap<String, FieldBaseTypes> fields = super.getFieldTypes();
-		for (String attr : grok.getGroupNames().keySet()) {
+		final LinkedHashMap<String, FieldBaseTypes> fields = super.getFieldTypes();
+		for (final String attr : grokBean.getGrok(groksRegistry).getGroupNames().keySet()) {
 			fields.put(attr, FieldBaseTypes.STRING);
 		}
 		if (overflowAttribute != null && !fields.containsKey(overflowAttribute)) {
@@ -89,39 +86,31 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> imple
 
 	@Override
 	protected void initPattern() throws FormatException {
-		try {
-			grok = Grok.compile(groksRegistry, grokBean.getPattern(),
-					(grokBean.isMultiLine() ? Pattern.MULTILINE : 0) | (grokBean.isDotAll() ? Pattern.DOTALL : 0)
-							| (grokBean.isCaseInsensitive() ? Pattern.CASE_INSENSITIVE : 0));
-		} catch (GrokException e) {
-			throw new FormatException("Failed to compile grok pattern: " + grokBean + " -> " + e.getMessage(), e);
-		}
+		logger.info("Compiled grok: {}", grokBean.getGrok(groksRegistry));
 	}
 
 	@Override
-	protected GrokMatcher matches(final String line) {
-		GrokMatcher m = grok.matcher(line);
+	protected GrokMatcher matches(final String line) throws FormatException {
+		final GrokMatcher m = grokBean.getGrok(groksRegistry).matcher(line);
 		return m.matches() ? m : null;
 	}
 
 	@Override
 	protected void fillAttributes(final LogEntry entry, final GrokMatcher ctx) throws FormatException {
-		LinkedHashMap<String, Integer> groups = grok.getGroupNames();
-		FieldsMap fields = entry.getFields();
-		for (String attrName : groups.keySet()) {
-			ctx.setToField(attrName, fields);
+		final LinkedHashMap<String, Integer> groups = grokBean.getGrok(groksRegistry).getGroupNames();
+		for (final String attrName : groups.keySet()) {
+			ctx.setToField(attrName, entry);
 		}
 	}
 
 	@Override
 	protected void attachOverflowLine(final LogEntry entry, final String overflowLine) {
 		if (overflowAttribute != null) {
-			FieldsMap fMap = entry.getFields();
-			String oldMsg = (String) fMap.get(overflowAttribute);
+			final String oldMsg = (String) entry.get(overflowAttribute);
 			if (oldMsg == null) {
-				fMap.put(overflowAttribute, overflowLine);
+				entry.put(overflowAttribute, overflowLine);
 			} else {
-				fMap.put(overflowAttribute, oldMsg + "\n" + overflowLine);
+				entry.put(overflowAttribute, oldMsg + "\n" + overflowLine);
 			}
 		}
 	}
@@ -174,12 +163,12 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> imple
 	 * @param grokBean
 	 *            the grokBean to set
 	 */
-	public void setGrokBean(GrokPatternBean grokBean) {
+	public void setGrokBean(final GrokPatternBean grokBean) {
 		this.grokBean = grokBean;
 	}
 
 	@Override
-	public void initGrokFactory(GroksRegistry groksRegistry) {
+	public void initGrokFactory(final GroksRegistry groksRegistry) {
 		this.groksRegistry = groksRegistry;
 	}
 

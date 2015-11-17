@@ -35,13 +35,13 @@ public final class GrokPatternBean {
 	@JsonIgnore
 	private Grok grok;
 
-	public Grok getGrok(GroksRegistry registry) throws FormatException {
+	public Grok getGrok(final GroksRegistry registry) throws FormatException {
 		if (grok == null) {
 			try {
 				grok = Grok.compile(registry, (subStringSearch ? ".*?" : "") + pattern + (subStringSearch ? ".*?" : ""),
 						(multiLine ? Pattern.MULTILINE : 0) | (dotAll ? Pattern.DOTALL : 0)
 								| (caseInsensitive ? Pattern.CASE_INSENSITIVE : 0));
-			} catch (GrokException e) {
+			} catch (final Exception e) {
 				throw new FormatException("Failed to compile grok pattern: " + this + " -> " + e.getMessage(), e);
 			}
 		}
@@ -59,7 +59,7 @@ public final class GrokPatternBean {
 	 * @param pattern
 	 *            the pattern to set
 	 */
-	public void setPattern(String pattern) {
+	public void setPattern(final String pattern) {
 		this.pattern = pattern;
 		this.grok = null;
 	}
@@ -75,7 +75,7 @@ public final class GrokPatternBean {
 	 * @param multiLine
 	 *            the multiLine to set
 	 */
-	public void setMultiLine(boolean multiLine) {
+	public void setMultiLine(final boolean multiLine) {
 		this.multiLine = multiLine;
 		this.grok = null;
 	}
@@ -91,7 +91,7 @@ public final class GrokPatternBean {
 	 * @param dotAll
 	 *            the dotAll to set
 	 */
-	public void setDotAll(boolean dotAll) {
+	public void setDotAll(final boolean dotAll) {
 		this.dotAll = dotAll;
 		this.grok = null;
 	}
@@ -107,7 +107,7 @@ public final class GrokPatternBean {
 	 * @param caseInsensitive
 	 *            the caseInsensitive to set
 	 */
-	public void setCaseInsensitive(boolean caseInsensitive) {
+	public void setCaseInsensitive(final boolean caseInsensitive) {
 		this.caseInsensitive = caseInsensitive;
 		this.grok = null;
 	}
@@ -123,7 +123,7 @@ public final class GrokPatternBean {
 	 * @param subStringSearch
 	 *            the subStringSearch to set
 	 */
-	public void setSubStringSearch(boolean subStringSearch) {
+	public void setSubStringSearch(final boolean subStringSearch) {
 		this.subStringSearch = subStringSearch;
 		this.grok = null;
 	}

@@ -76,7 +76,7 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 	/**
 	 * @return a matcher context in case of a matching line or null if doesn't.
 	 */
-	protected abstract MatcherContext matches(String line);
+	protected abstract MatcherContext matches(String line) throws FormatException;
 
 	/**
 	 * Fills the attributes from the matcher context.
@@ -136,7 +136,7 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 						}
 					}
 					entry = new LogEntry();
-					entry.getFields().setTypes(fieldTypes);
+					entry.setTypes(fieldTypes);
 					entry.setStartOffset(lastOffset);
 					text = new StringBuilder(line);
 					if (ctx != null) {
@@ -154,7 +154,7 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 					}
 					if (entry == null) {
 						entry = new LogEntry();
-						entry.getFields().setTypes(fieldTypes);
+						entry.setTypes(fieldTypes);
 						entry.setStartOffset(lastOffset);
 					}
 					if (text.length() > 0) {
