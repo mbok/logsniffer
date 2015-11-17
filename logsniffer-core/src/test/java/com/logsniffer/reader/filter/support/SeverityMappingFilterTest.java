@@ -28,7 +28,6 @@ import com.logsniffer.fields.FieldsMap;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.SeverityLevel;
 import com.logsniffer.model.SeverityLevel.SeverityClassification;
-import com.logsniffer.reader.filter.support.SeverityMappingFilter;
 
 /**
  * Test for {@link SeverityMappingFilter}.
@@ -47,10 +46,8 @@ public class SeverityMappingFilterTest {
 		f.setOverride(true);
 		f.setSourceField("prio");
 		levels = new HashMap<>();
-		levels.put("1", new SeverityLevel("INFO", 1,
-				SeverityClassification.INFORMATIONAL));
-		levels.put("W", new SeverityLevel("WARN", 2,
-				SeverityClassification.WARNING));
+		levels.put("1", new SeverityLevel("INFO", 1, SeverityClassification.INFORMATIONAL));
+		levels.put("W", new SeverityLevel("WARN", 2, SeverityClassification.WARNING));
 		f.setSeverityLevels(levels);
 
 		fields = new FieldsMap();
@@ -67,8 +64,7 @@ public class SeverityMappingFilterTest {
 		fields.put("prio", "1");
 		f.filter(fields);
 		Assert.assertNotNull(fields.get(LogEntry.FIELD_SEVERITY_LEVEL));
-		Assert.assertEquals(levels.get("1"),
-				fields.get(LogEntry.FIELD_SEVERITY_LEVEL));
+		Assert.assertEquals(levels.get("1"), fields.get(LogEntry.FIELD_SEVERITY_LEVEL));
 	}
 
 	@Test
@@ -76,8 +72,7 @@ public class SeverityMappingFilterTest {
 		fields.put("prio", "w");
 		f.filter(fields);
 		Assert.assertNotNull(fields.get(LogEntry.FIELD_SEVERITY_LEVEL));
-		Assert.assertEquals(levels.get("W"),
-				fields.get(LogEntry.FIELD_SEVERITY_LEVEL));
+		Assert.assertEquals(levels.get("W"), fields.get(LogEntry.FIELD_SEVERITY_LEVEL));
 	}
 
 	@Test
@@ -89,8 +84,7 @@ public class SeverityMappingFilterTest {
 
 		fields.put("prio", "W");
 		f.filter(fields);
-		Assert.assertEquals(levels.get("W"),
-				fields.get(LogEntry.FIELD_SEVERITY_LEVEL));
+		Assert.assertEquals(levels.get("W"), fields.get(LogEntry.FIELD_SEVERITY_LEVEL));
 	}
 
 	@Test
@@ -103,7 +97,7 @@ public class SeverityMappingFilterTest {
 	@Test
 	public void testValidFallback() {
 		fields.put("prio", "UNKNOWN");
-		SeverityLevel fallback = new SeverityLevel();
+		final SeverityLevel fallback = new SeverityLevel();
 		f.setFallback(fallback);
 		f.filter(fields);
 		Assert.assertEquals(fallback, fields.get(LogEntry.FIELD_SEVERITY_LEVEL));
@@ -111,7 +105,7 @@ public class SeverityMappingFilterTest {
 
 	@Test
 	public void testOverride() {
-		SeverityLevel preset = new SeverityLevel();
+		final SeverityLevel preset = new SeverityLevel();
 		fields.put(LogEntry.FIELD_SEVERITY_LEVEL, preset);
 		// Assert override false
 		f.setOverride(false);
@@ -122,8 +116,15 @@ public class SeverityMappingFilterTest {
 		// Assert override true
 		f.setOverride(true);
 		f.filter(fields);
-		Assert.assertEquals(levels.get("W"),
-				fields.get(LogEntry.FIELD_SEVERITY_LEVEL));
+		Assert.assertEquals(levels.get("W"), fields.get(LogEntry.FIELD_SEVERITY_LEVEL));
+	}
+
+	@Test
+	public void testMappingFromNonStringInput() {
+		fields.put("prio", 1);
+		f.filter(fields);
+		Assert.assertNotNull(fields.get(LogEntry.FIELD_SEVERITY_LEVEL));
+		Assert.assertEquals(levels.get("1"), fields.get(LogEntry.FIELD_SEVERITY_LEVEL));
 	}
 
 }

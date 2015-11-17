@@ -20,7 +20,6 @@ package com.logsniffer.reader.filter.support;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,8 +39,7 @@ import com.logsniffer.reader.filter.FieldsFilter;
  *
  */
 public abstract class AbstractTransformationFilter<T> implements FieldsFilter {
-	private static final Logger logger = LoggerFactory
-			.getLogger(AbstractTransformationFilter.class);
+	private static final Logger logger = LoggerFactory.getLogger(AbstractTransformationFilter.class);
 	@JsonProperty
 	@NotEmpty
 	private String targetField;
@@ -64,7 +62,7 @@ public abstract class AbstractTransformationFilter<T> implements FieldsFilter {
 	 * @param targetField
 	 *            the targetField to set
 	 */
-	public void setTargetField(String targetField) {
+	public void setTargetField(final String targetField) {
 		this.targetField = targetField;
 	}
 
@@ -79,7 +77,7 @@ public abstract class AbstractTransformationFilter<T> implements FieldsFilter {
 	 * @param sourceField
 	 *            the sourceField to set
 	 */
-	public void setSourceField(String sourceField) {
+	public void setSourceField(final String sourceField) {
 		this.sourceField = sourceField;
 	}
 
@@ -94,7 +92,7 @@ public abstract class AbstractTransformationFilter<T> implements FieldsFilter {
 	 * @param override
 	 *            the override to set
 	 */
-	public void setOverride(boolean override) {
+	public void setOverride(final boolean override) {
 		this.override = override;
 	}
 
@@ -124,23 +122,22 @@ public abstract class AbstractTransformationFilter<T> implements FieldsFilter {
 	protected abstract T getFallback();
 
 	@Override
-	public final void filter(FieldsMap fields) {
+	public final void filter(final FieldsMap fields) {
 		if (override || !fields.containsKey(getTargetField())) {
-			Object sourceStr = fields.get(getSourceField());
-			if (sourceStr instanceof String
-					&& StringUtils.isNotEmpty((String) sourceStr)) {
+			final Object sourceStr = fields.get(getSourceField());
+			if (sourceStr != null) {
 				try {
-					T transformed = transform((String) sourceStr);
+					final T transformed = transform(sourceStr.toString());
 					if (transformed != null) {
 						fields.put(getTargetField(), transformed);
 						return;
 					}
-				} catch (Exception e) {
-					logger.debug("Failed to transform value",e);
+				} catch (final Exception e) {
+					logger.debug("Failed to transform value", e);
 					// Fallback
 				}
 			}
-			T fallback = getFallback();
+			final T fallback = getFallback();
 			if (override || fallback != null) {
 				fields.put(getTargetField(), fallback);
 			}
@@ -148,13 +145,12 @@ public abstract class AbstractTransformationFilter<T> implements FieldsFilter {
 	}
 
 	@Override
-	public final void filterKnownFields(
-			LinkedHashMap<String, FieldBaseTypes> knownFields) {
+	public final void filterKnownFields(final LinkedHashMap<String, FieldBaseTypes> knownFields) {
 		knownFields.put(targetField, getTargetType());
 	}
 
 	@Override
-	public void filterSupportedSeverities(List<SeverityLevel> severities) {
+	public void filterSupportedSeverities(final List<SeverityLevel> severities) {
 		// Nothing todo
 	}
 
