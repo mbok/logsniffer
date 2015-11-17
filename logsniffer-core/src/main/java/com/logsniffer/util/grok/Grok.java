@@ -17,9 +17,14 @@
  *******************************************************************************/
 package com.logsniffer.util.grok;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -430,6 +435,18 @@ public final class Grok {
 		g.regexPattern = namedPattern.pattern();
 		for (final String name : namedPattern.groupInfo().keySet()) {
 			g.groupNames.put(name, namedPattern.groupInfo().get(name).get(0).groupIndex() + 1);
+		}
+		// Order groups by occurrence
+		final List<Entry<String, Integer>> groups = new ArrayList<>(g.groupNames.entrySet());
+		Collections.sort(groups, new Comparator<Entry<String, Integer>>() {
+			@Override
+			public int compare(final Entry<String, Integer> o1, final Entry<String, Integer> o2) {
+				return o1.getValue().compareTo(o2.getValue());
+			}
+		});
+		g.groupNames.clear();
+		for (final Entry<String, Integer> entry : groups) {
+			g.groupNames.put(entry.getKey(), entry.getValue());
 		}
 		LOGGER.debug("Compiled grok: {}", g);
 		return g;
