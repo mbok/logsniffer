@@ -38,6 +38,7 @@ import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.LogPointerFactory;
 import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.SeverityLevel;
+import com.logsniffer.model.SeverityLevel.SeverityClassification;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.LogEntryReader;
 import com.logsniffer.reader.LogEntryReader.LogEntryConsumer;
@@ -75,18 +76,18 @@ public class FilteredLogEntryReaderTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testFiltering() throws IOException, FormatException {
-		LogEntryReader<LogInputStream> r = FilteredLogEntryReader.wrappIfNeeded(targetReader, filters);
+		final LogEntryReader<LogInputStream> r = FilteredLogEntryReader.wrappIfNeeded(targetReader, filters);
 		Assert.assertNotEquals(r, targetReader);
 		final Log log = Mockito.mock(Log.class);
-		LogRawAccess<LogInputStream> logAccess = Mockito.mock(LogRawAccess.class);
-		LogPointer startOffset = Mockito.mock(LogPointer.class);
-		LogEntryConsumer consumer = Mockito.mock(LogEntryConsumer.class);
+		final LogRawAccess<LogInputStream> logAccess = Mockito.mock(LogRawAccess.class);
+		final LogPointer startOffset = Mockito.mock(LogPointer.class);
+		final LogEntryConsumer consumer = Mockito.mock(LogEntryConsumer.class);
 
 		final LogEntry logEntry = new LogEntry();
 		Mockito.doAnswer(new Answer<Object>() {
 			@Override
 			public Object answer(final InvocationOnMock invocation) throws Throwable {
-				LogEntryConsumer consumer = (LogEntryConsumer) invocation.getArguments()[3];
+				final LogEntryConsumer consumer = (LogEntryConsumer) invocation.getArguments()[3];
 				consumer.consume(log, Mockito.mock(LogPointerFactory.class), logEntry);
 				return null;
 			}
@@ -105,15 +106,15 @@ public class FilteredLogEntryReaderTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testFilteringSupportedSeverities() {
-		LogEntryReader<LogInputStream> r = FilteredLogEntryReader.wrappIfNeeded(targetReader, filters);
+		final LogEntryReader<LogInputStream> r = FilteredLogEntryReader.wrappIfNeeded(targetReader, filters);
 		Assert.assertNotEquals(r, targetReader);
 		// Use notModifieable list in relation to issue #10
-		List<SeverityLevel> sevs = Collections.emptyList();
+		final List<SeverityLevel> sevs = Collections.emptyList();
 		Mockito.when(targetReader.getSupportedSeverities()).thenReturn(sevs);
 		Mockito.doAnswer(new Answer<Object>() {
 			@Override
 			public Object answer(final InvocationOnMock invocation) throws Throwable {
-				List<SeverityLevel> sevs2Filter = (List<SeverityLevel>) invocation.getArguments()[0];
+				final List<SeverityLevel> sevs2Filter = (List<SeverityLevel>) invocation.getArguments()[0];
 				sevs2Filter.add(new SeverityLevel());
 				return null;
 			}
@@ -130,9 +131,9 @@ public class FilteredLogEntryReaderTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testFilteringKnownFields() throws FormatException {
-		LogEntryReader<LogInputStream> r = FilteredLogEntryReader.wrappIfNeeded(targetReader, filters);
+		final LogEntryReader<LogInputStream> r = FilteredLogEntryReader.wrappIfNeeded(targetReader, filters);
 		Assert.assertNotEquals(r, targetReader);
-		LinkedHashMap<String, FieldBaseTypes> types = new LinkedHashMap<>();
+		final LinkedHashMap<String, FieldBaseTypes> types = new LinkedHashMap<>();
 		Mockito.when(targetReader.getFieldTypes()).thenReturn(types);
 
 		// Call
@@ -142,5 +143,27 @@ public class FilteredLogEntryReaderTest {
 		// Custom map should be created in relation to issue #10
 		Mockito.verify(f1).filterKnownFields(Mockito.any(LinkedHashMap.class));
 		Mockito.verify(f2).filterKnownFields(Mockito.any(LinkedHashMap.class));
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testOrderingOfSeverities() {
+		final LogEntryReader<LogInputStream> r = FilteredLogEntryReader.wrappIfNeeded(targetReader, filters);
+		final List<SeverityLevel> sevs = new ArrayList<>();
+		sevs.add(new SeverityLevel("5", 5, SeverityClassification.EMERGENCY));
+		Mockito.when(targetReader.getSupportedSeverities()).thenReturn(sevs);
+		Mockito.doAnswer(new Answer<Object>() {
+			@Override
+			public Object answer(final InvocationOnMock invocation) throws Throwable {
+				final List<SeverityLevel> sevs2Filter = (List<SeverityLevel>) invocation.getArguments()[0];
+				sevs2Filter.add(new SeverityLevel("1", 1, SeverityClassification.INFORMATIONAL));
+				return null;
+			}
+		}).when(f1).filterSupportedSeverities(Mockito.anyList());
+
+		// Verify
+		final List<SeverityLevel> supportedSeverities = r.getSupportedSeverities();
+		Assert.assertEquals(1, supportedSeverities.get(0).getOrdinalNumber());
+		Assert.assertEquals(5, supportedSeverities.get(1).getOrdinalNumber());
 	}
 }

@@ -57,8 +57,7 @@ public final class SeverityLevel implements Comparable<SeverityLevel> {
 		super();
 	}
 
-	public SeverityLevel(final String name, final int ordinalNumber,
-			final SeverityClassification classification) {
+	public SeverityLevel(final String name, final int ordinalNumber, final SeverityClassification classification) {
 		super();
 		this.name = name;
 		this.ordinalNumber = ordinalNumber;
@@ -96,7 +95,7 @@ public final class SeverityLevel implements Comparable<SeverityLevel> {
 
 	@Override
 	public int compareTo(final SeverityLevel o) {
-		return this.getOrdinalNumber() - o.getOrdinalNumber();
+		return ((Integer) this.getOrdinalNumber()).compareTo(o.getOrdinalNumber());
 	}
 
 	/**
@@ -127,8 +126,7 @@ public final class SeverityLevel implements Comparable<SeverityLevel> {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result
-				+ ((classification == null) ? 0 : classification.hashCode());
+		result = prime * result + ((classification == null) ? 0 : classification.hashCode());
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + ordinalNumber;
 		return result;
@@ -142,7 +140,7 @@ public final class SeverityLevel implements Comparable<SeverityLevel> {
 			return false;
 		if (!(obj instanceof SeverityLevel))
 			return false;
-		SeverityLevel other = (SeverityLevel) obj;
+		final SeverityLevel other = (SeverityLevel) obj;
 		if (classification != other.classification)
 			return false;
 		if (name == null) {

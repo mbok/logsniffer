@@ -19,6 +19,7 @@ package com.logsniffer.reader.filter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -120,8 +121,8 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream> imp
 	}
 
 	private void filterLogEntry(final LogEntry entry) {
-		for (FieldsFilter f : filters) {
-			f.filter(entry.getFields());
+		for (final FieldsFilter f : filters) {
+			f.filter(entry);
 		}
 	}
 
@@ -135,9 +136,10 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream> imp
 			severities = new ArrayList<>();
 		}
 		if (filters != null) {
-			for (FieldsFilter f : filters) {
+			for (final FieldsFilter f : filters) {
 				f.filterSupportedSeverities(severities);
 			}
+			Collections.sort(severities);
 		}
 		return severities;
 	}
@@ -152,7 +154,7 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream> imp
 			fieldTypes = new LinkedHashMap<>();
 		}
 		if (filters != null) {
-			for (FieldsFilter f : filters) {
+			for (final FieldsFilter f : filters) {
 				f.filterKnownFields(fieldTypes);
 			}
 		}
