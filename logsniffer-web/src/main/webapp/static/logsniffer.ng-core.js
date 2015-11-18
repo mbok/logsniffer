@@ -71,8 +71,8 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 
 		    $scope.getFieldType = function (fieldName) {
 			var fields = $scope.fields;
-			if (fields && fields["_types"] && fields["_types"][fieldName]) {
-			    return fields["_types"][fieldName];
+			if (fields && fields["@types"] && fields["@types"][fieldName]) {
+			    return fields["@types"][fieldName];
 			} else {
 			    $log.warn("Unknown field type for", fieldName);
 			    return "UNKNOWN";
@@ -81,7 +81,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		    var ignoreFields = {
 		    	"lf_startOffset": true,
 		    	"lf_endOffset": true,
-		    	"_types": true
+		    	"@types": true
 		    };
 		    if ($scope.excludeFields) {
 		    	for (var i=0; i<$scope.excludeFields.length; i++) {

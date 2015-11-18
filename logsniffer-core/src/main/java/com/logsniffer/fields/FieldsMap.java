@@ -152,7 +152,7 @@ public class FieldsMap extends LinkedHashMap<String, Object> implements FieldsMa
 				throws IOException, JsonProcessingException {
 			jgen.writeStartObject();
 			if (!value.isEmpty()) {
-				jgen.writeFieldName("_types");
+				jgen.writeFieldName("@types");
 				jgen.writeStartObject();
 				final Object[][] values = new Object[value.size()][];
 				{
@@ -248,11 +248,8 @@ public class FieldsMap extends LinkedHashMap<String, Object> implements FieldsMa
 			// @types
 			final Map<String, Class<?>[]> types = new HashMap<String, Class<?>[]>();
 			final TreeNode readTree = jp.getCodec().readTree(jp);
-			String typesNodeName = "_types";
-			TreeNode typesNodes = readTree.get(typesNodeName);
-			if (typesNodes == null) {
-				typesNodes = readTree.get(typesNodeName = "@types");
-			}
+			final String typesNodeName = "@types";
+			final TreeNode typesNodes = readTree.get(typesNodeName);
 			if (typesNodes != null) {
 				final Iterator<String> typeFields = typesNodes.fieldNames();
 				while (typeFields.hasNext()) {
@@ -346,7 +343,7 @@ public class FieldsMap extends LinkedHashMap<String, Object> implements FieldsMa
  * 
  */
 interface FieldsMapPublicSerializationMixIn {
-	@JsonProperty("_types")
+	@JsonProperty("@types")
 	@JsonInclude(Include.NON_EMPTY)
 	Map<String, FieldBaseTypes> getTypes();
 
