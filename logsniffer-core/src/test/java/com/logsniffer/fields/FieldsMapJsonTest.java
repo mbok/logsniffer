@@ -65,8 +65,8 @@ public class FieldsMapJsonTest {
 		final String jsonStr = mapper.writeValueAsString(map);
 		LOGGER.info("Serialized {} to: {}", map, jsonStr);
 		final JSONObject parsedJson = JSONObject.fromObject(jsonStr);
-		Assert.assertNotNull(parsedJson.get("@types"));
-		Assert.assertEquals(FieldBaseTypes.DATE.name(), parsedJson.getJSONObject("@types").getString("fa"));
+		Assert.assertNotNull(parsedJson.get("_types"));
+		Assert.assertEquals(FieldBaseTypes.DATE.name(), parsedJson.getJSONObject("_types").getString("fa"));
 		Assert.assertEquals(0, parsedJson.getInt("fa"));
 	}
 
@@ -80,6 +80,14 @@ public class FieldsMapJsonTest {
 	}
 
 	@Test
+	public void testDeserializationPrioVersion_4_1_0() throws IOException {
+		final String jsonStr = "{\"@types\":{\"fa\":\"DATE\"},\"fa\":120}";
+		final FieldsMap dMap = mapper.readValue(jsonStr, FieldsMap.class);
+		Assert.assertNull(dMap.get("@types"));
+		Assert.assertEquals(new Date(120), dMap.get("fa"));
+	}
+
+	@Test
 	public void testDeserialization() throws IOException {
 		final FieldsMap map = new FieldsMap();
 		map.put("fa", new Date(120));
@@ -87,7 +95,7 @@ public class FieldsMapJsonTest {
 		LOGGER.info("Serialized {} to: {}", map, jsonStr);
 
 		final FieldsMap dMap = mapper.readValue(jsonStr, FieldsMap.class);
-		Assert.assertNull(dMap.get("@types"));
+		Assert.assertNull(dMap.get("_types"));
 		Assert.assertEquals(new Date(120), dMap.get("fa"));
 	}
 
@@ -102,7 +110,7 @@ public class FieldsMapJsonTest {
 		LOGGER.info("Serialized in extended form to: {}", jsonStr);
 
 		final FieldsMap dMap = mapper.readValue(jsonStr, FieldsMap.class);
-		Assert.assertNull(dMap.get("@types"));
+		Assert.assertNull(dMap.get("_types"));
 		Assert.assertEquals(2, dMap.size());
 		Assert.assertEquals(new Date(120), dMap.get("fa"));
 		Assert.assertTrue(dMap.get("unknown") instanceof Map);
