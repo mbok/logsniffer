@@ -14,7 +14,7 @@
 	<artifactId>logsniffer-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>LogSniffer Parent POM</name>
-	<version>0.4.2-SNAPSHOT</version>
+	<version>0.4.2</version>
 	<description>logsniffer is a sophisticated open source web tool for viewing, monitoring and analysing log data - smarter and easier.</description>
 
 	<properties>
@@ -27,7 +27,7 @@
 		<connection>scm:git:git://github.com:logsniffer/logsniffer.git</connection>
 		<developerConnection>scm:git:git@github.com:logsniffer/logsniffer.git</developerConnection>
 		<url>https://github.com/logsniffer/logsniffer.git</url>
-		<tag>0.2.1</tag>
+		<tag>0.4.2</tag>
 	</scm>
 
 	<developers>
