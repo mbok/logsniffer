@@ -88,23 +88,38 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		    		ignoreFields[$scope.excludeFields[i]] = true;
 		    	}
 		    }
+		    var internKeys = [];
+		    var customKeys = [];
 		    angular.forEach($scope.fields, function(value, key) {
+		        if (!($scope.excludeRaw && key=="lf_raw") && !ignoreFields[key]) {
+		        	if (key.indexOf("lf_")==0 || key.indexOf("_")==0) {
+		        		internKeys.push(key);
+		        	} else {
+		        		customKeys.push(key);
+		        	}
+		        }
+		    });
+		    internKeys.sort();
+		    customKeys.sort();
+		    var keys = internKeys.concat(customKeys);
 			if (!$scope.rows) {
 			    $scope.rows = [];
 			}
-		        if (!($scope.excludeRaw && key=="lf_raw") && !ignoreFields[key]) {
-		            $scope.rows.push({
-		        	name: key,
-		        	value: value,
-		        	type: $scope.getFieldType(key)
-		            });
-		        }
-		    });
+		    for (var i = 0; i < keys.length; i++) {
+		    	var key = keys[i];
+			    $scope.rows.push({
+	            	name: key,
+	            	value: $scope.fields[key],
+	            	type: $scope.getFieldType(key),
+	            	internal: key.indexOf("lf_")==0 || key.indexOf("_")==0
+	            });
+		    }
+
 	   },
 	   template: 
 	      '<div><div class="panel panel-default" ng-if="rows">'+
 	      	'<table class="attributes table table-condensed table-striped table-bordered entries">'+
-	      		'<tr ng-repeat="row in rows | orderBy: \'name\'">'+
+	      		'<tr ng-repeat="row in rows">'+
 	      			'<th class="text">{{row.name}}</th>'+
 	      			'<td ng-class="row.type" ng-switch="row.type">'+
 	      				'<div ng-switch-when="SEVERITY" class="text"><span class="label label-default severity sc-{{row.value.c}}">{{row.value.n}}</span></div>'+
