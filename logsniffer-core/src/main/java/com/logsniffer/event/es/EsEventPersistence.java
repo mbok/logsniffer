@@ -242,7 +242,7 @@ public class EsEventPersistence implements EventPersistence {
 			final SearchRequestBuilder requestBuilder = esClient.prepareSearch(indexName)
 					.setTypes(getSnifferIdAsType(snifferId));
 			requestBuilder.setFrom(offset).setSize(size)
-					.addSort(SortBuilders.fieldSort(Event.FIELD_OCCURRENCE).order(SortOrder.ASC).ignoreUnmapped(true));
+					.addSort(SortBuilders.fieldSort(Event.FIELD_TIMESTAMP).order(SortOrder.ASC).ignoreUnmapped(true));
 			return requestBuilder;
 		}
 
@@ -255,7 +255,7 @@ public class EsEventPersistence implements EventPersistence {
 			requestBuilder = adaptRequestBuilder(esClient, requestBuilder);
 			EventsCountHistogram histogram = null;
 			if (maxHistogramIntervalSlots > 0) {
-				final StatsBuilder timeRangeAgg = AggregationBuilders.stats("timeRange").field(Event.FIELD_OCCURRENCE);
+				final StatsBuilder timeRangeAgg = AggregationBuilders.stats("timeRange").field(Event.FIELD_TIMESTAMP);
 				final SearchRequestBuilder timeRangeQuery = adaptRequestBuilder(esClient,
 						getBaseRequestBuilder(esClient).setSize(0).addAggregation(timeRangeAgg));
 				try {
@@ -268,7 +268,7 @@ public class EsEventPersistence implements EventPersistence {
 					histogram = new EventsCountHistogram();
 					final Interval interval = getInterval(timeRange, maxHistogramIntervalSlots, histogram);
 					requestBuilder.addAggregation(AggregationBuilders.dateHistogram("eventsCount").interval(interval)
-							.field(Event.FIELD_OCCURRENCE).order(Order.KEY_ASC));
+							.field(Event.FIELD_TIMESTAMP).order(Order.KEY_ASC));
 				} catch (final SearchPhaseExecutionException e) {
 					logger.warn("Events histogram disabled because of exceptions (probably no events?)", e);
 				}
@@ -333,7 +333,7 @@ public class EsEventPersistence implements EventPersistence {
 				final SearchRequestBuilder requestBuilder) {
 			FilterBuilder filter = null;
 			if (from != null || to != null) {
-				final RangeFilterBuilder occRange = FilterBuilders.rangeFilter(Event.FIELD_OCCURRENCE);
+				final RangeFilterBuilder occRange = FilterBuilders.rangeFilter(Event.FIELD_TIMESTAMP);
 				if (from != null) {
 					occRange.gte(from.getTime());
 				}
@@ -534,7 +534,7 @@ public class EsEventPersistence implements EventPersistence {
 							.key("properties").object();
 
 					// TODO: Map sniffer fields dynamically
-					props.key(Event.FIELD_OCCURRENCE).object().key("type").value("date").endObject();
+					props.key(Event.FIELD_TIMESTAMP).object().key("type").value("date").endObject();
 					props.key(Event.FIELD_PUBLISHED).object().key("type").value("date").endObject();
 
 					for (final String key : entriesTypes.keySet()) {

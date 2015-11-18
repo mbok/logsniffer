@@ -63,9 +63,9 @@ public class Event extends FieldsMap implements EventAbstract {
 	public static final String FIELD_LOG_PATH = "lf_logPath";
 
 	/**
-	 * Field key for convenient method {@link #getOccurrence()}.
+	 * Field key for convenient method {@link #getTimestamp()}.
 	 */
-	public static final String FIELD_OCCURRENCE = "lf_occurrence";
+	public static final String FIELD_TIMESTAMP = LogEntry.FIELD_TIMESTAMP;
 
 	/**
 	 * Field key for convenient method {@link #getPublished()}.
@@ -175,8 +175,8 @@ public class Event extends FieldsMap implements EventAbstract {
 	 */
 	public void setPublished(final Date published) {
 		super.put(FIELD_PUBLISHED, published);
-		if (super.get(FIELD_OCCURRENCE) == null) {
-			setOccurrence(published);
+		if (super.get(FIELD_TIMESTAMP) == null) {
+			setTimestamp(published);
 		}
 	}
 
@@ -187,8 +187,8 @@ public class Event extends FieldsMap implements EventAbstract {
 	 * 
 	 * @return the occurrence start point for this event
 	 */
-	public Date getOccurrence() {
-		final Date occurrence = (Date) super.get(FIELD_OCCURRENCE);
+	public Date getTimestamp() {
+		final Date occurrence = (Date) super.get(FIELD_TIMESTAMP);
 		if (occurrence == null) {
 			return getAndSetOccurenceFromEntries();
 		}
@@ -204,7 +204,7 @@ public class Event extends FieldsMap implements EventAbstract {
 			return getPublished();
 		}
 		if (occurrence != null) {
-			setOccurrence(occurrence);
+			setTimestamp(occurrence);
 		}
 		return occurrence;
 	}
@@ -213,8 +213,8 @@ public class Event extends FieldsMap implements EventAbstract {
 	 * @param occurrence
 	 *            the occurrence to set
 	 */
-	public void setOccurrence(final Date occurrence) {
-		super.put(FIELD_OCCURRENCE, occurrence);
+	public void setTimestamp(final Date occurrence) {
+		super.put(FIELD_TIMESTAMP, occurrence);
 	}
 
 	/**

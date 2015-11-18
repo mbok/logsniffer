@@ -87,7 +87,7 @@ angular
 						},
 						"filter" : {
 						    "range" : {
-							"lf_occurrence" : {
+							"lf_timestamp" : {
 							    "to" : $scope.searchForm._to ? $scope.searchForm._to.getTime() : null,
 							    "from" : $scope.searchForm._from ? $scope.searchForm._from.getTime() : null,
 							    "include_lower" : true,
@@ -98,7 +98,7 @@ angular
 					    }
 					},
 					"sort" : [ {
-					    "lf_occurrence" : {
+					    "lf_timestamp" : {
 						"order" : "asc",
 						"ignore_unmapped" : true
 					    }
