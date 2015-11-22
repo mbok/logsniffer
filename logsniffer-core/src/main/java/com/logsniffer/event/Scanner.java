@@ -18,10 +18,13 @@
 package com.logsniffer.event;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
 
 import com.logsniffer.config.ConfigException;
 import com.logsniffer.config.ConfiguredBean;
 import com.logsniffer.config.WrappedBean;
+import com.logsniffer.fields.FieldBaseTypes;
+import com.logsniffer.fields.FieldsHost;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogInputStream;
@@ -37,7 +40,7 @@ import com.logsniffer.reader.LogEntryReader;
  * @author mbok
  * 
  */
-public interface Scanner extends ConfiguredBean {
+public interface Scanner extends ConfiguredBean, FieldsHost {
 	/**
 	 * Consumes events to allow pipeline processing.
 	 * 
@@ -137,6 +140,15 @@ public interface Scanner extends ConfiguredBean {
 				getWrappedScanner().find(reader, readerStrategy, log, logAccess, incrementData, eventConsumer);
 			} catch (final ConfigException e) {
 				throw new IOException("Failed to create configured scanner", e);
+			}
+		}
+
+		@Override
+		public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
+			try {
+				return getWrappedScanner().getFieldTypes();
+			} catch (final ConfigException e) {
+				throw new FormatException("Failed to create configured scanner", e);
 			}
 		}
 

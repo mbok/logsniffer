@@ -24,12 +24,13 @@
 </c:if>
 <div mc-messages></div>
 <script type="text/javascript">
-	SnifferEditorModule.controller(
+	LogSnifferNgApp.controller(
 		"SnifferBeanWizardControllerWrapper",
 		function($scope, $http, $log, $modal) {
 		    $scope.scannerWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.event.Scanner', pageContext.response.locale))};
 			$scope.readerStrategyWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.event.LogEntryReaderStrategy', pageContext.response.locale))};
 		    $scope.publisherWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.event.Publisher', pageContext.response.locale))};
+			$scope.scannerFilterWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.fields.filter.FieldsFilter', pageContext.response.locale))};
 		    $scope.sharedScope = {};
 		    $scope.testSession = {};
 		    
@@ -149,8 +150,27 @@
 			      }
 			    });
 		    };
+		    
+
+			$scope.addScannerFilter = function() {
+			    $scope.bean.scanner.filters.push({});  
+			};
+
+			$scope.deleteScannerFilter = function(index) {
+			    $scope.bean.scanner.filters.splice(index, 1);
+			};
 		});
-		
+
+		SnifferEditorModule.controller(
+			"ScannerFilterHelpController",
+			function($scope, $http, $log) {
+			    $scope.index = $scope.$index;
+			    $scope.$watch('filter', function(newValue, oldValue) {
+					$scope.bean.scanner.filters[$scope.index] = newValue;
+					$log.info("Update filter", $scope.index, newValue);
+				}, true);
+			}
+		);
 </script>
 	
 <fieldset id="sniffer-editor" ng-controller="SnifferBeanWizardControllerWrapper" ng-disabled="${scheduled}">
@@ -252,10 +272,35 @@
 	<div id="sniffer-scanner-editor" ng-form="form">
 		<h4>Event scanner configuration
 			<small>Configures the scanner sniffing the log consecutively for new events</small></h4>
-		<lfs-bean-wizard bean="bean.scanner" bean-type-label="Scanner type" wizards="scannerWizards"
-			shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="scanner.">
+		<lfs-bean-wizard bean="bean.scanner.targetScanner" bean-type-label="Scanner type" wizards="scannerWizards"
+			shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="scanner.targetScanner.">
 			<button type="button" class="btn btn-default btn-xs" ng-click="testScanner()" ng-disabled="form.$invalid"><i class="glyphicon glyphicon-check"></i> Test scanning</button>
 		</lfs-bean-wizard>
+
+		<!-- Filters -->
+		<div id="scanner-filters">
+			<h4>Filters
+				<small>Used to filter events e.g. for field transformation, normalization etc.</small></h4>
+			<div class="panel panel-default" ng-repeat="filter in bean.scanner.filters">
+				<div class="panel-heading">
+					<button type="button" class="close pull-right" title="Delete" ng-click="deleteScannerFilter($index)"><i class="glyphicon glyphicon-trash"></i></button>
+					<h3 class="panel-title">Filter {{$index+1}}</h3>
+				</div>
+				<div class="panel-body" ng-form="form">
+					<div ng-controller="ScannerFilterHelpController">
+						<lfs-bean-wizard bean="filter" bean-type-label="Filter type" wizards="scannerFilterWizards"
+							shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="scanner.filters[{{$index}}].">
+						</lfs-bean-wizard>
+					</div>
+				</div>
+			</div>
+			<div class="row post-desc">
+				<div class="col-md-12">
+					<a class="btn btn-link" ng-click="addScannerFilter()">
+						<i class="glyphicon glyphicon-plus"></i> Add new filter</a>
+				</div>
+			</div>
+		</div>
 	</div>
 	
 	<!-- Publishers -->

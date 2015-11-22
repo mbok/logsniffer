@@ -24,6 +24,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.logsniffer.fields.FieldsMap;
+import com.logsniffer.fields.filter.support.TimestampConvertFilter;
 import com.logsniffer.model.LogEntry;
 
 /**

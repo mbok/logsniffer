@@ -221,15 +221,17 @@ public class Log4jTextReader extends FormattedTextReader {
 		timeSpecifier = null;
 		levelSpecifier = null;
 		super.initPattern();
-		for (final Specifier s : parsingSpecifiers) {
-			if (s instanceof MessageSpecifier) {
-				messageSpecifier = (MessageSpecifier) s;
-			} else if (s instanceof TimeSpecifier) {
-				timeSpecifier = (TimeSpecifier) s;
-			} else if (s instanceof LevelSpecifier) {
-				levelSpecifier = (LevelSpecifier) s;
-			}
+		if (parsingSpecifiers != null) {
+			for (final Specifier s : parsingSpecifiers) {
+				if (s instanceof MessageSpecifier) {
+					messageSpecifier = (MessageSpecifier) s;
+				} else if (s instanceof TimeSpecifier) {
+					timeSpecifier = (TimeSpecifier) s;
+				} else if (s instanceof LevelSpecifier) {
+					levelSpecifier = (LevelSpecifier) s;
+				}
 
+			}
 		}
 	}
 

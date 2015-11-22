@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
-package com.logsniffer.reader.filter.support;
+package com.logsniffer.fields.filter.support;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,8 +27,8 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.fields.FieldsMap;
+import com.logsniffer.fields.filter.FieldsFilter;
 import com.logsniffer.model.SeverityLevel;
-import com.logsniffer.reader.filter.FieldsFilter;
 
 /**
  * Abstract filter class concerning transformation of a source field value into

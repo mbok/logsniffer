@@ -26,9 +26,9 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.logsniffer.config.PostConstructed;
 import com.logsniffer.event.Event;
+import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.util.grok.Grok;
@@ -36,6 +36,7 @@ import com.logsniffer.util.grok.GrokConsumerConstructor;
 import com.logsniffer.util.grok.GrokConsumerConstructor.GrokConsumer;
 import com.logsniffer.util.grok.GrokMatcher;
 import com.logsniffer.util.grok.GrokPatternBean;
+import com.logsniffer.util.grok.GrokPatternBeanJsonModel;
 import com.logsniffer.util.grok.GroksRegistry;
 
 /**
@@ -45,12 +46,12 @@ import com.logsniffer.util.grok.GroksRegistry;
  *
  */
 @PostConstructed(constructor = GrokConsumerConstructor.class)
-public class RegexPatternScanner extends SingleEntryIncrementalMatcher implements GrokConsumer {
+public class RegexPatternScanner extends SingleEntryIncrementalMatcher
+		implements GrokConsumer, GrokPatternBeanJsonModel {
 	@JsonIgnore
 	private GroksRegistry groksRegistry;
 
 	@JsonProperty
-	@JsonUnwrapped
 	@NotNull
 	@Valid
 	private GrokPatternBean grokBean = new GrokPatternBean();
@@ -112,4 +113,68 @@ public class RegexPatternScanner extends SingleEntryIncrementalMatcher implement
 		this.sourceField = sourceField;
 	}
 
+	@Override
+	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
+		return grokBean.getGrok(groksRegistry).getFieldTypes();
+	}
+
+	@Override
+	@JsonIgnore
+	@Deprecated
+	public String getPattern() {
+		return grokBean.getPattern();
+	}
+
+	@Override
+	public void setPattern(final String pattern) {
+		grokBean.setPattern(pattern);
+	}
+
+	@Override
+	@JsonIgnore
+	@Deprecated
+	public boolean isMultiLine() {
+		return grokBean.isMultiLine();
+	}
+
+	@Override
+	public void setMultiLine(final boolean multiLine) {
+		grokBean.setMultiLine(multiLine);
+	}
+
+	@Override
+	@JsonIgnore
+	@Deprecated
+	public boolean isDotAll() {
+		return grokBean.isDotAll();
+	}
+
+	@Override
+	public void setDotAll(final boolean dotAll) {
+		grokBean.setDotAll(dotAll);
+	}
+
+	@Override
+	@JsonIgnore
+	@Deprecated
+	public boolean isCaseInsensitive() {
+		return grokBean.isCaseInsensitive();
+	}
+
+	@Override
+	public void setCaseInsensitive(final boolean caseInsensitive) {
+		grokBean.setCaseInsensitive(caseInsensitive);
+	}
+
+	@Override
+	@JsonIgnore
+	@Deprecated
+	public boolean isSubStringSearch() {
+		return grokBean.isSubStringSearch();
+	}
+
+	@Override
+	public void setSubStringSearch(final boolean subStringSearch) {
+		grokBean.setSubStringSearch(subStringSearch);
+	}
 }

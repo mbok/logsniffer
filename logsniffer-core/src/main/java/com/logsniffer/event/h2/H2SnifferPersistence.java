@@ -57,6 +57,8 @@ import com.logsniffer.event.Scanner.ScannerWrapper;
 import com.logsniffer.event.Sniffer;
 import com.logsniffer.event.SnifferPersistence;
 import com.logsniffer.event.SnifferScheduler.ScheduleInfo;
+import com.logsniffer.event.filter.FilteredScanner;
+import com.logsniffer.event.filter.FilteredScanner.FilteredScannerWrapper;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogSource;
@@ -106,20 +108,32 @@ public class H2SnifferPersistence implements SnifferPersistence {
 				public LogEntryReaderStrategy getWrapped() throws ConfigException {
 					return configManager.createBeanFromJSON(LogEntryReaderStrategy.class, strategyConfigStr);
 				}
-
 			});
 			final String scannerConfigStr = rs.getString("SCANNER_CONFIG");
 			if (StringUtils.isNotEmpty(scannerConfigStr)) {
-				sniffer.setScanner(new ScannerWrapper() {
+				sniffer.setScanner(new FilteredScannerWrapper() {
+
 					@Override
-					public Scanner getWrapped() throws ConfigException {
-						return configManager.createBeanFromJSON(Scanner.class, scannerConfigStr);
+					public FilteredScanner getWrapped() throws ConfigException {
+						try {
+							return configManager.createBeanFromJSON(FilteredScanner.class, scannerConfigStr);
+						} catch (final ConfigException e) {
+							logger.warn(
+									"Failed to deserilize scanner as filtered scanner, try to map as common scanner: "
+											+ scannerConfigStr,
+									e);
+							return new FilteredScanner(
+									configManager.createBeanFromJSON(Scanner.class, scannerConfigStr));
+						}
 					}
 				});
 
 			}
+
 			final String publishersConfigStr = rs.getString("PUBLISHERS_CONFIG");
-			if (StringUtils.isNotEmpty(publishersConfigStr)) {
+			if (StringUtils.isNotEmpty(publishersConfigStr))
+
+			{
 				sniffer.setPublishers(new LazyList<Publisher>(new ListFactory<Publisher>() {
 					@Override
 					public List<Publisher> createList() {
@@ -163,7 +177,9 @@ public class H2SnifferPersistence implements SnifferPersistence {
 				ps.setString(c++, sniffer.getScheduleCronExpression());
 				ps.setLong(c++, sniffer.getLogSourceId());
 				if (sniffer.getScanner() != null) {
-					ps.setString(c++, configManager.saveBeanToJSON(ScannerWrapper.unwrap(sniffer.getScanner())));
+					final String scannerJsonStr = configManager
+							.saveBeanToJSON(ScannerWrapper.unwrap(sniffer.getScanner()));
+					ps.setString(c++, scannerJsonStr);
 				} else {
 					ps.setString(c++, (String) null);
 				}

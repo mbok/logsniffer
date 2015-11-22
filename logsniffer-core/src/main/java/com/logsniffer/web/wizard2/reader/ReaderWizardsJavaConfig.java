@@ -20,9 +20,9 @@ package com.logsniffer.web.wizard2.reader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.logsniffer.reader.filter.support.JsonParseFilter;
-import com.logsniffer.reader.filter.support.SeverityMappingFilter;
-import com.logsniffer.reader.filter.support.TimestampConvertFilter;
+import com.logsniffer.fields.filter.support.JsonParseFilter;
+import com.logsniffer.fields.filter.support.SeverityMappingFilter;
+import com.logsniffer.fields.filter.support.TimestampConvertFilter;
 import com.logsniffer.reader.log4j.Log4jTextReader;
 import com.logsniffer.web.wizard2.ConfigBeanWizard;
 import com.logsniffer.web.wizard2.SimpleBeanWizard;

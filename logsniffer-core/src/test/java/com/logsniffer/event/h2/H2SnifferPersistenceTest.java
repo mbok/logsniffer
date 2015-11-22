@@ -34,6 +34,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -51,6 +52,7 @@ import com.logsniffer.event.SnifferPersistence.AspectSniffer;
 import com.logsniffer.event.SnifferPersistence.SnifferChangedEvent;
 import com.logsniffer.event.SnifferScheduler;
 import com.logsniffer.event.SnifferScheduler.ScheduleInfo;
+import com.logsniffer.event.filter.FilteredScanner;
 import com.logsniffer.event.processing.ScheduleInfoAccess;
 import com.logsniffer.event.processing.SnifferJobManager;
 import com.logsniffer.event.publisher.MailPublisher;
@@ -123,6 +125,9 @@ public class H2SnifferPersistenceTest {
 	@Autowired
 	private H2LogSourceProvider sourceProvider;
 
+	@Autowired
+	private JdbcTemplate jdbcTpl;
+
 	private WildcardLogsSource source1, source2;
 
 	@Before
@@ -146,7 +151,7 @@ public class H2SnifferPersistenceTest {
 		s1.setLogSourceId(source1.getId());
 		final LevelScanner levelScanner = new LevelScanner();
 		levelScanner.setSeverityNumber(5);
-		s1.setScanner(levelScanner);
+		s1.setScanner(new FilteredScanner(levelScanner));
 		s1.setPublishers(Collections.singletonList((Publisher) new MailPublisher()));
 		s1.setReaderStrategy(new MinBAmountReadStrategy(2));
 		final long sid = snifferPersistence.createSniffer(s1);
@@ -166,17 +171,7 @@ public class H2SnifferPersistenceTest {
 
 		// Verify
 		checkSniffer = snifferPersistence.getSniffer(sid);
-		Assert.assertEquals("S1", checkSniffer.getName());
-		Assert.assertEquals(source1.getId(), checkSniffer.getLogSourceId());
-		Assert.assertEquals(true, checkSniffer.getScanner() instanceof Scanner);
-		Assert.assertNotNull(checkSniffer.getScanner());
-		Assert.assertEquals(1, checkSniffer.getPublishers().size());
-		Assert.assertNotNull(checkSniffer.getReaderStrategy());
-		Assert.assertTrue(((LogEntryReaderStrategyWrapper) checkSniffer.getReaderStrategy())
-				.getWrappedStrategy() instanceof MinBAmountReadStrategy);
-		Assert.assertEquals(2,
-				((MinBAmountReadStrategy) ((LogEntryReaderStrategyWrapper) checkSniffer.getReaderStrategy())
-						.getWrappedStrategy()).getMinBytesAmount());
+		checkS1Sniffer(checkSniffer);
 
 		// Update
 		checkSniffer.setName("S2");
@@ -221,6 +216,22 @@ public class H2SnifferPersistenceTest {
 		Mockito.verifyNoMoreInteractions(mockAppEventPublisher);
 	}
 
+	private void checkS1Sniffer(final Sniffer checkSniffer) {
+		Assert.assertEquals("S1", checkSniffer.getName());
+		Assert.assertEquals(source1.getId(), checkSniffer.getLogSourceId());
+		Assert.assertEquals(true, checkSniffer.getScanner() instanceof Scanner);
+		Assert.assertNotNull(checkSniffer.getScanner());
+		Assert.assertEquals(1, checkSniffer.getPublishers().size());
+		Assert.assertNotNull(checkSniffer.getReaderStrategy());
+		Assert.assertTrue(((LogEntryReaderStrategyWrapper) checkSniffer.getReaderStrategy())
+				.getWrappedStrategy() instanceof MinBAmountReadStrategy);
+		Assert.assertEquals(2,
+				((MinBAmountReadStrategy) ((LogEntryReaderStrategyWrapper) checkSniffer.getReaderStrategy())
+						.getWrappedStrategy()).getMinBytesAmount());
+		// Check scanner
+		Assert.assertTrue(checkSniffer.getScanner().getTargetScanner() instanceof LevelScanner);
+	}
+
 	@SuppressWarnings("unchecked")
 	@Test
 	@DirtiesContext
@@ -231,7 +242,7 @@ public class H2SnifferPersistenceTest {
 		s1.setLogSourceId(source1.getId());
 		final LevelScanner ls = new LevelScanner();
 		ls.setSeverityNumber(5);
-		s1.setScanner(ls);
+		s1.setScanner(new FilteredScanner(ls));
 
 		snifferPersistence.createSniffer(s1);
 		Log log1 = Mockito.mock(Log.class);
@@ -285,5 +296,17 @@ public class H2SnifferPersistenceTest {
 		snifferPersistence.deleteSniffer(s1);
 		inc3 = snifferPersistence.getIncrementData(s1, source1, log1);
 		Assert.assertNull(inc3.getNextOffset());
+	}
+
+	@Test
+	@DirtiesContext
+	public void testModelPrior_4_2_1() {
+		final String snifferInsert = "INSERT INTO PUBLIC.SNIFFERS(ID, NAME, CRON_EXPR, SOURCE, SCANNER_CONFIG, READER_STRATEGY_CONFIG, PUBLISHERS_CONFIG) VALUES(1, 'S1', '-', 1, '{\"@type\":\"LevelScanner\",\"severityNumber\":5,\"comparator\":\"EQ_OR_GREATER\",\"fieldTypes\":{}}', '{\"@type\":\"MinBAmountReadStrategy\",\"minBytesAmount\":2}', '[{\"@type\":\"MailPublisher\",\"to\":null,\"subject\":null,\"from\":null,\"textMessage\":\"Event link: $eventLink\"}]')";
+		jdbcTpl.update(snifferInsert);
+		final Sniffer checkSniffer = snifferPersistence.getSniffer(1);
+		Assert.assertNotNull(checkSniffer);
+		Assert.assertTrue(checkSniffer.getScanner() instanceof FilteredScanner);
+		checkS1Sniffer(checkSniffer);
+
 	}
 }

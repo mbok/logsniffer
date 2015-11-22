@@ -18,11 +18,10 @@
 package com.logsniffer.reader;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import com.logsniffer.config.ConfiguredBean;
-import com.logsniffer.fields.FieldBaseTypes;
+import com.logsniffer.fields.FieldsHost;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogInputStream;
@@ -37,8 +36,7 @@ import com.logsniffer.model.SeverityLevel;
  * @author mbok
  * 
  */
-public interface LogEntryReader<STREAMTYPE extends LogInputStream> extends
-		ConfiguredBean {
+public interface LogEntryReader<STREAMTYPE extends LogInputStream> extends ConfiguredBean, FieldsHost {
 
 	/**
 	 * Consumer for log entries, called sequentially when a new entry was read.
@@ -61,8 +59,7 @@ public interface LogEntryReader<STREAMTYPE extends LogInputStream> extends
 		 * @throws IOException
 		 *             in case of any errors
 		 */
-		boolean consume(Log log, LogPointerFactory pointerFactory,
-				LogEntry entry) throws IOException;
+		boolean consume(Log log, LogPointerFactory pointerFactory, LogEntry entry) throws IOException;
 	}
 
 	/**
@@ -86,22 +83,14 @@ public interface LogEntryReader<STREAMTYPE extends LogInputStream> extends
 	 *            number of entries to read
 	 * @return the read entries
 	 */
-	public void readEntries(Log log, LogRawAccess<STREAMTYPE> logAccess,
-			LogPointer startOffset, LogEntryConsumer consumer)
-			throws IOException, FormatException;
+	public void readEntries(Log log, LogRawAccess<STREAMTYPE> logAccess, LogPointer startOffset,
+			LogEntryConsumer consumer) throws IOException, FormatException;
 
 	/**
 	 * 
 	 * @return list of supported and provided severity levels.
 	 */
 	public List<SeverityLevel> getSupportedSeverities();
-
-	/**
-	 * 
-	 * @return fields and types recognized and supported by this reader.
-	 */
-	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes()
-			throws FormatException;
 
 	/**
 	 * Wrapper for delegated log entry reader e.g. to allow lazy initiating of
@@ -112,15 +101,12 @@ public interface LogEntryReader<STREAMTYPE extends LogInputStream> extends
 	 * @param <ContentType>
 	 *            the entry type
 	 */
-	public static abstract class LogEntryReaderWrapper implements
-			LogEntryReader<LogInputStream> {
+	public static abstract class LogEntryReaderWrapper implements LogEntryReader<LogInputStream> {
 		private LogEntryReader<LogInputStream> wrapped;
 
-		protected abstract LogEntryReader<LogInputStream> getWrapped()
-				throws IOException, FormatException;
+		protected abstract LogEntryReader<LogInputStream> getWrapped() throws IOException, FormatException;
 
-		private LogEntryReader<LogInputStream> getReader() throws IOException,
-				FormatException {
+		private LogEntryReader<LogInputStream> getReader() throws IOException, FormatException {
 			if (wrapped == null) {
 				wrapped = getWrapped();
 			}
@@ -128,10 +114,8 @@ public interface LogEntryReader<STREAMTYPE extends LogInputStream> extends
 		}
 
 		@Override
-		public void readEntries(Log log,
-				final LogRawAccess<LogInputStream> logAccess,
-				final LogPointer startOffset, final LogEntryConsumer consumer)
-				throws IOException, FormatException {
+		public void readEntries(final Log log, final LogRawAccess<LogInputStream> logAccess,
+				final LogPointer startOffset, final LogEntryConsumer consumer) throws IOException, FormatException {
 			getReader().readEntries(log, logAccess, startOffset, consumer);
 		}
 
@@ -139,7 +123,7 @@ public interface LogEntryReader<STREAMTYPE extends LogInputStream> extends
 		public List<SeverityLevel> getSupportedSeverities() {
 			try {
 				return getReader().getSupportedSeverities();
-			} catch (Exception e) {
+			} catch (final Exception e) {
 				throw new RuntimeException("Unexpected", e);
 			}
 		}

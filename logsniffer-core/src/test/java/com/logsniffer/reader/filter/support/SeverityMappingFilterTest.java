@@ -25,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.logsniffer.fields.FieldsMap;
+import com.logsniffer.fields.filter.support.SeverityMappingFilter;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.SeverityLevel;
 import com.logsniffer.model.SeverityLevel.SeverityClassification;

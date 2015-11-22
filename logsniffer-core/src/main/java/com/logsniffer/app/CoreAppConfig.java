@@ -83,17 +83,18 @@ public class CoreAppConfig {
 	@Autowired
 	public PropertiesFactoryBean logSnifferProperties(final ApplicationContext ctx) throws IOException {
 		if (ctx.getEnvironment().acceptsProfiles("!" + ContextProvider.PROFILE_NONE_QA)) {
-			File qaFile = File.createTempFile("logsniffer", "qa");
+			final File qaFile = File.createTempFile("logsniffer", "qa");
 			qaFile.delete();
-			String qaHomeDir = qaFile.getPath();
+			final String qaHomeDir = qaFile.getPath();
 			logger.info("QA mode active, setting random home directory: {}", qaHomeDir);
 			System.setProperty("logsniffer.home", qaHomeDir);
 		}
-		PathMatchingResourcePatternResolver pathMatcher = new PathMatchingResourcePatternResolver();
+		final PathMatchingResourcePatternResolver pathMatcher = new PathMatchingResourcePatternResolver();
 		Resource[] classPathProperties = pathMatcher.getResources("classpath*:/config/**/logsniffer-*.properties");
-		Resource[] metainfProperties = pathMatcher.getResources("classpath*:/META-INF/**/logsniffer-*.properties");
-		PropertiesFactoryBean p = new PropertiesFactoryBean();
-		for (Resource r : metainfProperties) {
+		final Resource[] metainfProperties = pathMatcher
+				.getResources("classpath*:/META-INF/**/logsniffer-*.properties");
+		final PropertiesFactoryBean p = new PropertiesFactoryBean();
+		for (final Resource r : metainfProperties) {
 			classPathProperties = (Resource[]) ArrayUtils.add(classPathProperties, r);
 		}
 		classPathProperties = (Resource[]) ArrayUtils.add(classPathProperties,
@@ -118,7 +119,7 @@ public class CoreAppConfig {
 	@Autowired
 	public PropertyPlaceholderConfigurer propertyPlaceholderConfigurer(
 			@Qualifier(BEAN_LOGSNIFFER_PROPS) final Properties props) throws IOException {
-		PropertyPlaceholderConfigurer c = new PropertyPlaceholderConfigurer();
+		final PropertyPlaceholderConfigurer c = new PropertyPlaceholderConfigurer();
 		c.setIgnoreResourceNotFound(true);
 		c.setIgnoreUnresolvablePlaceholders(true);
 		c.setSystemPropertiesMode(PropertyPlaceholderConfigurer.SYSTEM_PROPERTIES_MODE_OVERRIDE);
@@ -128,14 +129,14 @@ public class CoreAppConfig {
 
 	@Bean
 	public ObjectMapper jsonObjectMapper() {
-		ObjectMapper jsonMapper = new ObjectMapper();
+		final ObjectMapper jsonMapper = new ObjectMapper();
 		jsonMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 		jsonMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		jsonMapper.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
 		jsonMapper.configure(Feature.ALLOW_SINGLE_QUOTES, true);
 		jsonMapper.configure(MapperFeature.DEFAULT_VIEW_INCLUSION, false);
 
-		SimpleModule module = new SimpleModule("FieldsMapping", Version.unknownVersion());
+		final SimpleModule module = new SimpleModule("FieldsMapping", Version.unknownVersion());
 		module.setSerializerModifier(new BeanSerializerModifier() {
 			@Override
 			public JsonSerializer<?> modifyMapSerializer(final SerializationConfig config, final MapType valueType,

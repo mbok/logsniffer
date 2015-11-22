@@ -35,8 +35,8 @@ import com.logsniffer.app.CoreAppConfig;
 import com.logsniffer.config.BeanConfigFactoryManager;
 import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.fields.FieldsMap;
-import com.logsniffer.reader.filter.support.JsonParseFilter;
-import com.logsniffer.reader.filter.support.JsonParseFilter.JsonParseFilterBuilder;
+import com.logsniffer.fields.filter.support.JsonParseFilter;
+import com.logsniffer.fields.filter.support.JsonParseFilter.JsonParseFilterBuilder;
 
 /**
  * Test for {@link JsonParseFilter}.

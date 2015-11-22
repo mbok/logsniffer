@@ -14,7 +14,7 @@ import com.logsniffer.reader.FormatException;
  * @author mbok
  *
  */
-public final class GrokPatternBean {
+public final class GrokPatternBean implements GrokPatternBeanJsonModel {
 	@JsonProperty
 	@NotEmpty
 	@GrokPatternConstraint
@@ -51,6 +51,7 @@ public final class GrokPatternBean {
 	/**
 	 * @return the pattern
 	 */
+	@Override
 	public String getPattern() {
 		return pattern;
 	}
@@ -59,6 +60,7 @@ public final class GrokPatternBean {
 	 * @param pattern
 	 *            the pattern to set
 	 */
+	@Override
 	public void setPattern(final String pattern) {
 		this.pattern = pattern;
 		this.grok = null;
@@ -67,6 +69,7 @@ public final class GrokPatternBean {
 	/**
 	 * @return the multiLine
 	 */
+	@Override
 	public boolean isMultiLine() {
 		return multiLine;
 	}
@@ -75,6 +78,7 @@ public final class GrokPatternBean {
 	 * @param multiLine
 	 *            the multiLine to set
 	 */
+	@Override
 	public void setMultiLine(final boolean multiLine) {
 		this.multiLine = multiLine;
 		this.grok = null;
@@ -83,6 +87,7 @@ public final class GrokPatternBean {
 	/**
 	 * @return the dotAll
 	 */
+	@Override
 	public boolean isDotAll() {
 		return dotAll;
 	}
@@ -91,6 +96,7 @@ public final class GrokPatternBean {
 	 * @param dotAll
 	 *            the dotAll to set
 	 */
+	@Override
 	public void setDotAll(final boolean dotAll) {
 		this.dotAll = dotAll;
 		this.grok = null;
@@ -99,6 +105,7 @@ public final class GrokPatternBean {
 	/**
 	 * @return the caseInsensitive
 	 */
+	@Override
 	public boolean isCaseInsensitive() {
 		return caseInsensitive;
 	}
@@ -107,6 +114,7 @@ public final class GrokPatternBean {
 	 * @param caseInsensitive
 	 *            the caseInsensitive to set
 	 */
+	@Override
 	public void setCaseInsensitive(final boolean caseInsensitive) {
 		this.caseInsensitive = caseInsensitive;
 		this.grok = null;
@@ -115,6 +123,7 @@ public final class GrokPatternBean {
 	/**
 	 * @return the subStringSearch
 	 */
+	@Override
 	public boolean isSubStringSearch() {
 		return subStringSearch;
 	}
@@ -123,6 +132,7 @@ public final class GrokPatternBean {
 	 * @param subStringSearch
 	 *            the subStringSearch to set
 	 */
+	@Override
 	public void setSubStringSearch(final boolean subStringSearch) {
 		this.subStringSearch = subStringSearch;
 		this.grok = null;

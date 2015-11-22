@@ -23,6 +23,8 @@ import javax.validation.Valid;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.logsniffer.event.filter.FilteredScanner;
 import com.logsniffer.validators.CronExprConstraint;
 import com.logsniffer.validators.NotDefaultPrimitiveValue;
 
@@ -36,8 +38,11 @@ public class Sniffer {
 	private LogEntryReaderStrategy readerStrategy;
 	@NotDefaultPrimitiveValue
 	private long logSourceId;
+
 	@Valid
-	private Scanner scanner;
+	@JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
+	private FilteredScanner scanner = new FilteredScanner();
+
 	@Valid
 	private List<Publisher> publishers;
 	@NotEmpty
@@ -80,7 +85,7 @@ public class Sniffer {
 	/**
 	 * @return the scanner
 	 */
-	public Scanner getScanner() {
+	public FilteredScanner getScanner() {
 		return scanner;
 	}
 
@@ -88,7 +93,7 @@ public class Sniffer {
 	 * @param scanner
 	 *            the scanner to set
 	 */
-	public void setScanner(final Scanner scanner) {
+	public void setScanner(final FilteredScanner scanner) {
 		this.scanner = scanner;
 	}
 

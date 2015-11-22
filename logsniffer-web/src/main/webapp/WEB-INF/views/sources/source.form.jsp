@@ -23,7 +23,7 @@
 			function($scope, $http, $log, $modal) {
 				$scope.sourceWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.model.LogSource', pageContext.response.locale))};
 				$scope.readerWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.reader.LogEntryReader', pageContext.response.locale))};
-				$scope.readerFilterWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.reader.filter.FieldsFilter', pageContext.response.locale))};
+				$scope.readerFilterWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.fields.filter.FieldsFilter', pageContext.response.locale))};
 				$scope.readerTestSession = {};
 				$scope.resolvedTestLogs = null;
 				

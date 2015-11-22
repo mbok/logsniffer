@@ -35,12 +35,15 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.logsniffer.fields.FieldBaseTypes;
+import com.logsniffer.fields.FieldsHost;
+import com.logsniffer.reader.FormatException;
 
 /**
  * GROK https://code.google.com/p/semicomplete/wiki/Grok pattern implementation.
  */
 @JsonAutoDetect(creatorVisibility = Visibility.NONE, fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public final class Grok {
+public final class Grok implements FieldsHost {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Grok.class);
 	protected static final Pattern PATTERN_SUBGROK = Pattern.compile(
 			"%\\{([A-Z0-9_-]+)(?::([A-Z0-9_-]+)(?::(int|long|float|double|boolean))?)?\\}", Pattern.CASE_INSENSITIVE);
@@ -257,6 +260,8 @@ public final class Grok {
 		 * @return converted value or null in case of errors
 		 */
 		T convert(String input);
+
+		FieldBaseTypes getTargetType();
 	}
 
 	private Map<Integer, TypeConverter<Object>> typeConverters;
@@ -281,6 +286,11 @@ public final class Grok {
 				}
 				return null;
 			}
+
+			@Override
+			public FieldBaseTypes getTargetType() {
+				return FieldBaseTypes.INTEGER;
+			}
 		});
 		supportedTypeConverters.put("long", new TypeConverter<Long>() {
 			@Override
@@ -292,6 +302,11 @@ public final class Grok {
 					}
 				}
 				return null;
+			}
+
+			@Override
+			public FieldBaseTypes getTargetType() {
+				return FieldBaseTypes.LONG;
 			}
 		});
 		supportedTypeConverters.put("float", new TypeConverter<Float>() {
@@ -305,6 +320,11 @@ public final class Grok {
 				}
 				return null;
 			}
+
+			@Override
+			public FieldBaseTypes getTargetType() {
+				return FieldBaseTypes.FLOAT;
+			}
 		});
 		supportedTypeConverters.put("double", new TypeConverter<Double>() {
 			@Override
@@ -317,6 +337,11 @@ public final class Grok {
 				}
 				return null;
 			}
+
+			@Override
+			public FieldBaseTypes getTargetType() {
+				return FieldBaseTypes.DOUBLE;
+			}
 		});
 		supportedTypeConverters.put("boolean", new TypeConverter<Boolean>() {
 			@Override
@@ -325,6 +350,11 @@ public final class Grok {
 					return Boolean.parseBoolean(input.trim());
 				}
 				return null;
+			}
+
+			@Override
+			public FieldBaseTypes getTargetType() {
+				return FieldBaseTypes.BOOLEAN;
 			}
 		});
 	}
@@ -471,5 +501,20 @@ public final class Grok {
 	public String toString() {
 		return "Grok [grokPattern=" + grokPattern + ", regexPattern=" + regexPattern + ", groupNames=" + groupNames
 				+ "]";
+	}
+
+	@Override
+	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
+		final LinkedHashMap<String, FieldBaseTypes> fields = new LinkedHashMap<>();
+		for (final String attr : groupNames.keySet()) {
+			final int groupIndex = groupNames.get(attr);
+			final TypeConverter<Object> typeConverter = getTypeConverters().get(groupIndex);
+			if (typeConverter != null) {
+				fields.put(attr, typeConverter.getTargetType());
+			} else {
+				fields.put(attr, FieldBaseTypes.STRING);
+			}
+		}
+		return fields;
 	}
 }

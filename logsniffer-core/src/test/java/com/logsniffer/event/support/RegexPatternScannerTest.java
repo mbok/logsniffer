@@ -11,6 +11,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.logsniffer.app.CoreAppConfig;
+import com.logsniffer.config.BeanConfigFactoryManager;
 import com.logsniffer.event.Event;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.reader.FormatException;
@@ -31,6 +32,9 @@ public class RegexPatternScannerTest {
 	public GrokConsumerConstructor grokReaderConstructor() {
 		return new GrokConsumerConstructor();
 	}
+
+	@Autowired
+	private BeanConfigFactoryManager configManager;
 
 	@Autowired
 	private GrokConsumerConstructor constructor;
@@ -106,5 +110,16 @@ public class RegexPatternScannerTest {
 		Assert.assertNotNull(event);
 		Assert.assertEquals(1, event.size());
 		Assert.assertEquals(777, event.get("MyIntField"));
+	}
+
+	@Test
+	public void testGrokDexserializationWithUnwrappedFields() throws FormatException {
+		final String json = "{\"@type\":\"RegexPatternScanner\",\"pattern\":\"%{INT:MyIntField:int}\",\"subStringSearch\":false,\"multiLine\":false,\"dotAll\":false,\"caseInsensitive\":false,\"sourceField\":\"source\",\"fieldTypes\":{\"MyIntField\":\"INTEGER\"}}";
+		final RegexPatternScanner s = configManager.createBeanFromJSON(RegexPatternScanner.class, json);
+		Assert.assertEquals("%{INT:MyIntField:int}", s.getGrokBean().getPattern());
+		Assert.assertEquals(false, s.getGrokBean().isCaseInsensitive());
+		Assert.assertEquals(false, s.getGrokBean().isMultiLine());
+		Assert.assertEquals(false, s.getGrokBean().isDotAll());
+		Assert.assertEquals(false, s.getGrokBean().isSubStringSearch());
 	}
 }

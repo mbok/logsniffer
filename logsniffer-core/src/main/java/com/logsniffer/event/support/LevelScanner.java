@@ -17,14 +17,18 @@
  *******************************************************************************/
 package com.logsniffer.event.support;
 
+import java.util.LinkedHashMap;
+
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logsniffer.event.Event;
+import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.SeverityLevel;
+import com.logsniffer.reader.FormatException;
 import com.logsniffer.validators.NotDefaultPrimitiveValue;
 
 /**
@@ -99,6 +103,11 @@ public class LevelScanner extends SingleEntryIncrementalMatcher {
 	 */
 	public void setSeverityNumber(final int severityNumber) {
 		this.severityNumber = severityNumber;
+	}
+
+	@Override
+	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
+		return new LinkedHashMap<>();
 	}
 
 }

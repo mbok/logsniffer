@@ -63,6 +63,8 @@ import com.logsniffer.event.Scanner.EventConsumer;
 import com.logsniffer.event.Sniffer;
 import com.logsniffer.event.SnifferPersistence;
 import com.logsniffer.event.SnifferScheduler.ScheduleInfo;
+import com.logsniffer.event.filter.FilteredScanner;
+import com.logsniffer.fields.filter.FilteredLogEntryReader;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogInputStream;
@@ -72,7 +74,6 @@ import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.model.LogSourceProvider;
 import com.logsniffer.reader.LogEntryReader;
-import com.logsniffer.reader.filter.FilteredLogEntryReader;
 import com.logsniffer.util.sql.DefaultTxExecutor;
 import com.logsniffer.util.sql.TxExecutor;
 
@@ -189,7 +190,7 @@ public class SnifferJobTest {
 		sniffer.setScheduleCronExpression("*/15 * * ? * * */50");
 		sniffer.setLogSourceId(77);
 		final Scanner scanner = mock(Scanner.class);
-		sniffer.setScanner(scanner);
+		sniffer.setScanner(new FilteredScanner(scanner));
 		sniffer.setReaderStrategy(mock(LogEntryReaderStrategy.class));
 		when(sniffer.getReaderStrategy().continueReading(any(Log.class), any(LogPointerFactory.class),
 				any(LogEntry.class))).thenReturn(true);
@@ -257,8 +258,8 @@ public class SnifferJobTest {
 		verify(sniffer.getReaderStrategy(), times(1)).reset(eq(log2), eq(logAccess2), any(LogPointer.class));
 
 		// Fail sniffing log1 to check continuous sniffing on log2
-		doThrow(new IOException()).when(sniffer.getScanner()).find(eq(reader), any(LogEntryReaderStrategy.class),
-				eq(log1), eq(logAccess1), eq(log1idata), any(EventConsumer.class));
+		doThrow(new IOException()).when(sniffer.getScanner().getTargetScanner()).find(eq(reader),
+				any(LogEntryReaderStrategy.class), eq(log1), eq(logAccess1), eq(log1idata), any(EventConsumer.class));
 		scheduler.triggerJob(jobManager.getJobKey(sniffer, 77));
 		Thread.sleep(2000);
 		verify(publisher, times(2)).publish(any(Event.class));

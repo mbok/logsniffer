@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
-package com.logsniffer.reader.filter;
+package com.logsniffer.fields.filter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,6 +28,7 @@ import javax.validation.Valid;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.logsniffer.fields.FieldBaseTypes;
+import com.logsniffer.fields.FieldsHost;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogInputStream;
@@ -147,18 +148,7 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream> imp
 	@Override
 	@JsonView(Views.Info.class)
 	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
-		LinkedHashMap<String, FieldBaseTypes> fieldTypes;
-		if (targetReader != null) {
-			fieldTypes = new LinkedHashMap<>(targetReader.getFieldTypes());
-		} else {
-			fieldTypes = new LinkedHashMap<>();
-		}
-		if (filters != null) {
-			for (final FieldsFilter f : filters) {
-				f.filterKnownFields(fieldTypes);
-			}
-		}
-		return fieldTypes;
+		return FieldsHost.FieldHostUtils.getFilteredFieldTypes(targetReader, filters);
 	}
 
 	/**

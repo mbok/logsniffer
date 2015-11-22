@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.logsniffer.config.PostConstructed;
 import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.model.LogEntry;
@@ -41,6 +40,7 @@ import com.logsniffer.util.grok.GrokConsumerConstructor;
 import com.logsniffer.util.grok.GrokConsumerConstructor.GrokConsumer;
 import com.logsniffer.util.grok.GrokMatcher;
 import com.logsniffer.util.grok.GrokPatternBean;
+import com.logsniffer.util.grok.GrokPatternBeanJsonModel;
 import com.logsniffer.util.grok.GroksRegistry;
 
 /**
@@ -50,7 +50,8 @@ import com.logsniffer.util.grok.GroksRegistry;
  * 
  */
 @PostConstructed(constructor = GrokConsumerConstructor.class)
-public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> implements GrokConsumer {
+public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher>
+		implements GrokConsumer, GrokPatternBeanJsonModel {
 
 	private static final Logger logger = LoggerFactory.getLogger(GrokTextReader.class);
 
@@ -58,7 +59,6 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> imple
 	private GroksRegistry groksRegistry;
 
 	@JsonProperty
-	@JsonUnwrapped
 	@NotNull
 	@Valid
 	private GrokPatternBean grokBean = new GrokPatternBean();
@@ -75,9 +75,7 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> imple
 	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
 		initPattern();
 		final LinkedHashMap<String, FieldBaseTypes> fields = super.getFieldTypes();
-		for (final String attr : grokBean.getGrok(groksRegistry).getGroupNames().keySet()) {
-			fields.put(attr, FieldBaseTypes.STRING);
-		}
+		fields.putAll(grokBean.getGrok(groksRegistry).getFieldTypes());
 		if (overflowAttribute != null && !fields.containsKey(overflowAttribute)) {
 			fields.put(overflowAttribute, FieldBaseTypes.STRING);
 		}
@@ -170,6 +168,66 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher> imple
 	@Override
 	public void initGrokFactory(final GroksRegistry groksRegistry) {
 		this.groksRegistry = groksRegistry;
+	}
+
+	@Override
+	@JsonIgnore
+	@Deprecated
+	public String getPattern() {
+		return grokBean.getPattern();
+	}
+
+	@Override
+	public void setPattern(final String pattern) {
+		grokBean.setPattern(pattern);
+	}
+
+	@Override
+	@JsonIgnore
+	@Deprecated
+	public boolean isMultiLine() {
+		return grokBean.isMultiLine();
+	}
+
+	@Override
+	public void setMultiLine(final boolean multiLine) {
+		grokBean.setMultiLine(multiLine);
+	}
+
+	@Override
+	@JsonIgnore
+	@Deprecated
+	public boolean isDotAll() {
+		return grokBean.isDotAll();
+	}
+
+	@Override
+	public void setDotAll(final boolean dotAll) {
+		grokBean.setDotAll(dotAll);
+	}
+
+	@Override
+	@JsonIgnore
+	@Deprecated
+	public boolean isCaseInsensitive() {
+		return grokBean.isCaseInsensitive();
+	}
+
+	@Override
+	public void setCaseInsensitive(final boolean caseInsensitive) {
+		grokBean.setCaseInsensitive(caseInsensitive);
+	}
+
+	@Override
+	@JsonIgnore
+	@Deprecated
+	public boolean isSubStringSearch() {
+		return grokBean.isSubStringSearch();
+	}
+
+	@Override
+	public void setSubStringSearch(final boolean subStringSearch) {
+		grokBean.setSubStringSearch(subStringSearch);
 	}
 
 }

@@ -39,6 +39,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import com.logsniffer.app.CoreAppConfig;
 import com.logsniffer.config.BeanConfigFactoryManager;
 import com.logsniffer.config.ConfigException;
+import com.logsniffer.fields.filter.FilteredLogEntryReader;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogRawAccessor;
@@ -46,7 +47,6 @@ import com.logsniffer.model.file.AbstractTimestampRollingLogsSource.PastLogsType
 import com.logsniffer.model.support.ByteLogInputStream;
 import com.logsniffer.model.support.DailyRollingLog;
 import com.logsniffer.model.support.DailyRollingLogAccess;
-import com.logsniffer.reader.filter.FilteredLogEntryReader;
 import com.logsniffer.reader.log4j.Log4jTextReader;
 
 /**

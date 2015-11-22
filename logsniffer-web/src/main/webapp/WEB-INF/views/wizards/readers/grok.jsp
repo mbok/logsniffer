@@ -19,7 +19,7 @@
 				<span ng-include="contextPath + '/ng/help/regexGrokPattern.html'"></span>
 			</lsf-info-label>
 			<div class="controls controls-row">
-				<input type="text" class="form-control pattern" ng-model="bean.pattern" name="grokPattern" id="grokPattern" required/>
+				<input type="text" class="form-control pattern" ng-model="bean.grokBean.pattern" name="grokPattern" id="grokPattern" required/>
 			</div>
 		</t:ngFormFieldWrapper>
 		<t:ngFormFieldWrapper cssClass="form-group col-md-2" fieldName="charset">
@@ -38,17 +38,17 @@
 			<label class="control-label">Pattern flags:</label>
 			<div class="controls controls-row">
 				<label class="checkbox-inline">
-					<input type="checkbox" ng-model="bean.subStringSearch" class="subStringSearch"/> Sub string search
+					<input type="checkbox" ng-model="bean.grokBean.subStringSearch" class="subStringSearch"/> Sub string search
 				</label>
 				<label class="checkbox-inline">
-					<input type="checkbox" ng-model="bean.caseInsensitive" class="caseInsensitive"/> Case-insensitive matching
+					<input type="checkbox" ng-model="bean.grokBean.caseInsensitive" class="caseInsensitive"/> Case-insensitive matching
 				</label>
 				<!-- 
 				<label class="checkbox-inline">
-					<input type="checkbox" ng-model="bean.multiLine" class="multiLine"/> Multiline mode
+					<input type="checkbox" ng-model="bean.grokBean.multiLine" class="multiLine"/> Multiline mode
 				</label>
 				<label class="checkbox-inline">
-					<input type="checkbox" ng-model="bean.dotAll" class="dotAll"/> Dotall mode
+					<input type="checkbox" ng-model="bean.grokBean.dotAll" class="dotAll"/> Dotall mode
 				</label> -->
 			</div>
 		</div>

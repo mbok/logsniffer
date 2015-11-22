@@ -31,6 +31,8 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import com.logsniffer.fields.FieldBaseTypes;
+import com.logsniffer.fields.filter.FieldsFilter;
+import com.logsniffer.fields.filter.FilteredLogEntryReader;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogInputStream;

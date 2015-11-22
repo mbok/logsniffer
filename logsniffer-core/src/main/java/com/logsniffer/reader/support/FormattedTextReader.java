@@ -47,7 +47,7 @@ public abstract class FormattedTextReader extends AbstractPatternLineReader<Matc
 		private int minWidth;
 		private int maxWidth;
 		private String modifier;
-		private String specifierKey;
+		private final String specifierKey;
 		private String fieldName;
 
 		public Specifier(final String specifierKey) {
@@ -145,7 +145,7 @@ public abstract class FormattedTextReader extends AbstractPatternLineReader<Matc
 	 * 
 	 */
 	public static class ArbitraryTextSpecifier extends Specifier {
-		private boolean greedy;
+		private final boolean greedy;
 
 		public ArbitraryTextSpecifier(final String specifierKey, final boolean greedy) {
 			super(specifierKey);
@@ -223,19 +223,19 @@ public abstract class FormattedTextReader extends AbstractPatternLineReader<Matc
 		if (parsingPattern == null) {
 			// Only if not yet parsed
 			if (formatPattern != null) {
-				ArrayList<Specifier> specs = new ArrayList<Specifier>();
-				StringBuilder parsingPatternStr = new StringBuilder();
-				Matcher m = SPECIFIER_PATTERN.matcher(formatPattern);
+				final ArrayList<Specifier> specs = new ArrayList<Specifier>();
+				final StringBuilder parsingPatternStr = new StringBuilder();
+				final Matcher m = SPECIFIER_PATTERN.matcher(formatPattern);
 				int leftPos = 0;
 				while (m.find()) {
 					if (m.start() > leftPos) {
 						parsingPatternStr.append(Pattern.quote(formatPattern.substring(leftPos, m.start())));
 					}
 					leftPos = m.end();
-					String minWidthStr = m.group(2);
-					String maxWidthStr = m.group(4);
-					String specName = m.group(5);
-					String specModifier = m.group(7);
+					final String minWidthStr = m.group(2);
+					final String maxWidthStr = m.group(4);
+					final String specName = m.group(5);
+					final String specModifier = m.group(7);
 					int minWidth = -1;
 					if (minWidthStr != null && minWidthStr.length() > 0) {
 						minWidth = Integer.parseInt(minWidthStr);
@@ -245,7 +245,7 @@ public abstract class FormattedTextReader extends AbstractPatternLineReader<Matc
 						maxWidth = Integer.parseInt(maxWidthStr);
 					}
 					Specifier spec = null;
-					for (Specifier specTest : createSupportedSpecifiers()) {
+					for (final Specifier specTest : createSupportedSpecifiers()) {
 						if (specTest.getSpecifierKey().equals(specName)) {
 							spec = specTest;
 							break;
@@ -302,15 +302,15 @@ public abstract class FormattedTextReader extends AbstractPatternLineReader<Matc
 
 	@Override
 	protected Matcher matches(final String line) {
-		Matcher m = parsingPattern.matcher(line);
+		final Matcher m = parsingPattern.matcher(line);
 		return m.matches() ? m : null;
 	}
 
 	@Override
 	protected void fillAttributes(final LogEntry entry, final Matcher ctx) throws FormatException {
 		int specNumber = 1;
-		for (Specifier spec : parsingSpecifiers) {
-			String match = ctx.group(specNumber++);
+		for (final Specifier spec : parsingSpecifiers) {
+			final String match = ctx.group(specNumber++);
 			spec.set(entry, match);
 		}
 	}
@@ -339,9 +339,11 @@ public abstract class FormattedTextReader extends AbstractPatternLineReader<Matc
 	@Override
 	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
 		initPattern();
-		LinkedHashMap<String, FieldBaseTypes> fields = super.getFieldTypes();
-		for (Specifier s : parsingSpecifiers) {
-			fields.put(s.getFieldName(), s.getFieldType());
+		final LinkedHashMap<String, FieldBaseTypes> fields = super.getFieldTypes();
+		if (parsingSpecifiers != null) {
+			for (final Specifier s : parsingSpecifiers) {
+				fields.put(s.getFieldName(), s.getFieldType());
+			}
 		}
 		return fields;
 	}
