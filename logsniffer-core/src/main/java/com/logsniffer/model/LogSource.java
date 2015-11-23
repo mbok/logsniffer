@@ -23,7 +23,7 @@ import java.util.List;
 
 import com.logsniffer.config.ConfiguredBean;
 import com.logsniffer.config.WrappedBean;
-import com.logsniffer.fields.filter.FilteredLogEntryReader;
+import com.logsniffer.reader.filter.FilteredLogEntryReader;
 
 /**
  * A source for logs related to the same reader.

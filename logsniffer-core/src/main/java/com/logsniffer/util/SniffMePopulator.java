@@ -26,10 +26,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.logsniffer.app.DataSourceAppConfig.DBInitPopulator;
-import com.logsniffer.fields.filter.FilteredLogEntryReader;
 import com.logsniffer.app.LogSnifferHome;
 import com.logsniffer.model.LogSourceProvider;
 import com.logsniffer.model.file.RollingLogsSource;
+import com.logsniffer.reader.filter.FilteredLogEntryReader;
 import com.logsniffer.reader.log4j.Log4jTextReader;
 
 /**

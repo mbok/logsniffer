@@ -18,12 +18,10 @@
 package com.logsniffer.fields.filter;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 
 import com.logsniffer.config.ConfiguredBean;
 import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.fields.FieldsMap;
-import com.logsniffer.model.SeverityLevel;
 import com.logsniffer.reader.LogEntryReader;
 
 /**
@@ -49,11 +47,4 @@ public interface FieldsFilter extends ConfiguredBean {
 	 */
 	void filterKnownFields(LinkedHashMap<String, FieldBaseTypes> knownFields);
 
-	/**
-	 * Filters supported severities.
-	 * 
-	 * @param severities
-	 *            fields supported by a {@link LogEntryReader}.
-	 */
-	void filterSupportedSeverities(List<SeverityLevel> severities);
 }

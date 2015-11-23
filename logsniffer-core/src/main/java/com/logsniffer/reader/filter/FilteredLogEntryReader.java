@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
-package com.logsniffer.fields.filter;
+package com.logsniffer.reader.filter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.fields.FieldsHost;
+import com.logsniffer.fields.filter.FieldsFilter;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogInputStream;
@@ -87,10 +88,11 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream> imp
 	 * @param targetReader
 	 * @param filters
 	 */
+	@SuppressWarnings("unchecked")
 	public FilteredLogEntryReader(final LogEntryReader<STREAMTYPE> targetReader, final List<FieldsFilter> filters) {
 		super();
 		this.targetReader = targetReader;
-		this.filters = filters;
+		this.filters = (List<FieldsFilter>) (filters != null ? new ArrayList<>(filters) : new ArrayList<>());
 	}
 
 	/**
@@ -138,7 +140,9 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream> imp
 		}
 		if (filters != null) {
 			for (final FieldsFilter f : filters) {
-				f.filterSupportedSeverities(severities);
+				if (f instanceof LogEntryFilter) {
+					((LogEntryFilter) f).filterSupportedSeverities(severities);
+				}
 			}
 			Collections.sort(severities);
 		}
@@ -156,7 +160,7 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream> imp
 	 *            the filters to set
 	 */
 	public void setFilters(final List<FieldsFilter> filters) {
-		this.filters = filters != null ? filters : new ArrayList<FieldsFilter>();
+		this.filters = filters != null ? new ArrayList<>(filters) : new ArrayList<FieldsFilter>();
 	}
 
 	/**

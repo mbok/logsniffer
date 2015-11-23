@@ -29,6 +29,7 @@ import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.fields.FieldsMap;
 import com.logsniffer.fields.filter.FieldsFilter;
 import com.logsniffer.model.SeverityLevel;
+import com.logsniffer.reader.filter.LogEntryFilter;
 
 /**
  * Abstract filter class concerning transformation of a source field value into
@@ -38,7 +39,7 @@ import com.logsniffer.model.SeverityLevel;
  * @author mbok
  *
  */
-public abstract class AbstractTransformationFilter<T> implements FieldsFilter {
+public abstract class AbstractTransformationFilter<T> implements FieldsFilter, LogEntryFilter {
 	private static final Logger logger = LoggerFactory.getLogger(AbstractTransformationFilter.class);
 	@JsonProperty
 	@NotEmpty

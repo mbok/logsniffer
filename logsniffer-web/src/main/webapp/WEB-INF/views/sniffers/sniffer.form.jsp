@@ -274,7 +274,6 @@
 			<small>Configures the scanner sniffing the log consecutively for new events</small></h4>
 		<lfs-bean-wizard bean="bean.scanner.targetScanner" bean-type-label="Scanner type" wizards="scannerWizards"
 			shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="scanner.targetScanner.">
-			<button type="button" class="btn btn-default btn-xs" ng-click="testScanner()" ng-disabled="form.$invalid"><i class="glyphicon glyphicon-check"></i> Test scanning</button>
 		</lfs-bean-wizard>
 
 		<!-- Filters -->
@@ -299,6 +298,12 @@
 					<a class="btn btn-link" ng-click="addScannerFilter()">
 						<i class="glyphicon glyphicon-plus"></i> Add new filter</a>
 				</div>
+			</div>
+		</div>
+
+		<div class="row post-desc">
+			<div class="col-md-12">
+				<button type="button" class="btn btn-default btn-xs" ng-click="testScanner()" ng-disabled="form.$invalid"><i class="glyphicon glyphicon-check"></i> Test scanning</button>
 			</div>
 		</div>
 	</div>

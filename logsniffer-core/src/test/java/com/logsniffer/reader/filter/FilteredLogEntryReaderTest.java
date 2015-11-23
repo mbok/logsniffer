@@ -32,7 +32,6 @@ import org.mockito.stubbing.Answer;
 
 import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.fields.filter.FieldsFilter;
-import com.logsniffer.fields.filter.FilteredLogEntryReader;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogInputStream;
@@ -54,16 +53,16 @@ import com.logsniffer.reader.LogEntryReader.LogEntryConsumer;
 public class FilteredLogEntryReaderTest {
 	private LogEntryReader<LogInputStream> targetReader;
 	private List<FieldsFilter> filters;
-	private FieldsFilter f1;
-	private FieldsFilter f2;
+	private LogEntryFilter f1;
+	private LogEntryFilter f2;
 
 	@SuppressWarnings("unchecked")
 	@Before
 	public void setUp() {
 		targetReader = Mockito.mock(LogEntryReader.class);
 		filters = new ArrayList<>();
-		f1 = Mockito.mock(FieldsFilter.class);
-		f2 = Mockito.mock(FieldsFilter.class);
+		f1 = Mockito.mock(LogEntryFilter.class);
+		f2 = Mockito.mock(LogEntryFilter.class);
 		filters.add(f1);
 		filters.add(f2);
 	}
@@ -101,8 +100,8 @@ public class FilteredLogEntryReaderTest {
 
 		// Verify
 		Mockito.verify(consumer).consume(Mockito.eq(log), Mockito.any(LogPointerFactory.class), Mockito.eq(logEntry));
-		Mockito.verify(f1).filter(logEntry.getFields());
-		Mockito.verify(f2).filter(logEntry.getFields());
+		Mockito.verify(f1).filter(logEntry);
+		Mockito.verify(f2).filter(logEntry);
 	}
 
 	@SuppressWarnings("unchecked")

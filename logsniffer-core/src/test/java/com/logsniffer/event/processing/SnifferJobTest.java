@@ -64,7 +64,6 @@ import com.logsniffer.event.Sniffer;
 import com.logsniffer.event.SnifferPersistence;
 import com.logsniffer.event.SnifferScheduler.ScheduleInfo;
 import com.logsniffer.event.filter.FilteredScanner;
-import com.logsniffer.fields.filter.FilteredLogEntryReader;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogInputStream;
@@ -74,6 +73,7 @@ import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.model.LogSourceProvider;
 import com.logsniffer.reader.LogEntryReader;
+import com.logsniffer.reader.filter.FilteredLogEntryReader;
 import com.logsniffer.util.sql.DefaultTxExecutor;
 import com.logsniffer.util.sql.TxExecutor;
 

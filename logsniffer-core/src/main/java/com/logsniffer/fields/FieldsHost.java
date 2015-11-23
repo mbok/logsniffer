@@ -9,6 +9,12 @@ import com.logsniffer.fields.filter.FieldsFilter;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.util.json.Views;
 
+/**
+ * Hosts fields.
+ * 
+ * @author mbok
+ *
+ */
 @JsonIgnoreProperties(value = { "fieldTypes" }, allowGetters = true)
 public interface FieldsHost {
 	public static final class FieldHostUtils {
