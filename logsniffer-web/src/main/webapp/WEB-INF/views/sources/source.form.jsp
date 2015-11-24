@@ -16,7 +16,6 @@
 	</div>
 </c:if>
 
-<h4>Main</h4>
 <script type="text/javascript">
 	LogSnifferNgApp.controller(
 			"SourceBeanWizardControllerWrapper",
@@ -26,13 +25,19 @@
 				$scope.readerFilterWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.fields.filter.FieldsFilter', pageContext.response.locale))};
 				$scope.readerTestSession = {};
 				$scope.resolvedTestLogs = null;
+				$scope.dummy = {
+					statefullName: $scope.beanWrapper[0]?$scope.beanWrapper[0].name:null
+				};
 				
 				$scope.$watch('beanWrapper[0]', function(newValue, oldValue) {
 					if (newValue) {
-						newValue.name = $scope.statefullName;
+						newValue.name = $scope.dummy.statefullName;
+					}
+					if (oldValue && oldValue.reader && newValue) {
+						newValue.reader = oldValue.reader;
 					}
 			    });
-				$scope.$watch('statefullName', function(newValue, oldValue) {
+				$scope.$watch('dummy.statefullName', function(newValue, oldValue) {
 					if ($scope.beanWrapper[0]) {
 						$scope.beanWrapper[0].name = newValue;
 					}
@@ -99,50 +104,53 @@
 			});
 </script>
 <div id="source-editor" ng-controller="SourceBeanWizardControllerWrapper" ng-form="form2">
-	<div ng-init="statefullName=beanWrapper[0].name" ng-form="form">
-		<div class="row">
-			<div 
-				class="col-md-6 form-group" ng-class="{'has-error': form.name.$invalid && !form.name.$pristine || bindErrors.name && form.name.$pristine}">
-				<label class="control-label" for="name">Name*:</label>
-				<div class="controls">
-			        <input type="text" ng-model="statefullName" name="name" id="name" class="form-control" placeholder="Name" required>
-			    </div>
-			    <div class="help-block" ng-if="bindErrors.name && form.name.$pristine">{{bindErrors.name}}</div>
-		    </div>
-		</div>
-		<!-- Wizard -->
-		<lfs-bean-wizard bean="beanWrapper[0]" bean-type-label="Source type" wizards="sourceWizards"
-			shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="">
-			
-			<button type="button" class="btn btn-default btn-xs" ng-click="testResolvingLogs()" ng-disabled="form.$invalid">
-				<i class="glyphicon glyphicon-check"></i> Test resolving logs
-			</button> <i class="fa" ng-class="{'fa-refresh fa-spin': resolvingTestLogsInProgress}"></i>
-			<div class="alert alert-success animate-show" ng-show="resolvedTestLogs.length>0">
-				<h4>Resolved logs:</h4>
-				<ol>
-					<!-- TODO: Rolling logs -->
-					<li ng-repeat="log in resolvedTestLogs">{{log.path}} ({{log.size | bytesToSize}})
-						<label ng-if="log['@type']=='rolling'" class="blocked">Log parts:</label>
-						<ol ng-if="log['@type']=='rolling'">
-							<li ng-repeat="part in log.parts">{{part.path}} ({{part.size | bytesToSize}})</li>
+	<tabset>
+    	<tab heading="Main">
+			<div ng-form="form">
+				<div class="row">
+					<div 
+						class="col-md-6 form-group" ng-class="{'has-error': form.name.$invalid && !form.name.$pristine || bindErrors.name && form.name.$pristine}">
+						<label class="control-label" for="name">Name*:</label>
+						<div class="controls">
+					        <input type="text" ng-model="dummy.statefullName" name="name" id="name" class="form-control" placeholder="Name" required>
+					    </div>
+					    <div class="help-block" ng-if="bindErrors.name && form.name.$pristine">{{bindErrors.name}}</div>
+				    </div>
+				</div>
+				<!-- Wizard -->
+				<lfs-bean-wizard bean="beanWrapper[0]" bean-type-label="Source type" wizards="sourceWizards"
+					shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="">
+					
+					<button type="button" class="btn btn-default btn-xs" ng-click="testResolvingLogs()" ng-disabled="form.$invalid">
+						<i class="glyphicon glyphicon-check"></i> Test resolving logs
+					</button> <i class="fa" ng-class="{'fa-refresh fa-spin': resolvingTestLogsInProgress}"></i>
+					<div class="alert alert-success animate-show" ng-show="resolvedTestLogs.length>0">
+						<h4>Resolved logs:</h4>
+						<ol>
+							<!-- TODO: Rolling logs -->
+							<li ng-repeat="log in resolvedTestLogs">{{log.path}} ({{log.size | bytesToSize}})
+								<label ng-if="log['@type']=='rolling'" class="blocked">Log parts:</label>
+								<ol ng-if="log['@type']=='rolling'">
+									<li ng-repeat="part in log.parts">{{part.path}} ({{part.size | bytesToSize}})</li>
+								</ol>
+							</li>
 						</ol>
-					</li>
-				</ol>
+					</div>
+					<div class="alert alert-warning animate-show" ng-show="resolvedTestLogs.length==0"><h4>No logs resolved!</h4>Please check for misconfiguration.</div>
+					<div class="alert alert-danger animate-show" ng-show="resolvingTestLogsError"><h4>Error occurred!</h4>See above errors for more details.</div>
+				</lfs-bean-wizard>
 			</div>
-			<div class="alert alert-warning animate-show" ng-show="resolvedTestLogs.length==0"><h4>No logs resolved!</h4>Please check for misconfiguration.</div>
-			<div class="alert alert-danger animate-show" ng-show="resolvingTestLogsError"><h4>Error occurred!</h4>See above errors for more details.</div>
-		</lfs-bean-wizard>
-	</div>
+		</tab>
 
-	<hr>
-	
-	<!-- TODO if reader is configurable -->
-	<div id="log-reader-editor" ng-if="beanWrapper[0]['@type']" ng-form="form">
-		<h4>Log entry reader</h4>
-		<lfs-bean-wizard bean="beanWrapper[0].reader.targetReader" bean-type-label="Reader type" wizards="readerWizards"
-			shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="reader.targetReader.">
-		</lfs-bean-wizard>
-	</div>
+		<tab heading="Reader">
+			<!-- TODO if reader is configurable -->
+			<div id="log-reader-editor" ng-if="beanWrapper[0]['@type']" ng-form="form">
+				<h4>Log entry reader</h4>
+				<lfs-bean-wizard bean="beanWrapper[0].reader.targetReader" bean-type-label="Reader type" wizards="readerWizards"
+					shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="reader.targetReader.">
+				</lfs-bean-wizard>
+			</div>
+		</tab>
 
 	<!-- Filters -->
 	<script type="text/javascript">
@@ -157,30 +165,32 @@
 		}
 	);
 	</script>
-	<div id="source-reader-filters" ng-if="beanWrapper[0]['@type']">
-		<h4>Filters
-			<small>Used to filter log entries e.g. for field transformation, normalization etc.</small></h4>
-		<div class="panel panel-default" ng-repeat="filter in beanWrapper[0].reader.filters">
-			<div class="panel-heading">
-				<button type="button" class="close pull-right" title="Delete" ng-click="deleteReaderFilter($index)"><i class="glyphicon glyphicon-trash"></i></button>
-				<h3 class="panel-title">Filter {{$index+1}}</h3>
-			</div>
-			<div class="panel-body" ng-form="form">
-				<div ng-controller="SourceReaderFilterHelpController">
-					<lfs-bean-wizard bean="filter" bean-type-label="Filter type" wizards="readerFilterWizards"
-						shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="reader.filters[{{$index}}].">
-					</lfs-bean-wizard>
+		<tab heading="Filters">
+			<div id="source-reader-filters" ng-if="beanWrapper[0]['@type']">
+				<h4>Filters
+					<small>Used to filter log entries e.g. for field transformation, normalization etc.</small></h4>
+				<div class="panel panel-default" ng-repeat="filter in beanWrapper[0].reader.filters">
+					<div class="panel-heading">
+						<button type="button" class="close pull-right" title="Delete" ng-click="deleteReaderFilter($index)"><i class="glyphicon glyphicon-trash"></i></button>
+						<h3 class="panel-title">Filter {{$index+1}}</h3>
+					</div>
+					<div class="panel-body" ng-form="form">
+						<div ng-controller="SourceReaderFilterHelpController">
+							<lfs-bean-wizard bean="filter" bean-type-label="Filter type" wizards="readerFilterWizards"
+								shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="reader.filters[{{$index}}].">
+							</lfs-bean-wizard>
+						</div>
+					</div>
+				</div>
+				<div class="row post-desc">
+					<div class="col-md-12">
+						<a class="btn btn-link" ng-click="addReaderFilter()">
+							<i class="glyphicon glyphicon-plus"></i> Add new filter</a>
+					</div>
 				</div>
 			</div>
-		</div>
-		<div class="row post-desc">
-			<div class="col-md-12">
-				<a class="btn btn-link" ng-click="addReaderFilter()">
-					<i class="glyphicon glyphicon-plus"></i> Add new filter</a>
-			</div>
-		</div>
-	</div>
-
+		</tab>
+	</tabset>
 	<hr>
 
 	<div class="row">

@@ -174,139 +174,143 @@
 </script>
 	
 <fieldset id="sniffer-editor" ng-controller="SnifferBeanWizardControllerWrapper" ng-disabled="${scheduled}">
-	<h4>Main</h4>
-	<div class="row">
-		<t:ngFormFieldWrapper cssClass="form-group col-md-12 required" fieldName="name">
-			<label for="name" class="control-label">Name:</label>
-			<div class="controls">
-				<input ng-model="bean.name" name="name" id="name" class="form-control" placeholder="Name" required/>
-			</div>
-		</t:ngFormFieldWrapper>
-	</div>
-	<div class="row">
-		<t:ngFormFieldWrapper cssClass="form-group col-md-6 required" fieldName="source">
-			<label for="logSourceId" class="control-label">Log source:</label>
-			<div class="input-group">
-				<div class="input-group-addon">
-					<a href="#" ng-click="loadSources()" title="Reload log sources"><i class="glyphicon glyphicon-refresh" ng-class="{'spin':sourcesLoading}"></i></a>
+	<tabset>
+    	<tab heading="Main">	
+		<div class="row">
+			<t:ngFormFieldWrapper cssClass="form-group col-md-12 required" fieldName="name">
+				<label for="name" class="control-label">Name:</label>
+				<div class="controls">
+					<input ng-model="bean.name" name="name" id="name" class="form-control" placeholder="Name" required/>
 				</div>
-				<select ng-model="bean.logSourceId" name="logSourceId" id="logSourceId" class="form-control" required
-					ng-options="s.id as s.name for s in availableSources">
-					<option value=""><spring:message code="logsniffer.common.pleaseSelect" /></option>
-				</select>
-			</div>
-			<div class="has-error" ng-if="sourcesLoadingError"><div class="help-block"><i class="glyphicon glyphicon-warning-sign"></i> Failed to load log sources</div></div>
-		</t:ngFormFieldWrapper>
-		<t:ngFormFieldWrapper cssClass="form-group col-md-6 required" fieldName="scheduleCronExpression">
-			<label for="scheduleCronExpression" class="control-label">Execute every:</label>
-			<div class="controls">
-				<select ng-model="bean.scheduleCronExpression" name="scheduleCronExpression" id="scheduleCronExpression" class="form-control" required>
-					<option value=""><spring:message code="logsniffer.common.pleaseSelect" /></option>
-					<optgroup label="Second cycle">
-						<option value="*/5 * * ? * * *">5 Seconds</option>
-						<option value="*/10 * * ? * * *">10 Seconds</option>
-						<option value="*/15 * * ? * * *">15 Seconds</option>
-						<option value="*/30 * * ? * * *">30 Seconds</option>
-					</optgroup>
-					<optgroup label="Minute cycle">
-						<option value="0 */1 * ? * * *">1 Minute</option>
-						<option value="0 */2 * ? * * *">2 Minutes</option>
-						<option value="0 */3 * ? * * *">3 Minutes</option>
-						<option value="0 */4 * ? * * *">4 Minutes</option>
-						<option value="0 */5 * ? * * *">5 Minutes</option>
-						<option value="0 */10 * ? * * *">10 Minutes</option>
-						<option value="0 */15 * ? * * *">15 Minutes</option>
-						<option value="0 */20 * ? * * *">20 Minutes</option>
-						<option value="0 */30 * ? * * *">30 Minutes</option>
-						<option value="0 */40 * ? * * *">40 Minutes</option>
-						<option value="0 */50 * ? * * *">50 Minutes</option>
-					</optgroup>
-					<optgroup label="Hour cycle">
-						<option value="0 0 */1 ? * * *">1 Hour</option>
-						<option value="0 0 */2 ? * * *">2 Hours</option>
-						<option value="0 0 */3 ? * * *">3 Hours</option>
-						<option value="0 0 */4 ? * * *">4 Hours</option>
-						<option value="0 0 */5 ? * * *">5 Hours</option>
-						<option value="0 0 */6 ? * * *">6 Hours</option>
-					</optgroup>
-					<optgroup label="Day cycle">
-						<option value="0 0 0 * * ? *">Daily at 00:00</option>
-						<option value="0 0 1 * * ? *">Daily at 01:00</option>
-						<option value="0 0 2 * * ? *">Daily at 02:00</option>
-						<option value="0 0 3 * * ? *">Daily at 03:00</option>
-						<option value="0 0 4 * * ? *">Daily at 04:00</option>
-						<option value="0 0 5 * * ? *">Daily at 05:00</option>
-						<option value="0 0 6 * * ? *">Daily at 06:00</option>
-						<option value="0 0 7 * * ? *">Daily at 07:00</option>
-						<option value="0 0 8 * * ? *">Daily at 08:00</option>
-						<option value="0 0 9 * * ? *">Daily at 09:00</option>
-						<option value="0 0 10 * * ? *">Daily at 10:00</option>
-						<option value="0 0 11 * * ? *">Daily at 11:00</option>
-						<option value="0 0 12 * * ? *">Daily at 12:00</option>
-						<option value="0 0 13 * * ? *">Daily at 13:00</option>
-						<option value="0 0 14 * * ? *">Daily at 14:00</option>
-						<option value="0 0 15 * * ? *">Daily at 15:00</option>
-						<option value="0 0 16 * * ? *">Daily at 16:00</option>
-						<option value="0 0 17 * * ? *">Daily at 17:00</option>
-						<option value="0 0 18 * * ? *">Daily at 18:00</option>
-						<option value="0 0 19 * * ? *">Daily at 19:00</option>
-						<option value="0 0 20 * * ? *">Daily at 20:00</option>
-						<option value="0 0 21 * * ? *">Daily at 21:00</option>
-						<option value="0 0 22 * * ? *">Daily at 22:00</option>
-						<option value="0 0 23 * * ? *">Daily at 23:00</option>
-					</optgroup>
-				</select>
-			</div>
-		</t:ngFormFieldWrapper>		
-	</div>
-
-
-	<!-- Reader strategy wizard -->
-	<div id="sniffer-reader-strategy-editor">
-		<h4>Log reader strategy <small>Defines how much of the log should be scanned consecutively per iteration</small></h4>
-		<lfs-bean-wizard bean="bean.readerStrategy" bean-type-label="Strategy type" wizards="readerStrategyWizards"
-			shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="readerStrategy."></lfs-bean-wizard>
-	</div>
+			</t:ngFormFieldWrapper>
+		</div>
+		<div class="row">
+			<t:ngFormFieldWrapper cssClass="form-group col-md-6 required" fieldName="source">
+				<label for="logSourceId" class="control-label">Log source:</label>
+				<div class="input-group">
+					<div class="input-group-addon">
+						<a href="#" ng-click="loadSources()" title="Reload log sources"><i class="glyphicon glyphicon-refresh" ng-class="{'spin':sourcesLoading}"></i></a>
+					</div>
+					<select ng-model="bean.logSourceId" name="logSourceId" id="logSourceId" class="form-control" required
+						ng-options="s.id as s.name for s in availableSources">
+						<option value=""><spring:message code="logsniffer.common.pleaseSelect" /></option>
+					</select>
+				</div>
+				<div class="has-error" ng-if="sourcesLoadingError"><div class="help-block"><i class="glyphicon glyphicon-warning-sign"></i> Failed to load log sources</div></div>
+			</t:ngFormFieldWrapper>
+			<t:ngFormFieldWrapper cssClass="form-group col-md-6 required" fieldName="scheduleCronExpression">
+				<label for="scheduleCronExpression" class="control-label">Execute every:</label>
+				<div class="controls">
+					<select ng-model="bean.scheduleCronExpression" name="scheduleCronExpression" id="scheduleCronExpression" class="form-control" required>
+						<option value=""><spring:message code="logsniffer.common.pleaseSelect" /></option>
+						<optgroup label="Second cycle">
+							<option value="*/5 * * ? * * *">5 Seconds</option>
+							<option value="*/10 * * ? * * *">10 Seconds</option>
+							<option value="*/15 * * ? * * *">15 Seconds</option>
+							<option value="*/30 * * ? * * *">30 Seconds</option>
+						</optgroup>
+						<optgroup label="Minute cycle">
+							<option value="0 */1 * ? * * *">1 Minute</option>
+							<option value="0 */2 * ? * * *">2 Minutes</option>
+							<option value="0 */3 * ? * * *">3 Minutes</option>
+							<option value="0 */4 * ? * * *">4 Minutes</option>
+							<option value="0 */5 * ? * * *">5 Minutes</option>
+							<option value="0 */10 * ? * * *">10 Minutes</option>
+							<option value="0 */15 * ? * * *">15 Minutes</option>
+							<option value="0 */20 * ? * * *">20 Minutes</option>
+							<option value="0 */30 * ? * * *">30 Minutes</option>
+							<option value="0 */40 * ? * * *">40 Minutes</option>
+							<option value="0 */50 * ? * * *">50 Minutes</option>
+						</optgroup>
+						<optgroup label="Hour cycle">
+							<option value="0 0 */1 ? * * *">1 Hour</option>
+							<option value="0 0 */2 ? * * *">2 Hours</option>
+							<option value="0 0 */3 ? * * *">3 Hours</option>
+							<option value="0 0 */4 ? * * *">4 Hours</option>
+							<option value="0 0 */5 ? * * *">5 Hours</option>
+							<option value="0 0 */6 ? * * *">6 Hours</option>
+						</optgroup>
+						<optgroup label="Day cycle">
+							<option value="0 0 0 * * ? *">Daily at 00:00</option>
+							<option value="0 0 1 * * ? *">Daily at 01:00</option>
+							<option value="0 0 2 * * ? *">Daily at 02:00</option>
+							<option value="0 0 3 * * ? *">Daily at 03:00</option>
+							<option value="0 0 4 * * ? *">Daily at 04:00</option>
+							<option value="0 0 5 * * ? *">Daily at 05:00</option>
+							<option value="0 0 6 * * ? *">Daily at 06:00</option>
+							<option value="0 0 7 * * ? *">Daily at 07:00</option>
+							<option value="0 0 8 * * ? *">Daily at 08:00</option>
+							<option value="0 0 9 * * ? *">Daily at 09:00</option>
+							<option value="0 0 10 * * ? *">Daily at 10:00</option>
+							<option value="0 0 11 * * ? *">Daily at 11:00</option>
+							<option value="0 0 12 * * ? *">Daily at 12:00</option>
+							<option value="0 0 13 * * ? *">Daily at 13:00</option>
+							<option value="0 0 14 * * ? *">Daily at 14:00</option>
+							<option value="0 0 15 * * ? *">Daily at 15:00</option>
+							<option value="0 0 16 * * ? *">Daily at 16:00</option>
+							<option value="0 0 17 * * ? *">Daily at 17:00</option>
+							<option value="0 0 18 * * ? *">Daily at 18:00</option>
+							<option value="0 0 19 * * ? *">Daily at 19:00</option>
+							<option value="0 0 20 * * ? *">Daily at 20:00</option>
+							<option value="0 0 21 * * ? *">Daily at 21:00</option>
+							<option value="0 0 22 * * ? *">Daily at 22:00</option>
+							<option value="0 0 23 * * ? *">Daily at 23:00</option>
+						</optgroup>
+					</select>
+				</div>
+			</t:ngFormFieldWrapper>		
+		</div>
+	
+	
+		<!-- Reader strategy wizard -->
+		<div id="sniffer-reader-strategy-editor">
+			<h4>Log reader strategy <small>Defines how much of the log should be scanned consecutively per iteration</small></h4>
+			<lfs-bean-wizard bean="bean.readerStrategy" bean-type-label="Strategy type" wizards="readerStrategyWizards"
+				shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="readerStrategy."></lfs-bean-wizard>
+		</div>
+	</tab>
 
 	<!-- Scanner wizard -->
-	<div id="sniffer-scanner-editor" ng-form="form">
-		<h4>Event scanner configuration
-			<small>Configures the scanner sniffing the log consecutively for new events</small></h4>
-		<lfs-bean-wizard bean="bean.scanner.targetScanner" bean-type-label="Scanner type" wizards="scannerWizards"
-			shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="scanner.targetScanner.">
-		</lfs-bean-wizard>
-
-		<!-- Filters -->
-		<div id="scanner-filters">
-			<h4>Filters
-				<small>Used to filter events e.g. for field transformation, normalization etc.</small></h4>
-			<div class="panel panel-default" ng-repeat="filter in bean.scanner.filters">
-				<div class="panel-heading">
-					<button type="button" class="close pull-right" title="Delete" ng-click="deleteScannerFilter($index)"><i class="glyphicon glyphicon-trash"></i></button>
-					<h3 class="panel-title">Filter {{$index+1}}</h3>
+	<tab heading="Scanner">
+		<div id="sniffer-scanner-editor" ng-form="form">
+			<h4>Event scanner configuration
+				<small>Configures the scanner sniffing the log consecutively for new events</small></h4>
+			<lfs-bean-wizard bean="bean.scanner.targetScanner" bean-type-label="Scanner type" wizards="scannerWizards"
+				shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="scanner.targetScanner.">
+			</lfs-bean-wizard>
+	
+			<!-- Filters -->
+			<div id="scanner-filters">
+				<h4>Filters
+					<small>Used to filter events e.g. for field transformation, normalization etc.</small></h4>
+				<div class="panel panel-default" ng-repeat="filter in bean.scanner.filters">
+					<div class="panel-heading">
+						<button type="button" class="close pull-right" title="Delete" ng-click="deleteScannerFilter($index)"><i class="glyphicon glyphicon-trash"></i></button>
+						<h3 class="panel-title">Filter {{$index+1}}</h3>
+					</div>
+					<div class="panel-body" ng-form="form">
+						<div ng-controller="ScannerFilterHelpController">
+							<lfs-bean-wizard bean="filter" bean-type-label="Filter type" wizards="scannerFilterWizards"
+								shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="scanner.filters[{{$index}}].">
+							</lfs-bean-wizard>
+						</div>
+					</div>
 				</div>
-				<div class="panel-body" ng-form="form">
-					<div ng-controller="ScannerFilterHelpController">
-						<lfs-bean-wizard bean="filter" bean-type-label="Filter type" wizards="scannerFilterWizards"
-							shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="scanner.filters[{{$index}}].">
-						</lfs-bean-wizard>
+				<div class="row post-desc">
+					<div class="col-md-12">
+						<a class="btn btn-link" ng-click="addScannerFilter()">
+							<i class="glyphicon glyphicon-plus"></i> Add new filter</a>
 					</div>
 				</div>
 			</div>
+	
 			<div class="row post-desc">
 				<div class="col-md-12">
-					<a class="btn btn-link" ng-click="addScannerFilter()">
-						<i class="glyphicon glyphicon-plus"></i> Add new filter</a>
+					<button type="button" class="btn btn-default btn-s" ng-click="testScanner()" ng-disabled="form.$invalid"><i class="glyphicon glyphicon-check"></i> Test scanning</button>
 				</div>
 			</div>
 		</div>
-
-		<div class="row post-desc">
-			<div class="col-md-12">
-				<button type="button" class="btn btn-default btn-xs" ng-click="testScanner()" ng-disabled="form.$invalid"><i class="glyphicon glyphicon-check"></i> Test scanning</button>
-			</div>
-		</div>
-	</div>
+	</tab>
 	
 	<!-- Publishers -->
 	<script type="text/javascript">
@@ -321,28 +325,30 @@
 		}
 	);
 	</script>
-	<div id="sniffer-publishers">
-		<h4>Publishers
-			<small>Used to publish events additionally to further channels like mail, web etc.</small></h4>
-		<div class="panel panel-default" ng-repeat="publisher in bean.publishers">
-			<div class="panel-heading">
-				<button type="button" class="close pull-right" title="Delete" ng-click="deletePublisher($index)"><i class="glyphicon glyphicon-trash"></i></button>
-				<h3 class="panel-title">Publisher {{$index+1}}</h3>
+	<tab heading="Publishers">
+		<div id="sniffer-publishers">
+			<h4>Publishers
+				<small>Used to publish events additionally to further channels like mail, web etc.</small></h4>
+			<div class="panel panel-default" ng-repeat="publisher in bean.publishers">
+				<div class="panel-heading">
+					<button type="button" class="close pull-right" title="Delete" ng-click="deletePublisher($index)"><i class="glyphicon glyphicon-trash"></i></button>
+					<h3 class="panel-title">Publisher {{$index+1}}</h3>
+				</div>
+				<div class="panel-body" ng-form="form">
+					<div ng-controller="SnifferPublisherHelpController">
+						<lfs-bean-wizard bean="publisher" bean-type-label="Publisher type" wizards="publisherWizards"
+							shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="publishers[{{$index}}].">
+							<button type="button" class="btn btn-default btn-xs" ng-click="testPublisher(publisher)" ng-disabled="form.$invalid"><i class="glyphicon glyphicon-check"></i> Test publishing</button>
+						</lfs-bean-wizard>
+					</div>
+				</div>
 			</div>
-			<div class="panel-body" ng-form="form">
-				<div ng-controller="SnifferPublisherHelpController">
-					<lfs-bean-wizard bean="publisher" bean-type-label="Publisher type" wizards="publisherWizards"
-						shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="publishers[{{$index}}].">
-						<button type="button" class="btn btn-default btn-xs" ng-click="testPublisher(publisher)" ng-disabled="form.$invalid"><i class="glyphicon glyphicon-check"></i> Test publishing</button>
-					</lfs-bean-wizard>
+			<div class="row post-desc">
+				<div class="col-md-12">
+					<a class="btn btn-link" ng-click="addPublisher()">
+						<i class="glyphicon glyphicon-plus"></i> Add new publisher</a>
 				</div>
 			</div>
 		</div>
-		<div class="row post-desc">
-			<div class="col-md-12">
-				<a class="btn btn-link" ng-click="addPublisher()">
-					<i class="glyphicon glyphicon-plus"></i> Add new publisher</a>
-			</div>
-		</div>
-	</div>	
+	</tab>
 </fieldset>

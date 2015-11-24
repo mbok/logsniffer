@@ -3,7 +3,7 @@ package com.logsniffer.event.filter;
 import com.logsniffer.fields.filter.FieldsFilter;
 
 /**
- * Filter applied on an {@link Event}.
+ * Marker interface for filtering {@link Event}s.
  * 
  * @author mbok
  *
