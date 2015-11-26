@@ -797,3 +797,40 @@ LogSniffer.stripPrefix = function(source, prefix) {
 	}
 	return target;
 };
+LogSniffer.containsKey = function(source, keys, startsWith) {
+	if (!source) {
+		return false;
+	}
+	if (!angular.isArray(keys)) {
+		keys = [keys];
+	}
+	for(var z=0;z < keys.length;z++) {
+		var key = keys[z];
+		for(var i in source) {
+			if (i==key || startsWith && i.indexOf(key)==0) {
+				return true;
+			}
+		}
+	}
+	return false;
+};
+LogSniffer.hasKeysExpectOf = function(source, keys, startsWith) {
+	if (!source) {
+		return false;
+	}
+	if (!angular.isArray(keys)) {
+		keys = [keys];
+	}
+	var total=0, matching=0;
+	for(var i in source) {
+		total++;
+		for(var z=0;z < keys.length;z++) {
+			var key = keys[z];
+			if (i==key || startsWith && i.indexOf(key)==0) {
+				matching++;
+				break;
+			}
+		}
+	}
+	return total > matching;
+};
