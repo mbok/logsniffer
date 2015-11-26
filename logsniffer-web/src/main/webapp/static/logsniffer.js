@@ -390,7 +390,7 @@ LogPosition.prototype.resetToEnd = function() {
 	;
 
 	function getSeverityClass(severity) {
-		if (typeof severity != "undefined" && typeof severity.c != "undefined") {
+		if (typeof severity != "undefined" && severity && typeof severity.c != "undefined") {
 			return "sc-" + severity.c;
 		} else {
 			return "";

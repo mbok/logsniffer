@@ -9,11 +9,6 @@
 	<jsp:body>
 		<jsp:include page="source.breadcrumb.jsp" />
 	
-		<ul class="nav nav-tabs">
-			<li class="active"><a href="<c:url value="/c/sources/${activeSource.id}/logs"/>">Logs</a></li>
-			<li><a href="<c:url value="/c/sources/${activeSource.id}"/>">Edit</a></li>
-		</ul>
-
 		<c:if test="${not empty message}">
 			<div class="alert alert-${message.type.name().toLowerCase()}">
 				<button type="button" class="close" data-dismiss="alert">&times;</button>
