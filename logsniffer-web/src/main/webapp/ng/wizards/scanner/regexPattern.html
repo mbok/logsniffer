@@ -15,7 +15,7 @@
 	</div>
 	<div class="row">
 		<div class="col-md-6">
-			<lsf-form-group class="form-group required" field-name="pattern" field-path="pattern" bind-errors="bindErrors">
+			<lsf-form-group class="form-group required" field-name="pattern" field-path="pattern" bind-errors="bindErrors" bind-errors-path="grokBean.pattern">
 				<lsf-info-label label="Pattern:" for="pattern">
 					The pattern the source field value is parsed by. <span ng-include="contextPath + '/ng/help/regexGrokPattern.html'"></span>
 				</lsf-info-label>

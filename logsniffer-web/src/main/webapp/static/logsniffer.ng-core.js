@@ -152,6 +152,23 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	      '<div class="busy-container"><div class="backdrop" ng-show="loading"></div><div class="spinner-area" ng-show="loading"><div us-spinner class="spinner"></div></div><div ng-transclude></div></div>'
        };
    })
+   .directive('lsfFormValidObserver', function() {
+       return {
+	   restrict: 'AE',
+	   replace: false,
+	   transclude: false,
+	   scope: {
+	       form: '=',
+	       onValidChange: '='
+	   },
+	   controller: function($scope, $log) {
+	       $scope.loading = $scope.busy;
+	       $scope.$watch('form.$valid', function(newValue, oldValue) {
+	    	   $scope.onValidChange($scope.form, newValue);
+	       });
+	   	}
+       };
+   })
    .directive('lsfInfoLabel', function() {
        return {
 	   restrict: 'AE',
@@ -869,11 +886,12 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	   scope: {
 	       fieldName: '@',
 	       fieldPath: '@',
+	       bindErrorsPath: '@',
 	       bindErrors: '='
 	   },
 	   template: 
-	      '<div ng-class="{\'has-error\': $parent.form[fieldName].$invalid || bindErrors[fieldPath]}">' +
-	      '	<div ng-transclude></div><div class="help-block" ng-if="bindErrors[fieldPath]">{{bindErrors[fieldPath]}}</div>' +
+	      '<div ng-class="{\'has-error\': $parent.form[fieldName].$invalid || bindErrors[bindErrorsPath?bindErrorsPath:fieldPath]}">' +
+	      '	<div ng-transclude></div><div class="help-block" ng-if="bindErrors[bindErrorsPath?bindErrorsPath:fieldPath]">{{bindErrors[bindErrorsPath?bindErrorsPath:fieldPath]}}</div>' +
 	      '</div>'
        };
    })

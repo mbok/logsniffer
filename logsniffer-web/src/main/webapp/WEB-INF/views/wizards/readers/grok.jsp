@@ -13,7 +13,7 @@
 		This reader reads the content of a log and parses each line using the specified regular or grok expression.
 	</lsf-info-label>
 	<div class="row">
-		<t:ngFormFieldWrapper cssClass="form-group col-md-10 required" fieldName="grokPattern">
+		<t:ngFormFieldWrapper cssClass="form-group col-md-10 required" fieldName="grokPattern" bindErrorsPath="grokBean.pattern">
 			<lsf-info-label for="grokPattern" label="Pattern:">
 				The pattern each log line is parsed by.
 				<span ng-include="contextPath + '/ng/help/regexGrokPattern.html'"></span>
