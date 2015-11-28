@@ -310,7 +310,7 @@ public class FieldsMap extends LinkedHashMap<String, Object> implements FieldsMa
 						fields.put(key, collection);
 					} else {
 						final Class<?>[] targetType = types.get(key);
-						if (targetType != null) {
+						if (targetType != null && targetType[0] != null) {
 							final Object o = getContextualValueDeserializer(targetType[0], ctxt)
 									.deserialize(fieldValueParser, ctxt);
 							fields.put(key, o);
