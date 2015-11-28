@@ -4,7 +4,7 @@
 <form action="<c:url value="/c/sources/${activeSource.id}/delete" />" method="post">
 	<ul class="breadcrumb">
 		<li><a href="<c:url value="/c/sources" />"><spring:message code="logsniffer.breadcrumb.sources" /></a></li>
-		<li class="active">${activeSource.name}</li>
+		<li class="active"><a href="<c:url value="/c/sources/${activeSource.id}/logs" />">${activeSource.name}</a></li>
 		<li class="dropdown">
 			<button data-toggle="dropdown" href="#" class="btn btn-xs"><i class="glyphicon glyphicon-cog"></i> <span class="caret"></span></button>
 			<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">

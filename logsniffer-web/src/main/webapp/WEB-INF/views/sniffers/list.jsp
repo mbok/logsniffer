@@ -26,14 +26,6 @@
 		<t:messages />
 
 		<script type="text/javascript">
-		$(function() {
-			$("ul.bordered-list li").bind("mouseenter", function () {
-				$(this).find('.hidden2').fadeIn("fast");
-			});
-			$("ul.bordered-list li").bind("mouseleave", function () {
-				$(this).find('.hidden2').fadeOut("fast");
-			});
-		});
 		
 		var SnifferListModule = angular.module('SnifferListModule', ['ui.bootstrap', 'angularSpinner', 'MessageCenterModule']);
 		SnifferListModule.controller(
@@ -98,16 +90,6 @@
 							<div ng-controller="SnifferController">
 								<h4>
 									<a href="{{contextPath}}/c/sniffers/{{sniffer.id}}/events">{{sniffer.name}}</a>
-									<div class="pull-right hidden2">
-										<div class="btn-group btn-group-xs" role="group" aria-label="Actions">
-											<a href="#" class="btn btn-xs btn-default" ng-if="!sniffer.aspects.scheduleInfo.scheduled"
-												ng-click="start()"><i class="glyphicon glyphicon-play"></i>Start</a>
-											<a href="#" class="btn btn-xs btn-default" ng-if="sniffer.aspects.scheduleInfo.scheduled"
-												ng-click="stop()"><i class="glyphicon glyphicon-pause"></i>Pause</a>
-											<a href="{{contextPath}}/c/sniffers/{{sniffer.id}}" class="btn btn-xs btn-default"><i class="glyphicon glyphicon-edit"></i> Edit</a>
-											<a href="{{contextPath}}/c/sniffers/{{sniffer.id}}/status" class="btn btn-xs btn-default"><i class="glyphicon glyphicon-play-circle"></i> Control</a>
-										</div>
-									</div>
 								</h4>
 								<div class="row">
 									<div class="col-md-12">
@@ -122,6 +104,16 @@
 											<a href="{{contextPath}}/c/sniffers/{{sniffer.id}}/events">
 												<span class="badge" ng-class="{'badge-warning': sniffer.aspects.eventsCount!=0}">{{sniffer.aspects.eventsCount}}</span>
 											</a>
+										<div class="pull-right">
+											<div class="btn-group btn-group-sm" role="group" aria-label="Actions">
+												<a href="#" class="btn btn-sm btn-default" ng-if="!sniffer.aspects.scheduleInfo.scheduled"
+													ng-click="start()"><i class="glyphicon glyphicon-play"></i>Start</a>
+												<a href="#" class="btn btn-sm btn-default" ng-if="sniffer.aspects.scheduleInfo.scheduled"
+													ng-click="stop()"><i class="glyphicon glyphicon-pause"></i>Pause</a>
+												<a href="{{contextPath}}/c/sniffers/{{sniffer.id}}" class="btn btn-sm btn-default"><i class="glyphicon glyphicon-edit"></i> Edit</a>
+												<a href="{{contextPath}}/c/sniffers/{{sniffer.id}}/status" class="btn btn-sm btn-default"><i class="glyphicon glyphicon-play-circle"></i> Control</a>
+											</div>
+										</div>
 									</div>
 								</div>
 							</div>
