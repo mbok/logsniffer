@@ -27,7 +27,11 @@
 					$scope.LogSniffer = LogSniffer;
 					$scope.bindErrors={<spring:hasBindErrors name="snifferForm"><c:forEach items="${errors.allErrors}" var="error">'${error.field }':'<spring:message code="${error.code}" text="${error.defaultMessage}" javaScriptEscape="true" />',</c:forEach></spring:hasBindErrors>};
 					$scope.bean = {
-						"@type": "sniffer"
+						"@type": "sniffer",
+						"scanner": {
+							"@type": "FilteredScanner", 
+							"filters": []
+						}
 					};
 
 					$scope.submit = function(form) {

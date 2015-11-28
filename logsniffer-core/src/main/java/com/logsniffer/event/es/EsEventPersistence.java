@@ -513,7 +513,10 @@ public class EsEventPersistence implements EventPersistence {
 	private void prepareMapping(final long snifferId) {
 		logger.info("Rebuilding mapping for sniffer {}", snifferId);
 		final Sniffer sniffer = snifferPersistence.getSniffer(snifferId);
-		sniffer.getLogSourceId();
+		if (sniffer == null) {
+			logger.info("Skip rebuilding mapping due to no more existing sniffer: {}", snifferId);
+			return;
+		}
 		final LinkedHashMap<String, FieldBaseTypes> snifferTypes = new LinkedHashMap<>();
 
 		final LogSource<LogInputStream> source = logSourceProvider.getSourceById(sniffer.getLogSourceId());

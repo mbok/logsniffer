@@ -17,6 +17,8 @@
  *******************************************************************************/
 package com.logsniffer.web.controller.exception;
 
+import java.io.IOException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -43,10 +45,9 @@ public class ExceptionControllerAdvice {
 	 * @return
 	 */
 	@ExceptionHandler(ResourceNotFoundException.class)
-	public ModelAndView handleResourceNotFound(
-			final ResourceNotFoundException ex) {
+	public ModelAndView handleResourceNotFound(final ResourceNotFoundException ex) {
 		logger.info("Catched resource not found exception", ex);
-		ModelAndView mv = new ModelAndView("errors/404");
+		final ModelAndView mv = new ModelAndView("errors/404");
 		mv.addObject("ex", ex);
 		return mv;
 	}
@@ -54,16 +55,23 @@ public class ExceptionControllerAdvice {
 	@ExceptionHandler(ActionViolationException.class)
 	public ModelAndView handleActionViolation(final ActionViolationException ex) {
 		logger.info("Catched action violation exception", ex);
-		ModelAndView mv = new ModelAndView("errors/action-violation");
+		final ModelAndView mv = new ModelAndView("errors/action-violation");
 		mv.addObject("ex", ex);
 		return mv;
 	}
 
 	@ExceptionHandler(ReferenceIntegrityException.class)
-	public ModelAndView handleActionViolation(
-			final ReferenceIntegrityException ex) {
+	public ModelAndView handleActionViolation(final ReferenceIntegrityException ex) {
 		logger.info("Catched reference integrity violation exception", ex);
-		ModelAndView mv = new ModelAndView("errors/ref-intg-violation");
+		final ModelAndView mv = new ModelAndView("errors/ref-intg-violation");
+		mv.addObject("ex", ex);
+		return mv;
+	}
+
+	@ExceptionHandler(Throwable.class)
+	public ModelAndView processAllExceptions(final Throwable ex) throws IOException {
+		logger.error("Catched untyped exception", ex);
+		final ModelAndView mv = new ModelAndView("errors/ups");
 		mv.addObject("ex", ex);
 		return mv;
 	}

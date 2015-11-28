@@ -68,6 +68,7 @@
 
 			$scope.$watch('bean.logSourceId', function(newValue, oldValue) {
 				$scope.source=null;
+				$scope.testSession = {};
 				$log.info("Exposing new source: " + newValue);
 				for(var i=0;i<$scope.availableSources.length;i++) {
 					if ($scope.availableSources[i].id==newValue) {
@@ -194,7 +195,7 @@
 		);
 </script>
 	
-<fieldset id="sniffer-editor" ng-controller="SnifferBeanWizardControllerWrapper" ng-disabled="${scheduled}">
+<fieldset id="sniffer-editor" ng-controller="SnifferBeanWizardControllerWrapper" ng-disabled="${scheduled}" ng-form="rootForm">
 	<tabset>
     	<tab heading="Main">
 	   		<tab-heading>
@@ -212,7 +213,7 @@
 						</t:ngFormFieldWrapper>
 					</div>
 					<div class="row">
-						<t:ngFormFieldWrapper cssClass="form-group col-md-6 required" fieldName="source">
+						<t:ngFormFieldWrapper cssClass="form-group col-md-6 required" fieldName="logSourceId">
 							<label for="logSourceId" class="control-label">Log source:</label>
 							<div class="input-group">
 								<div class="input-group-addon">
@@ -338,9 +339,9 @@
 					</div>
 				</div>
 		
-				<div class="row post-desc">
+				<div class="row">
 					<div class="col-md-12">
-						<button type="button" class="btn btn-default btn-s" ng-click="testScanner()" ng-disabled="form.$invalid"><i class="glyphicon glyphicon-check"></i> Test scanning</button>
+						<button type="button" class="btn btn-default btn-sm" ng-click="testScanner()" ng-disabled="scannerForm.$invalid || !bean.logSourceId"><i class="glyphicon glyphicon-check"></i> Test scanning</button>
 					</div>
 				</div>
 			</div>
@@ -377,8 +378,8 @@
 					<div class="panel-body" ng-form="form">
 						<div ng-controller="SnifferPublisherHelpController">
 							<lfs-bean-wizard bean="publisher" bean-type-label="Publisher type" wizards="publisherWizards"
-								shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="publishers[{{$index}}].">
-								<button type="button" class="btn btn-default btn-xs" ng-click="testPublisher(publisher)" ng-disabled="form.$invalid"><i class="glyphicon glyphicon-check"></i> Test publishing</button>
+								shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="publishers[{{$index}}].">{{$parent.bean.logSourceId}}
+								<button type="button" class="btn btn-default btn-xs" ng-click="testPublisher(publisher)" ng-disabled="form.$invalid || scannerForm.$invalid || !sharedScope.source"><i class="glyphicon glyphicon-check"></i> Test publishing</button>
 							</lfs-bean-wizard>
 						</div>
 					</div>

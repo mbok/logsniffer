@@ -121,7 +121,11 @@ public class SniffersResourceController {
 		}
 		snifferPersistence.deleteSniffer(sniffer);
 		logger.info("Deleting all sniffer events: {}", snifferId);
-		eventPersistence.deleteAll(snifferId);
+		try {
+			eventPersistence.deleteAll(snifferId);
+		} catch (final Exception e) {
+			logger.error("Failed to delete events of sniffer: " + snifferId, e);
+		}
 		logger.info("Deleted sniffer: {}", snifferId);
 
 	}

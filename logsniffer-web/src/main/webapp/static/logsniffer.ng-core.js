@@ -423,8 +423,8 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		};
 		
 		scope.handleHttpError = function(context, data, status, headers, config, statusText) {
-		    if (angular.isFunction(scope.onError)) {
-			scope.onError()(context);
+		    if (angular.isFunction(scope.onError())) {
+		    	scope.onError()(context);
 		    };
 		    scope.alerts.httpError(context, data, status, headers, config, statusText);
 		};
