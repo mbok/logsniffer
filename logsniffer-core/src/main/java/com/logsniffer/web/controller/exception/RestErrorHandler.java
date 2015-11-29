@@ -30,6 +30,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.validation.FieldError;
@@ -46,57 +48,63 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * 
  */
 @ControllerAdvice
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class RestErrorHandler {
-	private final Logger logger = LoggerFactory.getLogger(getClass());
+	static final String REST_SPECIFIC_ERROR_HANDLER = "restSpecificErrorHandler";
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(RestErrorHandler.class);
 
 	@Autowired
 	private MessageSource messageSource;
 
+	@ControllerAdvice
+	@Order(Ordered.LOWEST_PRECEDENCE)
+	public static class ThrowableRestErrorHandler {
+
+		@ExceptionHandler(value = Throwable.class)
+		@ResponseBody
+		public ErrorResponse processAllExceptions(final Throwable ex, final HttpServletResponse response)
+				throws IOException {
+			return processExceptionResponse(ex, response, org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@ExceptionHandler(ResourceNotFoundException.class)
+	public ErrorResponse handleResourceNotFound(final ResourceNotFoundException ex, final HttpServletResponse response)
+			throws IOException {
+		return processExceptionResponse(ex, response, org.apache.http.HttpStatus.SC_NOT_FOUND);
+	}
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ResponseBody
-	public ErrorResponse processValidationError(
-			final MethodArgumentNotValidException ex,
+	public ErrorResponse processValidationError(final MethodArgumentNotValidException ex,
 			final HttpServletResponse response) throws IOException {
-		return processFieldErrors(
-				processExceptionResponse(ex, response,
-						org.apache.http.HttpStatus.SC_BAD_REQUEST), ex
-						.getBindingResult().getFieldErrors());
+		return processFieldErrors(processExceptionResponse(ex, response, org.apache.http.HttpStatus.SC_BAD_REQUEST),
+				ex.getBindingResult().getFieldErrors());
 	}
 
 	@ExceptionHandler(HttpMessageConversionException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ResponseBody
-	public ErrorResponse processHttpMessageConversionError(
-			final HttpMessageConversionException ex,
+	public ErrorResponse processHttpMessageConversionError(final HttpMessageConversionException ex,
 			final HttpServletResponse response) throws IOException {
-		return processExceptionResponse(ex, response,
-				org.apache.http.HttpStatus.SC_BAD_REQUEST);
+		return processExceptionResponse(ex, response, org.apache.http.HttpStatus.SC_BAD_REQUEST);
 	}
 
-	@ExceptionHandler(Throwable.class)
-	@ResponseBody
-	public ErrorResponse processAllExceptions(final Throwable ex,
-			final HttpServletResponse response) throws IOException {
-		return processExceptionResponse(ex, response,
-				org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR);
-	}
-
-	private ErrorResponse processExceptionResponse(final Throwable ex,
-			final HttpServletResponse response, final int status)
-			throws IOException {
-		logger.info("Catched exception", ex);
-		ErrorResponse er = new ErrorResponse();
+	private static ErrorResponse processExceptionResponse(final Throwable ex, final HttpServletResponse response,
+			final int status) throws IOException {
+		LOGGER.info("Catched exception", ex);
+		final ErrorResponse er = new ErrorResponse();
 		er.setException(ex);
 		response.setStatus(status, er.getExceptionMessage());
 		return er;
 	}
 
-	private ErrorResponse processFieldErrors(final ErrorResponse er,
-			final List<FieldError> fieldErrors) {
-		Map<String, String> errors = new HashMap<String, String>();
-		for (FieldError fieldError : fieldErrors) {
-			String localizedErrorMessage = resolveLocalizedErrorMessage(fieldError);
+	private ErrorResponse processFieldErrors(final ErrorResponse er, final List<FieldError> fieldErrors) {
+		final Map<String, String> errors = new HashMap<String, String>();
+		for (final FieldError fieldError : fieldErrors) {
+			final String localizedErrorMessage = resolveLocalizedErrorMessage(fieldError);
 			errors.put(fieldError.getField(), localizedErrorMessage);
 		}
 		er.setBindErrors(errors);
@@ -104,9 +112,8 @@ public class RestErrorHandler {
 	}
 
 	private String resolveLocalizedErrorMessage(final FieldError fieldError) {
-		Locale currentLocale = LocaleContextHolder.getLocale();
-		String localizedErrorMessage = messageSource.getMessage(fieldError,
-				currentLocale);
+		final Locale currentLocale = LocaleContextHolder.getLocale();
+		final String localizedErrorMessage = messageSource.getMessage(fieldError, currentLocale);
 		return localizedErrorMessage;
 	}
 }
