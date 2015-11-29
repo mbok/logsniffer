@@ -221,7 +221,7 @@ public class SnifferJob implements ContextAwareJob, InterruptableJob {
 			}
 		});
 		snifferPersistence.storeIncrementalData(sniffer, source, log, incData);
-		if (statisticsLogger.isInfoEnabled()) {
+		if (statisticsLogger.isInfoEnabled() && incData.getNextOffset() != null) {
 			final long duration = System.currentTimeMillis() - startTime;
 			final long amount = logAccess.getDifference(startPointer, incData.getNextOffset(logAccess));
 			statisticsLogger.info("Statistics for sniffer '{}': {}ms, {} bytes, {} KB/s, {} entries, {} events",
