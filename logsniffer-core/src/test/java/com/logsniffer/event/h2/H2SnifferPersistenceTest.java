@@ -286,16 +286,25 @@ public class H2SnifferPersistenceTest {
 		// Update again
 		inc2.getData().element("top", 789);
 		snifferPersistence.storeIncrementalData(s1, source1, log1, inc2);
-		IncrementData inc3 = snifferPersistence.getIncrementData(s1, source1, log1);
+
+		final IncrementData inc3 = snifferPersistence.getIncrementData(s1, source1, log1);
 		Assert.assertEquals("my-pos", inc3.getNextOffset().getJson());
 		Assert.assertEquals(125, inc3.getData().getInt("index"));
 		Assert.assertEquals(789, inc3.getData().getInt("top"));
 
+		// Update with null next start offset
+		inc3.setNextOffset(null);
+		snifferPersistence.storeIncrementalData(s1, source1, log1, inc3);
+		IncrementData inc4 = snifferPersistence.getIncrementData(s1, source1, log1);
+		Assert.assertNull(inc4.getNextOffset());
+		Assert.assertEquals(125, inc4.getData().getInt("index"));
+		Assert.assertEquals(789, inc4.getData().getInt("top"));
+
 		// Delete sniffer
-		Assert.assertNotNull(inc3.getNextOffset());
 		snifferPersistence.deleteSniffer(s1);
-		inc3 = snifferPersistence.getIncrementData(s1, source1, log1);
-		Assert.assertNull(inc3.getNextOffset());
+		inc4 = snifferPersistence.getIncrementData(s1, source1, log1);
+		Assert.assertNull(inc4.getNextOffset());
+		Assert.assertEquals(0, inc4.getData().size());
 	}
 
 	@Test

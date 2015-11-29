@@ -292,7 +292,10 @@ public class H2SnifferPersistence implements SnifferPersistence {
 					public IncrementData mapRow(final ResultSet rs, final int rowNum) throws SQLException {
 						final IncrementData data = new IncrementData();
 						data.setData(JSONObject.fromObject(rs.getString("DATA")));
-						data.setNextOffset(new JsonLogPointer(rs.getString("NEXT_POINTER")));
+						final String jsonStr = rs.getString("NEXT_POINTER");
+						if (StringUtils.isNotBlank(jsonStr)) {
+							data.setNextOffset(new JsonLogPointer(jsonStr));
+						}
 						return data;
 					}
 				});
@@ -329,8 +332,10 @@ public class H2SnifferPersistence implements SnifferPersistence {
 								final IncrementData data = new IncrementData();
 								data.setData(JSONObject.fromObject(rs.getString("DATA")));
 								try {
-									data.setNextOffset(
-											source.getLogAccess(log).getFromJSON(rs.getString("NEXT_POINTER")));
+									final String jsonStr = rs.getString("NEXT_POINTER");
+									if (StringUtils.isNotBlank(jsonStr)) {
+										data.setNextOffset(source.getLogAccess(log).getFromJSON(jsonStr));
+									}
 									incs.put(log, data);
 								} catch (final IOException e) {
 									throw new SQLException("Failed to construct pointer in log: " + log, e);
@@ -356,7 +361,7 @@ public class H2SnifferPersistence implements SnifferPersistence {
 	public void storeIncrementalData(final Sniffer observer, final LogSource<? extends LogInputStream> source,
 			final Log log, final IncrementData data) {
 		final ArrayList<Object> args = new ArrayList<Object>();
-		args.add(data.getNextOffset().getJson());
+		args.add(data.getNextOffset() != null ? data.getNextOffset().getJson() : "");
 		args.add(data.getData().toString());
 		args.add(observer.getId());
 		args.add(source.getId());
