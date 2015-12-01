@@ -17,13 +17,15 @@
  *******************************************************************************/
 package com.logsniffer.reader;
 
+import java.io.IOException;
+
 /**
  * Reflects an exception in case of format errors during reading log entries.
  * 
  * @author mbok
  * 
  */
-public class FormatException extends Exception {
+public class FormatException extends IOException {
 	private static final long serialVersionUID = -7865748029157326999L;
 
 	public FormatException(final String arg0, final Throwable arg1) {

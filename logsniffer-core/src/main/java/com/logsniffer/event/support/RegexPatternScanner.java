@@ -63,9 +63,9 @@ public class RegexPatternScanner extends SingleEntryIncrementalMatcher
 	@Override
 	public Event matches(final LogEntry entry) throws FormatException {
 		final Object value = entry.get(sourceField);
-		if (value instanceof String) {
+		if (value != null) {
 			final Grok grok = grokBean.getGrok(groksRegistry);
-			final GrokMatcher matcher = grok.matcher((String) value);
+			final GrokMatcher matcher = grok.matcher(value.toString());
 			if (matcher.matches()) {
 				final Event event = new Event();
 				final LinkedHashMap<String, Integer> groups = grok.getGroupNames();

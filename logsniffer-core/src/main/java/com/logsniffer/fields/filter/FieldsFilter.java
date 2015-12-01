@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import com.logsniffer.config.ConfiguredBean;
 import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.fields.FieldsMap;
+import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.LogEntryReader;
 
 /**
@@ -37,7 +38,7 @@ public interface FieldsFilter extends ConfiguredBean {
 	 * @param fields
 	 *            fields to filter
 	 */
-	void filter(FieldsMap fields);
+	void filter(FieldsMap fields) throws FormatException;
 
 	/**
 	 * Filters known fields.
@@ -45,6 +46,6 @@ public interface FieldsFilter extends ConfiguredBean {
 	 * @param knownFields
 	 *            fields supported and known by a {@link LogEntryReader}
 	 */
-	void filterKnownFields(LinkedHashMap<String, FieldBaseTypes> knownFields);
+	void filterKnownFields(LinkedHashMap<String, FieldBaseTypes> knownFields) throws FormatException;
 
 }

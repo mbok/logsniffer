@@ -123,7 +123,7 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream> imp
 
 	}
 
-	private void filterLogEntry(final LogEntry entry) {
+	private void filterLogEntry(final LogEntry entry) throws FormatException {
 		for (final FieldsFilter f : filters) {
 			f.filter(entry);
 		}

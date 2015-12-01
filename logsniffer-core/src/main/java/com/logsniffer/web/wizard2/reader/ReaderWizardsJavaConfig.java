@@ -20,9 +20,6 @@ package com.logsniffer.web.wizard2.reader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.logsniffer.fields.filter.support.JsonParseFilter;
-import com.logsniffer.fields.filter.support.SeverityMappingFilter;
-import com.logsniffer.fields.filter.support.TimestampConvertFilter;
 import com.logsniffer.reader.log4j.Log4jTextReader;
 import com.logsniffer.web.wizard2.ConfigBeanWizard;
 import com.logsniffer.web.wizard2.SimpleBeanWizard;
@@ -37,33 +34,8 @@ import com.logsniffer.web.wizard2.SimpleBeanWizard;
 public class ReaderWizardsJavaConfig {
 	@Bean
 	public ConfigBeanWizard<Log4jTextReader> log4jTextReaderWizard() {
-		return new SimpleBeanWizard<Log4jTextReader>(
-				"logsniffer.wizard.reader.log4j", "wizards/readers/log4j",
+		return new SimpleBeanWizard<Log4jTextReader>("logsniffer.wizard.reader.log4j", "wizards/readers/log4j",
 				Log4jTextReader.class, new Log4jTextReader());
-	}
-
-	@Bean
-	public ConfigBeanWizard<SeverityMappingFilter> severityMappingFilterWizard() {
-		return new SimpleBeanWizard<SeverityMappingFilter>(
-				"logsniffer.wizard.reader.filter.severityMappingFilter",
-				"/ng/wizards/reader/filter/severityMapping.html",
-				SeverityMappingFilter.class, new SeverityMappingFilter());
-	}
-
-	@Bean
-	public ConfigBeanWizard<JsonParseFilter> jsonFilterWizard() {
-		return new SimpleBeanWizard<JsonParseFilter>(
-				"logsniffer.wizard.reader.filter.jsonParseFilter",
-				"/ng/wizards/reader/filter/jsonParser.html",
-				JsonParseFilter.class, new JsonParseFilter());
-	}
-
-	@Bean
-	public ConfigBeanWizard<TimestampConvertFilter> timestampConvertFilterWizard() {
-		return new SimpleBeanWizard<TimestampConvertFilter>(
-				"logsniffer.wizard.reader.filter.timestampConvert",
-				"/ng/wizards/reader/filter/timestampConvert.html",
-				TimestampConvertFilter.class, new TimestampConvertFilter());
 	}
 
 }

@@ -48,7 +48,7 @@ public interface Scanner extends ConfiguredBean, FieldsHost {
 	 * 
 	 */
 	public static interface EventConsumer {
-		void consume(Event eventData) throws IOException;
+		void consume(Event eventData) throws IOException, FormatException;
 	}
 
 	/**

@@ -50,7 +50,7 @@ public class FilteredScanner implements Scanner {
 			final EventConsumer eventConsumer) throws IOException, FormatException {
 		targetScanner.find(reader, readerStrategy, log, logAccess, incrementData, new EventConsumer() {
 			@Override
-			public void consume(final Event eventData) throws IOException {
+			public void consume(final Event eventData) throws IOException, FormatException {
 				filter(eventData);
 				eventConsumer.consume(eventData);
 			}
@@ -58,7 +58,7 @@ public class FilteredScanner implements Scanner {
 
 	}
 
-	private void filter(final Event event) {
+	private void filter(final Event event) throws FormatException {
 		for (final FieldsFilter f : filters) {
 			f.filter(event);
 		}
