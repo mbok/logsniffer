@@ -100,7 +100,8 @@ public class CoreAppConfig {
 		classPathProperties = (Resource[]) ArrayUtils.add(classPathProperties,
 				new FileSystemResource(System.getProperty("logsniffer.home") + "/" + LOGSNIFFER_PROPERTIES_FILE));
 		p.setLocations(classPathProperties);
-		p.setLocalOverride(false);
+		p.setProperties(System.getProperties());
+		p.setLocalOverride(true);
 		p.setIgnoreResourceNotFound(true);
 		return p;
 	}

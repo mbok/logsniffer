@@ -216,11 +216,11 @@ public class Log4jTextReader extends FormattedTextReader {
 	}
 
 	@Override
-	protected void initPattern() throws FormatException {
+	protected void init() throws FormatException {
 		messageSpecifier = null;
 		timeSpecifier = null;
 		levelSpecifier = null;
-		super.initPattern();
+		super.init();
 		if (parsingSpecifiers != null) {
 			for (final Specifier s : parsingSpecifiers) {
 				if (s instanceof MessageSpecifier) {
@@ -251,7 +251,7 @@ public class Log4jTextReader extends FormattedTextReader {
 
 	@Override
 	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
-		initPattern();
+		init();
 		final LinkedHashMap<String, FieldBaseTypes> types = super.getFieldTypes();
 		if (timeSpecifier != null) {
 			types.put(LogEntry.FIELD_TIMESTAMP, FieldBaseTypes.DATE);

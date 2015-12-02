@@ -73,7 +73,7 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher>
 
 	@Override
 	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
-		initPattern();
+		init();
 		final LinkedHashMap<String, FieldBaseTypes> fields = super.getFieldTypes();
 		fields.putAll(grokBean.getGrok(groksRegistry).getFieldTypes());
 		if (overflowAttribute != null && !fields.containsKey(overflowAttribute)) {
@@ -83,7 +83,8 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher>
 	}
 
 	@Override
-	protected void initPattern() throws FormatException {
+	protected void init() throws FormatException {
+		super.init();
 		logger.info("Compiled grok: {}", grokBean.getGrok(groksRegistry));
 	}
 

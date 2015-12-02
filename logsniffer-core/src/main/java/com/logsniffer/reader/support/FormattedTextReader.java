@@ -219,7 +219,8 @@ public abstract class FormattedTextReader extends AbstractPatternLineReader<Matc
 	 *            the formatPattern to set
 	 */
 	@Override
-	protected void initPattern() throws FormatException {
+	protected void init() throws FormatException {
+		super.init();
 		if (parsingPattern == null) {
 			// Only if not yet parsed
 			if (formatPattern != null) {
@@ -338,7 +339,7 @@ public abstract class FormattedTextReader extends AbstractPatternLineReader<Matc
 
 	@Override
 	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
-		initPattern();
+		init();
 		final LinkedHashMap<String, FieldBaseTypes> fields = super.getFieldTypes();
 		if (parsingSpecifiers != null) {
 			for (final Specifier s : parsingSpecifiers) {

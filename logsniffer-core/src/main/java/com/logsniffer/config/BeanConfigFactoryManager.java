@@ -39,6 +39,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.logsniffer.config.ConfiguredBean.ConfiguredBeanDeserializer;
+import com.logsniffer.util.value.ConfigInjector;
 
 /**
  * Manages creating, serialization and deserialization of bean configs.
@@ -57,20 +58,20 @@ public class BeanConfigFactoryManager implements ConfigBeanTypeResolver {
 	@Autowired
 	private ObjectMapper jsonMapper;
 
+	@Autowired
+	private ConfigInjector configInjector;
+
 	private final Map<Class<? extends ConfiguredBean>, List<String>> configBeanNames = new HashMap<>();;
 
 	@SuppressWarnings("unchecked")
 	@PostConstruct
 	private void initJsonMapper() {
-		SimpleModule module = new SimpleModule();
+		final SimpleModule module = new SimpleModule();
 		module.setDeserializerModifier(new BeanDeserializerModifier() {
 			@Override
-			public JsonDeserializer<?> modifyDeserializer(
-					final DeserializationConfig config,
-					final BeanDescription beanDesc,
-					final JsonDeserializer<?> deserializer) {
-				if (ConfiguredBean.class.isAssignableFrom(beanDesc
-						.getBeanClass())) {
+			public JsonDeserializer<?> modifyDeserializer(final DeserializationConfig config,
+					final BeanDescription beanDesc, final JsonDeserializer<?> deserializer) {
+				if (ConfiguredBean.class.isAssignableFrom(beanDesc.getBeanClass())) {
 					return new ConfiguredBeanDeserializer(deserializer);
 				}
 				return deserializer;
@@ -78,42 +79,36 @@ public class BeanConfigFactoryManager implements ConfigBeanTypeResolver {
 		});
 		jsonMapper.registerModule(module);
 		if (postConstructors != null) {
-			for (BeanPostConstructor<?> bpc : postConstructors) {
+			for (final BeanPostConstructor<?> bpc : postConstructors) {
 				mappedPostConstrucors.put(bpc.getClass(), bpc);
 			}
 		}
 
 		// Register sub beans
-		ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(
+		final ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(
 				false);
-		final AssignableTypeFilter filter4configBenas = new AssignableTypeFilter(
-				ConfiguredBean.class);
+		final AssignableTypeFilter filter4configBenas = new AssignableTypeFilter(ConfiguredBean.class);
 		scanner.addIncludeFilter(filter4configBenas);
 
-		for (BeanDefinition bd : scanner
-				.findCandidateComponents("com.logsniffer")) {
+		for (final BeanDefinition bd : scanner.findCandidateComponents("com.logsniffer")) {
 			try {
-				Class<? extends ConfiguredBean> clazz = (Class<? extends ConfiguredBean>) Class
+				final Class<? extends ConfiguredBean> clazz = (Class<? extends ConfiguredBean>) Class
 						.forName(bd.getBeanClassName());
-				JsonTypeName jsonNameAnnotation = clazz
-						.getAnnotation(JsonTypeName.class);
-				List<String> names = new ArrayList<String>();
+				final JsonTypeName jsonNameAnnotation = clazz.getAnnotation(JsonTypeName.class);
+				final List<String> names = new ArrayList<String>();
 				configBeanNames.put(clazz, names);
 				if (jsonNameAnnotation != null) {
 					names.add(jsonNameAnnotation.value());
 					if (jsonNameAnnotation.deprecated() != null) {
-						for (String dep : jsonNameAnnotation.deprecated()) {
+						for (final String dep : jsonNameAnnotation.deprecated()) {
 							names.add(dep);
 						}
 					}
 				}
 				names.add(clazz.getSimpleName());
-				logger.debug("Registered JSON type {} for following names: {}",
-						clazz, names);
-			} catch (ClassNotFoundException e) {
-				logger.warn(
-						"Failed to register JSON type name for "
-								+ bd.getBeanClassName(), e);
+				logger.debug("Registered JSON type {} for following names: {}", clazz, names);
+			} catch (final ClassNotFoundException e) {
+				logger.warn("Failed to register JSON type name for " + bd.getBeanClassName(), e);
 			}
 		}
 	}
@@ -128,12 +123,11 @@ public class BeanConfigFactoryManager implements ConfigBeanTypeResolver {
 	 * @throws ConfigException
 	 *             in case of serialize errors
 	 */
-	public <BeanType extends ConfiguredBean> String saveBeanToJSON(
-			final BeanType bean) throws ConfigException {
+	public <BeanType extends ConfiguredBean> String saveBeanToJSON(final BeanType bean) throws ConfigException {
 		try {
-			String str = jsonMapper.writeValueAsString(bean);
+			final String str = jsonMapper.writeValueAsString(bean);
 			return str;
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			throw new ConfigException("Failed to serialize bean: " + bean, e);
 		}
 	}
@@ -143,24 +137,21 @@ public class BeanConfigFactoryManager implements ConfigBeanTypeResolver {
 		if (bean == null) {
 			return;
 		}
-		PostConstructed pc = AnnotationUtils.findAnnotation(bean.getClass(),
-				PostConstructed.class);
+		final PostConstructed pc = AnnotationUtils.findAnnotation(bean.getClass(), PostConstructed.class);
 		if (bean instanceof BeanPostConstructor<?>
-				&& (pc == null || !mappedPostConstrucors.containsKey(bean
-						.getClass()))) {
+				&& (pc == null || !mappedPostConstrucors.containsKey(bean.getClass()))) {
 			((BeanPostConstructor) bean).postConstruct(bean, this);
 		}
 		if (pc != null) {
-			BeanPostConstructor bpc = mappedPostConstrucors.get(pc
-					.constructor());
+			final BeanPostConstructor bpc = mappedPostConstrucors.get(pc.constructor());
 			if (bpc != null) {
 				bpc.postConstruct(bean, this);
 			} else {
-				logger.error(
-						"Unsatisfied bean construction of '{}' due to missing post constructor of type: {}",
-						bean, pc.getClass());
+				logger.error("Unsatisfied bean construction of '{}' due to missing post constructor of type: {}", bean,
+						pc.getClass());
 			}
 		}
+		configInjector.postProcessBeforeInitialization(bean, bean.getClass().getName());
 	}
 
 	/**
@@ -175,22 +166,19 @@ public class BeanConfigFactoryManager implements ConfigBeanTypeResolver {
 	 * @throws ConfigException
 	 *             in case of errors
 	 */
-	public <BeanType extends ConfiguredBean> BeanType createBeanFromJSON(
-			final Class<BeanType> clazz, final String json)
+	public <BeanType extends ConfiguredBean> BeanType createBeanFromJSON(final Class<BeanType> clazz, final String json)
 			throws ConfigException {
 		try {
-			BeanType bean = jsonMapper.readValue(json, clazz);
+			final BeanType bean = jsonMapper.readValue(json, clazz);
 			return bean;
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			throw new ConfigException("Failed to deserialize bean: " + clazz, e);
 		}
 	}
 
 	@Override
-	public String resolveTypeName(final Class<? extends ConfiguredBean> clazz)
-			throws ConfigException {
-		if (configBeanNames.containsKey(clazz)
-				&& !configBeanNames.get(clazz).isEmpty()) {
+	public String resolveTypeName(final Class<? extends ConfiguredBean> clazz) throws ConfigException {
+		if (configBeanNames.containsKey(clazz) && !configBeanNames.get(clazz).isEmpty()) {
 			return configBeanNames.get(clazz).get(0);
 		}
 		throw new ConfigException("No name defined for type: " + clazz);
@@ -198,20 +186,18 @@ public class BeanConfigFactoryManager implements ConfigBeanTypeResolver {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T extends ConfiguredBean> Class<? extends T> resolveTypeClass(
-			final String searchNname, final Class<T> wantedSuperType)
-			throws ConfigException {
-		for (Class<? extends ConfiguredBean> clazz : configBeanNames.keySet()) {
-			if (wantedSuperType == null
-					|| wantedSuperType.isAssignableFrom(clazz)) {
-				for (String name : configBeanNames.get(clazz)) {
+	public <T extends ConfiguredBean> Class<? extends T> resolveTypeClass(final String searchNname,
+			final Class<T> wantedSuperType) throws ConfigException {
+		for (final Class<? extends ConfiguredBean> clazz : configBeanNames.keySet()) {
+			if (wantedSuperType == null || wantedSuperType.isAssignableFrom(clazz)) {
+				for (final String name : configBeanNames.get(clazz)) {
 					if (name.equalsIgnoreCase(searchNname)) {
 						return (Class<? extends T>) clazz;
 					}
 				}
 			}
 		}
-		throw new ConfigException("Couldn't resolve type for name '"
-				+ searchNname + "' of type base: " + wantedSuperType);
+		throw new ConfigException(
+				"Couldn't resolve type for name '" + searchNname + "' of type base: " + wantedSuperType);
 	}
 }

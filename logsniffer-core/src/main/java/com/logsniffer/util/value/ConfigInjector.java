@@ -49,27 +49,21 @@ public class ConfigInjector implements BeanPostProcessor {
 	}
 
 	@Override
-	public Object postProcessAfterInitialization(final Object bean,
-			final String beanName) throws BeansException {
+	public Object postProcessAfterInitialization(final Object bean, final String beanName) throws BeansException {
 		return bean;
 	}
 
 	@Override
-	public Object postProcessBeforeInitialization(final Object bean,
-			final String beanName) throws BeansException {
+	public Object postProcessBeforeInitialization(final Object bean, final String beanName) throws BeansException {
 		ReflectionUtils.doWithFields(bean.getClass(), new FieldCallback() {
 			@Override
-			public void doWith(final Field field)
-					throws IllegalArgumentException, IllegalAccessException {
-				LOGGER.info("Injecting value={} for bean={}", field.getName(),
-						beanName);
+			public void doWith(final Field field) throws IllegalArgumentException, IllegalAccessException {
+				LOGGER.debug("Injecting value={} for bean={}", field.getName(), beanName);
 				field.setAccessible(true);
-				final String key = field.getAnnotation(Configured.class)
-						.value();
-				final String defaultValue = field.getAnnotation(
-						Configured.class).defaultValue();
-				final Class<?> targetValueType = (Class<?>) ((ParameterizedType) field
-						.getGenericType()).getActualTypeArguments()[0];
+				final String key = field.getAnnotation(Configured.class).value();
+				final String defaultValue = field.getAnnotation(Configured.class).defaultValue();
+				final Class<?> targetValueType = (Class<?>) ((ParameterizedType) field.getGenericType())
+						.getActualTypeArguments()[0];
 				field.set(bean, new ConfigValue<Object>() {
 					private String oldTextValue;
 					private Object oldValue;
@@ -80,12 +74,10 @@ public class ConfigInjector implements BeanPostProcessor {
 						if (textValue == null) {
 							textValue = defaultValue;
 						}
-						if (oldTextValue != null
-								&& oldTextValue.equals(textValue)) {
+						if (oldTextValue != null && oldTextValue.equals(textValue)) {
 							return oldValue;
 						} else {
-							oldValue = conversionService.convert(textValue,
-									targetValueType);
+							oldValue = conversionService.convert(textValue, targetValueType);
 							oldTextValue = textValue;
 							return oldValue;
 						}
@@ -96,8 +88,7 @@ public class ConfigInjector implements BeanPostProcessor {
 		}, new FieldFilter() {
 			@Override
 			public boolean matches(final Field field) {
-				return field.getType().equals(ConfigValue.class)
-						&& field.isAnnotationPresent(Configured.class);
+				return field.getType().equals(ConfigValue.class) && field.isAnnotationPresent(Configured.class);
 			}
 		});
 

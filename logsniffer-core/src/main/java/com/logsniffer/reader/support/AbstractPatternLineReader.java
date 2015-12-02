@@ -35,6 +35,8 @@ import com.logsniffer.model.support.ByteLogInputStream;
 import com.logsniffer.model.support.LineInputStream;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.LogEntryReader;
+import com.logsniffer.util.value.ConfigValue;
+import com.logsniffer.util.value.Configured;
 
 /**
  * Abstract line text reader based on pattern matching.
@@ -43,8 +45,14 @@ import com.logsniffer.reader.LogEntryReader;
  * 
  */
 public abstract class AbstractPatternLineReader<MatcherContext> implements LogEntryReader<ByteLogInputStream> {
+	public static final String PROP_LOGSNIFFER_READER_MAX_MULTIPLE_LINES = "logsniffer.reader.pattern.maxMultiline";
+
 	private static final Logger logger = LoggerFactory.getLogger(AbstractPatternLineReader.class);
-	private static int MAX_LINES2CONSUME_WITHOUT_PATTERN = 50;
+
+	@Configured(value = PROP_LOGSNIFFER_READER_MAX_MULTIPLE_LINES, defaultValue = "500")
+	private ConfigValue<Integer> maxMultipleLinesConfigValue;
+
+	private int maxMultipleUnmatchedLines = 500;
 
 	@JsonProperty
 	@NotEmpty
@@ -71,7 +79,11 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 	 * @throws ParseException
 	 *             in case pattern initialization errors
 	 */
-	protected abstract void initPattern() throws FormatException;
+	protected void init() throws FormatException {
+		maxMultipleUnmatchedLines = maxMultipleLinesConfigValue.get();
+		logger.debug("Init {} with max multiple lines without matching pattern: {}", getClass(),
+				maxMultipleUnmatchedLines);
+	}
 
 	/**
 	 * @return a matcher context in case of a matching line or null if doesn't.
@@ -109,7 +121,7 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 	@Override
 	public final void readEntries(final Log log, final LogRawAccess<ByteLogInputStream> logAccess,
 			final LogPointer startOffset, final LogEntryConsumer consumer) throws IOException, FormatException {
-		initPattern();
+		init();
 		final LinkedHashMap<String, FieldBaseTypes> fieldTypes = getFieldTypes();
 		LineInputStream lis = null;
 		try {
@@ -145,7 +157,7 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 				} else {
 					if (patternAware && linesWithoutPattern >= 0) {
 						linesWithoutPattern++;
-						if (linesWithoutPattern > MAX_LINES2CONSUME_WITHOUT_PATTERN) {
+						if (linesWithoutPattern > maxMultipleUnmatchedLines) {
 							logger.warn(
 									"Pattern {} for log '{}' didn't matched any of read {} lines, pattern matching will be disabled",
 									getPatternInfo(), log, linesWithoutPattern);
