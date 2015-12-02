@@ -59,6 +59,11 @@ public final class LogEntry extends FieldsMap {
 	 */
 	public static final String FIELD_RAW_CONTENT = "lf_raw";
 
+	/**
+	 * Field key for convenient method {@link #isUnformatted()}.
+	 */
+	public static final String FIELD_UNFORMATTED = "lf_unformatted";
+
 	// @JsonSerialize(typing = Typing.STATIC)
 	// @JsonDeserialize(as = JsonLogPointer.class)
 	// private LogPointer startOffset;
@@ -150,6 +155,30 @@ public final class LogEntry extends FieldsMap {
 	 */
 	public void setTimeStamp(final Date timeStamp) {
 		super.put(FIELD_TIMESTAMP, timeStamp);
+	}
+
+	/**
+	 * Marks the log entry as unformatted.
+	 * 
+	 * @param unformatted
+	 *            to set
+	 */
+	public void setUnformatted(final boolean unformatted) {
+		super.put(FIELD_UNFORMATTED, unformatted);
+	}
+
+	/**
+	 * Indicates if the log entry is unformatted.
+	 * 
+	 * @return true and only if this log entry was explictly marked as
+	 *         unformatted
+	 */
+	public boolean isUnformatted() {
+		final Object u = super.get(FIELD_UNFORMATTED);
+		if (u instanceof Boolean) {
+			return (Boolean) u;
+		}
+		return false;
 	}
 
 	/**

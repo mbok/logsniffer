@@ -19,6 +19,8 @@ package com.logsniffer.model.support;
 
 import java.io.IOException;
 
+import org.mortbay.jetty.security.Credential.MD5;
+
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.LogRawAccess;
@@ -30,9 +32,8 @@ import com.logsniffer.model.LogRawAccessor;
  * @author mbok
  * 
  */
-public class ByteArrayLog implements Log,
-		LogRawAccessor<ByteLogInputStream, ByteArrayLog>,
-		LogRawAccess<ByteLogInputStream> {
+public class ByteArrayLog
+		implements Log, LogRawAccessor<ByteLogInputStream, ByteArrayLog>, LogRawAccess<ByteLogInputStream> {
 	/**
 	 * Byte array input stream in memory for tests.
 	 * 
@@ -63,7 +64,7 @@ public class ByteArrayLog implements Log,
 	private final String path;
 
 	public ByteArrayLog(final byte[] data) {
-		this(new String(data), data);
+		this(MD5.digest(new String(data)), data);
 	}
 
 	public ByteArrayLog(final String path, final byte[] data) {
@@ -73,19 +74,16 @@ public class ByteArrayLog implements Log,
 	}
 
 	@Override
-	public long getDifference(final LogPointer source,
-			final LogPointer compareTo) throws IOException {
-		long start = source != null ? ((DefaultPointer) source).getOffset() : 0;
+	public long getDifference(final LogPointer source, final LogPointer compareTo) throws IOException {
+		final long start = source != null ? ((DefaultPointer) source).getOffset() : 0;
 		return ((DefaultPointer) compareTo).getOffset() - start;
 	}
 
 	@Override
-	public LogPointer createRelative(final LogPointer _source,
-			final long relativeBytePosition) throws IOException {
-		DefaultPointer source = (DefaultPointer) _source;
-		long newOffset = (source != null ? source.getOffset() : 0)
-				+ relativeBytePosition;
-		long size = data.length;
+	public LogPointer createRelative(final LogPointer _source, final long relativeBytePosition) throws IOException {
+		final DefaultPointer source = (DefaultPointer) _source;
+		final long newOffset = (source != null ? source.getOffset() : 0) + relativeBytePosition;
+		final long size = data.length;
 		return new DefaultPointer(Math.max(0, Math.min(newOffset, size)), size);
 	}
 
@@ -100,12 +98,10 @@ public class ByteArrayLog implements Log,
 	}
 
 	@Override
-	public ByteLogInputStream getInputStream(final LogPointer from)
-			throws IOException {
-		LogByteArrayInputStream is = new LogByteArrayInputStream(data);
+	public ByteLogInputStream getInputStream(final LogPointer from) throws IOException {
+		final LogByteArrayInputStream is = new LogByteArrayInputStream(data);
 		if (from != null) {
-			is.pos = ((DefaultPointer) createRelative(null,
-					((DefaultPointer) from).getOffset())).getOffset();
+			is.pos = ((DefaultPointer) createRelative(null, ((DefaultPointer) from).getOffset())).getOffset();
 		}
 		return is;
 	}
@@ -126,8 +122,7 @@ public class ByteArrayLog implements Log,
 	}
 
 	@Override
-	public LogRawAccess<ByteLogInputStream> getLogAccess(final ByteArrayLog log)
-			throws IOException {
+	public LogRawAccess<ByteLogInputStream> getLogAccess(final ByteArrayLog log) throws IOException {
 		return log;
 	}
 

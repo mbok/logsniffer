@@ -63,7 +63,7 @@ import com.logsniffer.fields.FieldsMap.FieldsMapMixInLikeSerializer;
  * 
  */
 @Configuration
-@Import(StartupAppConfig.class)
+@Import({ StartupAppConfig.class, ConfigValueAppConfig.class })
 public class CoreAppConfig {
 	public static final String BEAN_LOGSNIFFER_PROPS = "logSnifferProps";
 	public static final String LOGSNIFFER_PROPERTIES_FILE = "config.properties";

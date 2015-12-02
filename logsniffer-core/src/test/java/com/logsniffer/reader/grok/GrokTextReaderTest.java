@@ -38,6 +38,7 @@ import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.support.ByteArrayLog;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.log4j.Log4jTextReaderTest;
+import com.logsniffer.reader.support.AbstractPatternLineReader;
 import com.logsniffer.util.grok.GrokAppConfig;
 import com.logsniffer.util.grok.GrokConsumerConstructor;
 import com.logsniffer.util.grok.GroksRegistry;
@@ -65,6 +66,10 @@ public class GrokTextReaderTest {
 	private GroksRegistry grokRegistry;
 
 	private GrokTextReader grokReader;
+
+	static {
+		System.setProperty(AbstractPatternLineReader.PROP_LOGSNIFFER_READER_MAX_MULTIPLE_LINES, "3");
+	}
 
 	@Before
 	public void initReader() {
@@ -106,11 +111,20 @@ public class GrokTextReaderTest {
 
 		// Test overflow to existing field "program"
 		grokReader.setOverflowAttribute("program");
-		entries = Log4jTextReaderTest.readEntries(grokReader, Log4jTextReaderTest.createLog(0, logLine1 + "\noverflow"),
-				null, 1);
-		assertEquals(1, entries.length);
-		assertEquals("kernel\noverflow", entries[0].get("program"));
-
+		entries = Log4jTextReaderTest
+				.readEntries(grokReader,
+						Log4jTextReaderTest.createLog(0,
+								logLine1 + "\noverflow\nline2\nline3\nline4\nline5\nline6\nline7\n" + logLine1),
+						null, 5);
+		assertEquals(4, entries.length);
+		assertEquals(false, entries[0].isUnformatted());
+		assertEquals(true, entries[1].isUnformatted());
+		assertEquals(true, entries[2].isUnformatted());
+		assertEquals(false, entries[3].isUnformatted());
+		assertEquals("kernel\noverflow\nline2\nline3", entries[0].get("program"));
+		assertEquals("line4\nline5\nline6", entries[1].get("program"));
+		assertEquals("line7", entries[2].get("program"));
+		assertEquals("kernel", entries[3].get("program"));
 	}
 
 	@Test

@@ -51,75 +51,61 @@ public class BackwardReaderTest {
 			"22:27:29,456 INFO  [com.logsniffer.parser.log4j.Log4jParser] Unfinished",
 			"22:37:29,456 INFO  [com.logsniffer.parser.log4j.Log4jParser] Finished" };
 
+	static {
+		System.setProperty(AbstractPatternLineReader.PROP_LOGSNIFFER_READER_MAX_MULTIPLE_LINES, "1");
+	}
+
 	@Before
-	public void setUp() throws FormatException, UnsupportedEncodingException,
-			IOException {
+	public void setUp() throws FormatException, UnsupportedEncodingException, IOException {
 		fwReader = new Log4jTextReader("%d{ABSOLUTE} %-5p [%c] %m%n", "UTF-8");
-		log = Log4jTextReaderTest
-				.createLog(0, StringUtils.join(logLines, "\n"));
+		log = Log4jTextReaderTest.createLog(0, StringUtils.join(logLines, "\n"));
 		revReader = new BackwardReader<ByteLogInputStream>(fwReader);
 	}
 
 	@Test
-	public void testRevReadingAtStart() throws FormatException,
-			UnsupportedEncodingException, IOException {
-		Assert.assertEquals(0,
-				revReader
-						.readEntries(log, log, log.createRelative(null, 0), -1)
-						.size());
+	public void testRevReadingAtStart() throws FormatException, UnsupportedEncodingException, IOException {
+		Assert.assertEquals(0, revReader.readEntries(log, log, log.createRelative(null, 0), -1).size());
 	}
 
 	@Test
-	public void testRevReadingAllFromTail() throws FormatException,
-			UnsupportedEncodingException, IOException {
-		List<LogEntry> entries = revReader.readEntries(log, log,
-				log.createRelative(null, Long.MAX_VALUE), -10);
+	public void testRevReadingAllFromTail() throws FormatException, UnsupportedEncodingException, IOException {
+		final List<LogEntry> entries = revReader.readEntries(log, log, log.createRelative(null, Long.MAX_VALUE), -10);
 		Assert.assertEquals(3, entries.size());
-		Assert.assertEquals(logLines[0] + "\n" + logLines[1] + "\n"
-				+ logLines[2] + "\n" + logLines[3], entries.get(0)
-				.getRawContent());
+		Assert.assertEquals(logLines[0] + "\n" + logLines[1] + "\n" + logLines[2] + "\n" + logLines[3],
+				entries.get(0).getRawContent());
 		Assert.assertEquals(logLines[4], entries.get(1).getRawContent());
 		Assert.assertEquals(logLines[5], entries.get(2).getRawContent());
 	}
 
 	@Test
-	public void testRevReadingIncrementallyFromTail() throws FormatException,
-			UnsupportedEncodingException, IOException {
-		List<LogEntry> entries = revReader.readEntries(log, log,
-				log.createRelative(null, Long.MAX_VALUE), -1);
+	public void testRevReadingIncrementallyFromTail()
+			throws FormatException, UnsupportedEncodingException, IOException {
+		List<LogEntry> entries = revReader.readEntries(log, log, log.createRelative(null, Long.MAX_VALUE), -1);
 		Assert.assertEquals(1, entries.size());
 		Assert.assertEquals(logLines[5], entries.get(0).getRawContent());
 
 		// Next prev line
-		entries = revReader.readEntries(log, log, entries.get(0)
-				.getStartOffset(), -1);
+		entries = revReader.readEntries(log, log, entries.get(0).getStartOffset(), -1);
 		Assert.assertEquals(1, entries.size());
 		Assert.assertEquals(logLines[4], entries.get(0).getRawContent());
 
 		// Next prev line
-		entries = revReader.readEntries(log, log, entries.get(0)
-				.getStartOffset(), -1);
+		entries = revReader.readEntries(log, log, entries.get(0).getStartOffset(), -1);
 		Assert.assertEquals(1, entries.size());
-		Assert.assertEquals(logLines[0] + "\n" + logLines[1] + "\n"
-				+ logLines[2] + "\n" + logLines[3], entries.get(0)
-				.getRawContent());
+		Assert.assertEquals(logLines[0] + "\n" + logLines[1] + "\n" + logLines[2] + "\n" + logLines[3],
+				entries.get(0).getRawContent());
 
 		// Start reached
-		Assert.assertEquals(
-				0,
-				revReader.readEntries(log, log,
-						entries.get(0).getStartOffset(), -1).size());
+		Assert.assertEquals(0, revReader.readEntries(log, log, entries.get(0).getStartOffset(), -1).size());
 	}
 
 	@Test
-	public void testRecursionBug() throws FormatException,
-			UnsupportedEncodingException, IOException {
-		log = Log4jTextReaderTest.createLog(0,
-				StringUtils.repeat(StringUtils.repeat("abc", 72) + "\n", 1000));
-		BackwardReader<ByteLogInputStream> reader = new BackwardReader<ByteLogInputStream>(
-				new Log4jTextReader("unknown format", "UTF-8"));
-		List<LogEntry> entries = reader.readEntries(log, log,
-				log.createRelative(null, 52000), -100);
+	public void testRecursionBug() throws FormatException, UnsupportedEncodingException, IOException {
+		log = Log4jTextReaderTest.createLog(0, StringUtils.repeat(StringUtils.repeat("abc", 72) + "\n", 1000));
+		final Log4jTextReader log4jReader = new Log4jTextReader("unknown format", "UTF-8");
+		log4jReader.setMaxUnfomattedLines(1);
+		final BackwardReader<ByteLogInputStream> reader = new BackwardReader<ByteLogInputStream>(log4jReader);
+		final List<LogEntry> entries = reader.readEntries(log, log, log.createRelative(null, 52000), -100);
 		Assert.assertEquals(100, entries.size());
 	}
 }

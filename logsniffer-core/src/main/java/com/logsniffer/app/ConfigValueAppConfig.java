@@ -19,7 +19,8 @@ package com.logsniffer.app;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.format.support.DefaultFormattingConversionService;
 
 import com.logsniffer.util.value.ConfigInjector;
 import com.logsniffer.util.value.support.PropertiesBasedSource;
@@ -31,7 +32,6 @@ import com.logsniffer.util.value.support.PropertiesBasedSource;
  * 
  */
 @Configuration
-@Import(CoreAppConfig.class)
 public class ConfigValueAppConfig {
 	public static final String LOGSNIFFER_BASE_URL = "logsniffer.baseUrl";
 
@@ -43,5 +43,10 @@ public class ConfigValueAppConfig {
 	@Bean
 	public PropertiesBasedSource propertiesBasedSource() {
 		return new PropertiesBasedSource();
+	}
+
+	@Bean
+	public ConversionService conversionService() {
+		return new DefaultFormattingConversionService();
 	}
 }

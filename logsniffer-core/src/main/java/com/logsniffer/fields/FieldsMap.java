@@ -65,23 +65,8 @@ import com.logsniffer.fields.FieldsMap.FieldsMapTypeSafeSerializer;
 public class FieldsMap extends LinkedHashMap<String, Object> implements FieldsMapPublicSerializationMixIn {
 	private static final long serialVersionUID = -3923428304353465704L;
 
-	private LinkedHashMap<String, FieldBaseTypes> types;
-
 	public FieldsMap() {
 		super();
-	}
-
-	public FieldsMap(final LinkedHashMap<String, FieldBaseTypes> types) {
-		super();
-		this.types = types;
-	}
-
-	@Override
-	public Object put(final String key, final Object value) {
-		if (types != null && !types.containsKey(key)) {
-			types.put(key, FieldBaseTypes.resolveType(value));
-		}
-		return super.put(key, value);
 	}
 
 	/**
@@ -89,21 +74,11 @@ public class FieldsMap extends LinkedHashMap<String, Object> implements FieldsMa
 	 */
 	@Override
 	public Map<String, FieldBaseTypes> getTypes() {
-		if (types == null) {
-			types = new LinkedHashMap<String, FieldBaseTypes>();
-			for (final Map.Entry<String, Object> e : entrySet()) {
-				types.put(e.getKey(), FieldBaseTypes.resolveType(e.getValue()));
-			}
+		final LinkedHashMap<String, FieldBaseTypes> types = new LinkedHashMap<String, FieldBaseTypes>();
+		for (final Map.Entry<String, Object> e : entrySet()) {
+			types.put(e.getKey(), FieldBaseTypes.resolveType(e.getValue()));
 		}
 		return types;
-	}
-
-	/**
-	 * @param types
-	 *            the types to set
-	 */
-	public void setTypes(final LinkedHashMap<String, FieldBaseTypes> types) {
-		this.types = types;
 	}
 
 	@Override

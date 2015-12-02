@@ -45,14 +45,16 @@ import com.logsniffer.util.value.Configured;
  * 
  */
 public abstract class AbstractPatternLineReader<MatcherContext> implements LogEntryReader<ByteLogInputStream> {
-	public static final String PROP_LOGSNIFFER_READER_MAX_MULTIPLE_LINES = "logsniffer.reader.pattern.maxMultiline";
+	public static final String PROP_LOGSNIFFER_READER_MAX_MULTIPLE_LINES = "logsniffer.reader.pattern.maxUnformattedLines";
+
+	public static final int DEFAULT_MAX_UNFORMATTED_LINES = 500;
 
 	private static final Logger logger = LoggerFactory.getLogger(AbstractPatternLineReader.class);
 
-	@Configured(value = PROP_LOGSNIFFER_READER_MAX_MULTIPLE_LINES, defaultValue = "500")
-	private ConfigValue<Integer> maxMultipleLinesConfigValue;
+	@Configured(value = PROP_LOGSNIFFER_READER_MAX_MULTIPLE_LINES, defaultValue = DEFAULT_MAX_UNFORMATTED_LINES + "")
+	private ConfigValue<Integer> maxUnformattedLinesConfigValue;
 
-	private int maxMultipleUnmatchedLines = 500;
+	private int maxUnfomattedLines = DEFAULT_MAX_UNFORMATTED_LINES;
 
 	@JsonProperty
 	@NotEmpty
@@ -80,9 +82,10 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 	 *             in case pattern initialization errors
 	 */
 	protected void init() throws FormatException {
-		maxMultipleUnmatchedLines = maxMultipleLinesConfigValue.get();
-		logger.debug("Init {} with max multiple lines without matching pattern: {}", getClass(),
-				maxMultipleUnmatchedLines);
+		if (maxUnformattedLinesConfigValue != null) {
+			maxUnfomattedLines = maxUnformattedLinesConfigValue.get();
+		}
+		logger.debug("Init {} with max multiple lines without matching pattern: {}", getClass(), maxUnfomattedLines);
 	}
 
 	/**
@@ -122,10 +125,8 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 	public final void readEntries(final Log log, final LogRawAccess<ByteLogInputStream> logAccess,
 			final LogPointer startOffset, final LogEntryConsumer consumer) throws IOException, FormatException {
 		init();
-		final LinkedHashMap<String, FieldBaseTypes> fieldTypes = getFieldTypes();
 		LineInputStream lis = null;
 		try {
-			boolean patternAware = true;
 			int linesWithoutPattern = 0;
 			lis = new LineInputStream(logAccess, logAccess.getInputStream(startOffset), getCharset());
 			LogEntry entry = null;
@@ -138,8 +139,8 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 			LogPointer currentOffset = null;
 			while ((line = lis.readNextLine()) != null && (currentOffset = lis.getPointer()) != null) {
 				final MatcherContext ctx = matches(line);
-				if (ctx != null || !patternAware) {
-					linesWithoutPattern = -1;
+				if (ctx != null) {
+					linesWithoutPattern = 0;
 					if (entry != null) {
 						entry.setRawContent(text.toString());
 						entry.setEndOffset(lastOffset);
@@ -148,32 +149,37 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 						}
 					}
 					entry = new LogEntry();
-					entry.setTypes(fieldTypes);
 					entry.setStartOffset(lastOffset);
 					text = new StringBuilder(line);
 					if (ctx != null) {
 						fillAttributes(entry, ctx);
 					}
 				} else {
-					if (patternAware && linesWithoutPattern >= 0) {
-						linesWithoutPattern++;
-						if (linesWithoutPattern > maxMultipleUnmatchedLines) {
-							logger.warn(
-									"Pattern {} for log '{}' didn't matched any of read {} lines, pattern matching will be disabled",
-									getPatternInfo(), log, linesWithoutPattern);
-							patternAware = false;
-						}
-					}
+					linesWithoutPattern++;
 					if (entry == null) {
 						entry = new LogEntry();
-						entry.setTypes(fieldTypes);
 						entry.setStartOffset(lastOffset);
+						entry.setUnformatted(true);
 					}
 					if (text.length() > 0) {
 						text.append("\n");
 					}
 					text.append(line);
 					attachOverflowLine(entry, line);
+					if (linesWithoutPattern >= maxUnfomattedLines) {
+						logger.warn(
+								"Pattern {} for log '{}' didn't matched any of read {} lines, adding unmatching data to previous log entry",
+								getPatternInfo(), log.getPath(), linesWithoutPattern);
+						entry.setRawContent(text.toString());
+						entry.setEndOffset(lastOffset);
+						if (!consumer.consume(log, logAccess, entry)) {
+							return;
+						}
+						entry = null;
+						text = new StringBuilder();
+						linesWithoutPattern = 0;
+					}
+
 				}
 				lastOffset = currentOffset;
 			}
@@ -192,5 +198,20 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 		final LinkedHashMap<String, FieldBaseTypes> fields = new LinkedHashMap<String, FieldBaseTypes>();
 		fields.put(LogEntry.FIELD_RAW_CONTENT, FieldBaseTypes.STRING);
 		return fields;
+	}
+
+	/**
+	 * @return the maxUnfomattedLines
+	 */
+	public int getMaxUnfomattedLines() {
+		return maxUnfomattedLines;
+	}
+
+	/**
+	 * @param maxUnfomattedLines
+	 *            the maxUnfomattedLines to set
+	 */
+	public void setMaxUnfomattedLines(final int maxUnfomattedLines) {
+		this.maxUnfomattedLines = maxUnfomattedLines;
 	}
 }

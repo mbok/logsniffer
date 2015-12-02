@@ -25,12 +25,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.logsniffer.app.ConfigValueAppConfig;
+import com.logsniffer.app.CoreAppConfig;
 import com.logsniffer.util.value.ConfigInjectorTest.HelperAppConfig;
 
 /**
@@ -40,17 +39,11 @@ import com.logsniffer.util.value.ConfigInjectorTest.HelperAppConfig;
  * 
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { ConfigValueAppConfig.class,
-		HelperAppConfig.class })
+@ContextConfiguration(classes = { ConfigValueAppConfig.class, HelperAppConfig.class, CoreAppConfig.class })
 public class ConfigInjectorTest {
 
 	@Configuration
 	public static class HelperAppConfig {
-		@Bean
-		public ConversionService conversionService() {
-			return new DefaultFormattingConversionService();
-		}
-
 		@Bean
 		@Primary
 		public ConfigValueSource source() {

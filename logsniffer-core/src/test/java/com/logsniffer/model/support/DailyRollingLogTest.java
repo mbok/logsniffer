@@ -19,8 +19,7 @@ package com.logsniffer.model.support;
 
 import java.io.IOException;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.logsniffer.model.LogPointer;
@@ -34,14 +33,12 @@ import com.logsniffer.model.LogPointer;
 public class DailyRollingLogTest {
 	@Test
 	public void testReadingOnlyLive() throws IOException {
-		String log1Text = "live";
-		ByteArrayLog blog = new ByteArrayLog(log1Text.getBytes());
-		DailyRollingLog log = new DailyRollingLog(blog);
+		final String log1Text = "live";
+		final ByteArrayLog blog = new ByteArrayLog(log1Text.getBytes());
+		final DailyRollingLog log = new DailyRollingLog(blog);
 		Assert.assertEquals(log1Text.length(), log.getSize());
-		Assert.assertEquals(log1Text, log.getPath());
-		DailyRollingLogAccess logAccess = new DailyRollingLogAccess(blog, log);
-		LineInputStream lis = new LineInputStream(logAccess,
-				logAccess.getInputStream(null), "UTF-8");
+		final DailyRollingLogAccess logAccess = new DailyRollingLogAccess(blog, log);
+		final LineInputStream lis = new LineInputStream(logAccess, logAccess.getInputStream(null), "UTF-8");
 		Assert.assertEquals(true, lis.getPointer().isSOF());
 		Assert.assertEquals(false, lis.getPointer().isEOF());
 		Assert.assertEquals(log1Text, lis.readNextLine());
@@ -53,29 +50,25 @@ public class DailyRollingLogTest {
 
 	@Test
 	public void testRollingReading() throws IOException {
-		String liveText = "live";
-		String pastText = "old-start\nold-next\n";
+		final String liveText = "live";
+		final String pastText = "old-start\nold-next\n";
 
-		DailyRollingLog log = new DailyRollingLog(new ByteArrayLog(
-				liveText.getBytes()), new ByteArrayLog(pastText.getBytes()));
-		Assert.assertEquals(liveText.length() + pastText.length(),
-				log.getSize());
-		Assert.assertEquals(liveText, log.getPath());
+		final DailyRollingLog log = new DailyRollingLog(new ByteArrayLog(liveText.getBytes()),
+				new ByteArrayLog(pastText.getBytes()));
+		Assert.assertEquals(liveText.length() + pastText.length(), log.getSize());
 
-		DailyRollingLogAccess logAccess = new DailyRollingLogAccess(
-				new ByteArrayLog(new byte[0]), log);
-		LineInputStream lis = new LineInputStream(logAccess,
-				logAccess.getInputStream(null), "UTF-8");
+		final DailyRollingLogAccess logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]), log);
+		LineInputStream lis = new LineInputStream(logAccess, logAccess.getInputStream(null), "UTF-8");
 		Assert.assertEquals(true, lis.getPointer().isSOF());
 		Assert.assertEquals(false, lis.getPointer().isEOF());
 		Assert.assertEquals("old-start", lis.readNextLine());
 		Assert.assertEquals(false, lis.getPointer().isSOF());
 		Assert.assertEquals(false, lis.getPointer().isEOF());
-		LogPointer rollingMarkOldMiddle = lis.getPointer();
+		final LogPointer rollingMarkOldMiddle = lis.getPointer();
 		Assert.assertEquals("old-next", lis.readNextLine());
 		Assert.assertEquals(false, lis.getPointer().isSOF());
 		Assert.assertEquals(false, lis.getPointer().isEOF());
-		LogPointer rollingMarkLiveStart = lis.getPointer();
+		final LogPointer rollingMarkLiveStart = lis.getPointer();
 		Assert.assertEquals("live", lis.readNextLine());
 		Assert.assertEquals(false, lis.getPointer().isSOF());
 		Assert.assertEquals(true, lis.getPointer().isEOF());
@@ -83,20 +76,16 @@ public class DailyRollingLogTest {
 		lis.close();
 
 		// Test mark in old
-		Assert.assertEquals(rollingMarkOldMiddle,
-				logAccess.getFromJSON(rollingMarkOldMiddle.getJson()));
-		lis = new LineInputStream(logAccess,
-				logAccess.getInputStream(rollingMarkOldMiddle), "UTF-8");
+		Assert.assertEquals(rollingMarkOldMiddle, logAccess.getFromJSON(rollingMarkOldMiddle.getJson()));
+		lis = new LineInputStream(logAccess, logAccess.getInputStream(rollingMarkOldMiddle), "UTF-8");
 		Assert.assertEquals("old-next", lis.readNextLine());
 		Assert.assertEquals("live", lis.readNextLine());
 		Assert.assertNull(lis.readNextLine());
 		lis.close();
 
 		// Test mark in live
-		Assert.assertEquals(rollingMarkLiveStart,
-				logAccess.getFromJSON(rollingMarkLiveStart.getJson()));
-		lis = new LineInputStream(logAccess,
-				logAccess.getInputStream(rollingMarkLiveStart), "UTF-8");
+		Assert.assertEquals(rollingMarkLiveStart, logAccess.getFromJSON(rollingMarkLiveStart.getJson()));
+		lis = new LineInputStream(logAccess, logAccess.getInputStream(rollingMarkLiveStart), "UTF-8");
 		Assert.assertEquals("live", lis.readNextLine());
 		Assert.assertNull(lis.readNextLine());
 		lis.close();
@@ -104,29 +93,24 @@ public class DailyRollingLogTest {
 
 	@Test
 	public void testPointerWithRolledLive() throws IOException {
-		String liveNewText = "liveNew1\nliveNew2\r\n";
-		String liveOldText = "liveOld1\nliveOld2\n";
-		String pastText = "old-start\nold-next\n";
-		DailyRollingLog log = new DailyRollingLog(new ByteArrayLog(
-				liveOldText.getBytes()), new ByteArrayLog(pastText.getBytes()));
+		final String liveNewText = "liveNew1\nliveNew2\r\n";
+		final String liveOldText = "liveOld1\nliveOld2\n";
+		final String pastText = "old-start\nold-next\n";
+		DailyRollingLog log = new DailyRollingLog(new ByteArrayLog(liveOldText.getBytes()),
+				new ByteArrayLog(pastText.getBytes()));
 
-		DailyRollingLogAccess logAccess = new DailyRollingLogAccess(
-				new ByteArrayLog(new byte[0]), log);
-		LineInputStream lis = new LineInputStream(logAccess,
-				logAccess.getInputStream(null), "UTF-8");
+		DailyRollingLogAccess logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]), log);
+		LineInputStream lis = new LineInputStream(logAccess, logAccess.getInputStream(null), "UTF-8");
 		Assert.assertEquals("old-start", lis.readNextLine());
 		Assert.assertEquals("old-next", lis.readNextLine());
 		Assert.assertEquals("liveOld1", lis.readNextLine());
-		LogPointer oldLiveMark = lis.getPointer();
+		final LogPointer oldLiveMark = lis.getPointer();
 		lis.close();
 
 		// Try the mark with the same log
-		log = new DailyRollingLog(new ByteArrayLog(liveOldText.getBytes()),
-				new ByteArrayLog(pastText.getBytes()));
-		logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]),
-				log);
-		lis = new LineInputStream(logAccess,
-				logAccess.getInputStream(oldLiveMark), "UTF-8");
+		log = new DailyRollingLog(new ByteArrayLog(liveOldText.getBytes()), new ByteArrayLog(pastText.getBytes()));
+		logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]), log);
+		lis = new LineInputStream(logAccess, logAccess.getInputStream(oldLiveMark), "UTF-8");
 		Assert.assertEquals(false, lis.getPointer().isSOF());
 		Assert.assertEquals(false, lis.getPointer().isEOF());
 		Assert.assertEquals("liveOld2", lis.readNextLine());
@@ -134,13 +118,10 @@ public class DailyRollingLogTest {
 		lis.close();
 
 		// Now roll the liveOld
-		log = new DailyRollingLog(new ByteArrayLog(liveNewText.getBytes()),
-				new ByteArrayLog(liveOldText.getBytes()), new ByteArrayLog(
-						pastText.getBytes()));
-		logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]),
-				log);
-		lis = new LineInputStream(logAccess,
-				logAccess.getInputStream(oldLiveMark), "UTF-8");
+		log = new DailyRollingLog(new ByteArrayLog(liveNewText.getBytes()), new ByteArrayLog(liveOldText.getBytes()),
+				new ByteArrayLog(pastText.getBytes()));
+		logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]), log);
+		lis = new LineInputStream(logAccess, logAccess.getInputStream(oldLiveMark), "UTF-8");
 		Assert.assertEquals(false, lis.getPointer().isSOF());
 		Assert.assertEquals(false, lis.getPointer().isEOF());
 		Assert.assertEquals("liveOld2", lis.readNextLine());
@@ -158,54 +139,41 @@ public class DailyRollingLogTest {
 
 	@Test
 	public void testRollingErrors() throws IOException {
-		String liveNewText = "liveNew1\nliveNew2\r\n";
-		String liveOldText = "liveOld1\nliveOld2\n";
-		String pastText = "old-start\nold-next\n";
-		DailyRollingLog log = new DailyRollingLog(new ByteArrayLog("past",
-				pastText.getBytes()));
-		DailyRollingLogAccess logAccess = new DailyRollingLogAccess(
-				new ByteArrayLog(new byte[0]), log);
-		LineInputStream lis = new LineInputStream(logAccess,
-				logAccess.getInputStream(null), "UTF-8");
+		final String liveNewText = "liveNew1\nliveNew2\r\n";
+		final String liveOldText = "liveOld1\nliveOld2\n";
+		final String pastText = "old-start\nold-next\n";
+		DailyRollingLog log = new DailyRollingLog(new ByteArrayLog("past", pastText.getBytes()));
+		DailyRollingLogAccess logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]), log);
+		LineInputStream lis = new LineInputStream(logAccess, logAccess.getInputStream(null), "UTF-8");
 		Assert.assertEquals("old-start", lis.readNextLine());
 		LogPointer mark = lis.getPointer();
 		lis.close();
 
 		// Detecting next archive failed
-		log = new DailyRollingLog(new ByteArrayLog("past",
-				liveOldText.getBytes()), new ByteArrayLog("other",
-				pastText.getBytes()));
-		logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]),
-				log);
-		lis = new LineInputStream(logAccess, logAccess.getInputStream(mark),
-				"UTF-8");
+		log = new DailyRollingLog(new ByteArrayLog("past", liveOldText.getBytes()),
+				new ByteArrayLog("other", pastText.getBytes()));
+		logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]), log);
+		lis = new LineInputStream(logAccess, logAccess.getInputStream(mark), "UTF-8");
 		Assert.assertEquals(true, lis.getPointer().isSOF());
 		Assert.assertEquals(false, lis.getPointer().isEOF());
 		Assert.assertEquals("old-start", lis.readNextLine());
 		lis.close();
 
 		// Unknown mark
-		log = new DailyRollingLog(new ByteArrayLog("pastUNKNOWN",
-				liveOldText.getBytes()), new ByteArrayLog("other",
-				pastText.getBytes()));
-		logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]),
-				log);
-		lis = new LineInputStream(logAccess, logAccess.getInputStream(mark),
-				"UTF-8");
+		log = new DailyRollingLog(new ByteArrayLog("pastUNKNOWN", liveOldText.getBytes()),
+				new ByteArrayLog("other", pastText.getBytes()));
+		logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]), log);
+		lis = new LineInputStream(logAccess, logAccess.getInputStream(mark), "UTF-8");
 		Assert.assertEquals(true, lis.getPointer().isSOF());
 		Assert.assertEquals(false, lis.getPointer().isEOF());
 		Assert.assertEquals("old-start", lis.readNextLine());
 		lis.close();
 
 		// Continue reading after two rolls
-		log = new DailyRollingLog(new ByteArrayLog("liveNew",
-				liveNewText.getBytes()), new ByteArrayLog("liveOld",
-				liveOldText.getBytes()), new ByteArrayLog("past",
-				pastText.getBytes()));
-		logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]),
-				log);
-		lis = new LineInputStream(logAccess, logAccess.getInputStream(null),
-				"UTF-8");
+		log = new DailyRollingLog(new ByteArrayLog("liveNew", liveNewText.getBytes()),
+				new ByteArrayLog("liveOld", liveOldText.getBytes()), new ByteArrayLog("past", pastText.getBytes()));
+		logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]), log);
+		lis = new LineInputStream(logAccess, logAccess.getInputStream(null), "UTF-8");
 		Assert.assertEquals("old-start", lis.readNextLine());
 		Assert.assertEquals("old-next", lis.readNextLine());
 		Assert.assertEquals("liveOld1", lis.readNextLine());
@@ -214,16 +182,12 @@ public class DailyRollingLogTest {
 		mark = lis.getPointer();
 		lis.close();
 
-		log = new DailyRollingLog(
-				new ByteArrayLog("liveNew", "zz\n".getBytes()),
+		log = new DailyRollingLog(new ByteArrayLog("liveNew", "zz\n".getBytes()),
 				new ByteArrayLog("unknown", "unknown\n".getBytes()),
 				new ByteArrayLog("continueHere", liveNewText.getBytes()),
-				new ByteArrayLog("liveOld", liveOldText.getBytes()),
-				new ByteArrayLog("past", pastText.getBytes()));
-		logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]),
-				log);
-		lis = new LineInputStream(logAccess, logAccess.getInputStream(mark),
-				"UTF-8");
+				new ByteArrayLog("liveOld", liveOldText.getBytes()), new ByteArrayLog("past", pastText.getBytes()));
+		logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]), log);
+		lis = new LineInputStream(logAccess, logAccess.getInputStream(mark), "UTF-8");
 		Assert.assertEquals(false, lis.getPointer().isSOF());
 		Assert.assertEquals(false, lis.getPointer().isEOF());
 		Assert.assertEquals("liveNew2", lis.readNextLine());
@@ -239,19 +203,15 @@ public class DailyRollingLogTest {
 
 		// The same, but with missing reference "liveOld" => Start from
 		// beginning
-		log = new DailyRollingLog(
-				new ByteArrayLog("liveNew", "zz\n".getBytes()),
+		log = new DailyRollingLog(new ByteArrayLog("liveNew", "zz\n".getBytes()),
 				new ByteArrayLog("unknown", "unknown\n".getBytes()),
 				new ByteArrayLog("continueHere", liveNewText.getBytes()),
 				new ByteArrayLog("past", pastText.getBytes()));
-		logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]),
-				log);
-		lis = new LineInputStream(logAccess, logAccess.getInputStream(mark),
-				"UTF-8");
+		logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]), log);
+		lis = new LineInputStream(logAccess, logAccess.getInputStream(mark), "UTF-8");
 		mark = lis.getPointer();
 		lis.close();
-		lis = new LineInputStream(logAccess, logAccess.getInputStream(mark),
-				"UTF-8");
+		lis = new LineInputStream(logAccess, logAccess.getInputStream(mark), "UTF-8");
 		Assert.assertEquals(true, lis.getPointer().isSOF());
 		Assert.assertEquals(false, lis.getPointer().isEOF());
 		Assert.assertEquals("old-start", lis.readNextLine());
@@ -259,12 +219,10 @@ public class DailyRollingLogTest {
 		lis.close();
 
 		// Mark in the past and with list changes, but with still stable pointer
-		log = new DailyRollingLog(
-				new ByteArrayLog("liveNew", "zz\n".getBytes()),
+		log = new DailyRollingLog(new ByteArrayLog("liveNew", "zz\n".getBytes()),
 				new ByteArrayLog("continueHere", liveNewText.getBytes()),
 				new ByteArrayLog("past", pastText.getBytes()));
-		lis = new LineInputStream(logAccess, logAccess.getInputStream(mark),
-				"UTF-8");
+		lis = new LineInputStream(logAccess, logAccess.getInputStream(mark), "UTF-8");
 		Assert.assertEquals(false, lis.getPointer().isSOF());
 		Assert.assertEquals(false, lis.getPointer().isEOF());
 		Assert.assertEquals("old-next", lis.readNextLine());
