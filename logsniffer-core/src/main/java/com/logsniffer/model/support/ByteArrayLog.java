@@ -19,12 +19,12 @@ package com.logsniffer.model.support;
 
 import java.io.IOException;
 
-import org.mortbay.jetty.security.Credential.MD5;
-
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogRawAccessor;
+
+import wiremock.org.mortbay.jetty.security.Credential.MD5;
 
 /**
  * Byte array log for tests.
