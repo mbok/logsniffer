@@ -17,6 +17,8 @@
  *******************************************************************************/
 package com.logsniffer.util.grok;
 
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 
@@ -30,8 +32,8 @@ import com.logsniffer.util.grok.Grok.TypeConverter;
  * 
  */
 public final class GrokMatcher implements MatchResult {
-	private Matcher regexMatcher;
-	private Grok grok;
+	private final Matcher regexMatcher;
+	private final Grok grok;
 
 	protected GrokMatcher(final Grok grok, final Matcher regexMatcher) {
 		this.grok = grok;
@@ -81,13 +83,13 @@ public final class GrokMatcher implements MatchResult {
 		return regexMatcher.group(grok.getGroupNames().get(groupName));
 	}
 
-	public void setToField(String groupName, FieldsMap fields) {
-		int groupIndex = grok.getGroupNames().get(groupName);
-		String strValue = regexMatcher.group(groupIndex);
+	public void setToField(final String groupName, final FieldsMap fields) {
+		final int groupIndex = grok.getGroupNames().get(groupName);
+		final String strValue = regexMatcher.group(groupIndex);
 		if (strValue != null) {
-			TypeConverter<Object> typeConverter = grok.getTypeConverters().get(groupIndex);
+			final TypeConverter<Object> typeConverter = grok.getTypeConverters().get(groupIndex);
 			if (typeConverter != null) {
-				Object targetValue = typeConverter.convert(strValue);
+				final Object targetValue = typeConverter.convert(strValue);
 				if (targetValue != null) {
 					fields.put(groupName, targetValue);
 				}
@@ -96,6 +98,28 @@ public final class GrokMatcher implements MatchResult {
 			}
 		} else {
 			fields.put(groupName, null);
+		}
+	}
+
+	public void setMatchingGroupsToFields(final FieldsMap fields, final boolean setAlsoNullValues) {
+		final Set<Entry<String, Integer>> entrySet = grok.getGroupNames().entrySet();
+		for (final Entry<String, Integer> group : entrySet) {
+			final int groupIndex = group.getValue();
+			final String groupName = group.getKey();
+			final String strValue = regexMatcher.group(groupIndex);
+			if (strValue != null) {
+				final TypeConverter<Object> typeConverter = grok.getTypeConverters().get(groupIndex);
+				if (typeConverter != null) {
+					final Object targetValue = typeConverter.convert(strValue);
+					if (targetValue != null) {
+						fields.put(groupName, targetValue);
+					}
+				} else {
+					fields.put(groupName, strValue);
+				}
+			} else if (setAlsoNullValues) {
+				fields.put(groupName, null);
+			}
 		}
 	}
 

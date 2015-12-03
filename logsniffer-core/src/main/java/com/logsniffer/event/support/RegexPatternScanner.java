@@ -68,10 +68,7 @@ public class RegexPatternScanner extends SingleEntryIncrementalMatcher
 			final GrokMatcher matcher = grok.matcher(value.toString());
 			if (matcher.matches()) {
 				final Event event = new Event();
-				final LinkedHashMap<String, Integer> groups = grok.getGroupNames();
-				for (final String attrName : groups.keySet()) {
-					matcher.setToField(attrName, event);
-				}
+				matcher.setMatchingGroupsToFields(event, false);
 				return event;
 			}
 		}

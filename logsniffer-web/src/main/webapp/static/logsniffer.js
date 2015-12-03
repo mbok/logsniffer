@@ -365,10 +365,14 @@ LogPosition.prototype.resetToEnd = function() {
 					}
 					html += '<td class="text '
 							+ fieldsTypes[name]
-							+ '">'
-							+ (e[name] != null ? printFieldValue(
-									fieldsTypes[name], e[name]) : '')
-							+ '</td>';
+							+ '">';
+					if (e.lf_unformatted) {
+						html += '- parsing error -';
+					} else {
+						html += (e[name] != null ? printFieldValue(
+									fieldsTypes[name], e[name]) : '');
+					}
+					html += '</td>';
 				}
 			} else {
 				html += '<tr sof="' + e.lf_startOffset.sof + '" start=\''

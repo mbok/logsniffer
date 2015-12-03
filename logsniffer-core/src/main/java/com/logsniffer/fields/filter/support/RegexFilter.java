@@ -78,10 +78,7 @@ public class RegexFilter implements FieldsFilter, GrokConsumer {
 			final Grok grok = grokBean.getGrok(groksRegistry);
 			final GrokMatcher matcher = grok.matcher(value.toString());
 			if (matcher.matches()) {
-				final LinkedHashMap<String, Integer> groups = grok.getGroupNames();
-				for (final String attrName : groups.keySet()) {
-					matcher.setToField(attrName, fields);
-				}
+				matcher.setMatchingGroupsToFields(fields, false);
 			}
 		}
 

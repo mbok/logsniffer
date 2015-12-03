@@ -18,13 +18,14 @@
 package com.logsniffer.model.support;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.UUID;
 
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogRawAccessor;
-
-import wiremock.org.mortbay.jetty.security.Credential.MD5;
 
 /**
  * Byte array log for tests.
@@ -64,7 +65,16 @@ public class ByteArrayLog
 	private final String path;
 
 	public ByteArrayLog(final byte[] data) {
-		this(MD5.digest(new String(data)), data);
+		this(getPath(data), data);
+	}
+
+	private static String getPath(final byte[] data) {
+		try {
+			return new String(MessageDigest.getInstance("MD5").digest(data));
+		} catch (final NoSuchAlgorithmException e) {
+			e.printStackTrace();
+			return UUID.randomUUID().toString();
+		}
 	}
 
 	public ByteArrayLog(final String path, final byte[] data) {
