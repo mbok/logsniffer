@@ -159,7 +159,7 @@ public abstract class FormattedTextReader extends AbstractPatternLineReader<Matc
 
 		@Override
 		protected void set(final LogEntry entry, final String match) throws FormatException {
-			entry.getFields().put(getFieldName(), match);
+			entry.put(getFieldName(), match);
 		}
 
 		@Override

@@ -1,3 +1,4 @@
+<div class="viewer-fullscreen" ngsf-fullscreen>
 <div class="lsf-viewer">
 		<style>
 .row.padded,.row.padded {
@@ -38,10 +39,16 @@
 .log-entries tr:hover td.zoom * {
 	visibility:visible;
 }
+.viewer-fullscreen.fullscreen {
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	padding: 10px;
+}
 </style>
 	<div class="backdrop-overlay" style="display:none"></div>
 	<div lsf-alerts alerts="alerts"></div>
-	<accordion close-others="false" ng-if="searchEnabled">
+	<accordion close-others="false" ng-if="searchEnabled" class="viewer-search">
 		<accordion-group is-open="searchSettings.expanded">
 	        <accordion-heading>
 	            Search<i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': !searchSettings.expanded, 'glyphicon-chevron-up': searchSettings.expanded}"></i>
@@ -130,13 +137,19 @@
 		</div>
 	</div>
 	
-	<div class="text-right" ng-if="isFollowEnabled">
-		<span style="visibility:hidden" id="slow-following-popup" data-toggle="popover" data-placement="left" data-content="The log is being written to fast in the background. Following is lagging behind the tail...">x</span>
-		<button type="button" class="btn tail-follow"
-			data-toggle="button"
-			ng-click="toggleTailFollow()" ng-class="tailFollowEnabled ? 'btn-info' : 'btn-default'"
-			onclick="this.blur()">
-			<i class="fa fa-refresh" ng-class="{'fa-spin': tailFollowEnabled}"></i> tail &amp; follow
+	<div class="text-right">
+		<button type="button" class="btn btn-default" ng-class="fullscreen ? 'btn-info' : 'btn-default'" ngsf-toggle-fullscreen>
+			<i class="glyphicon" ng-class="fullscreen ? 'glyphicon-resize-small' : 'glyphicon-fullscreen'" title="Resize log viewer to full screen"></i>
 		</button>
+		<span ng-if="isFollowEnabled">
+			<span style="visibility:hidden" id="slow-following-popup" data-toggle="popover" data-placement="left" data-content="The log is being written to fast in the background. Following is lagging behind the tail...">x</span>
+			<button type="button" class="btn tail-follow"
+				data-toggle="button"
+				ng-click="toggleTailFollow()" ng-class="tailFollowEnabled ? 'btn-info' : 'btn-default'"
+				onclick="this.blur()">
+				<i class="fa fa-refresh" ng-class="{'fa-spin': tailFollowEnabled}"></i> tail &amp; follow
+			</button>
+		</span>
 	</div>
+</div>
 </div>

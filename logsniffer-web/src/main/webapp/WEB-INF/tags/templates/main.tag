@@ -29,6 +29,8 @@
 		<script src="<c:url value="/static/slider/js/bootstrap-slider.js" />"></script>
 		<link href="<c:url value="/static/json-formatter/json-formatter.min.css" />" rel="stylesheet" />
 		<script src="<c:url value="/static/json-formatter/json-formatter.min.js" />"></script>	
+		<script src="<c:url value="/static/screenfull/screenfull.min.js" />"></script>
+		<script src="<c:url value="/static/screenfull/angular-screenfull.min.js" />"></script>
 		<link href="<c:url value="/static/fontawesome/css/font-awesome.min.css" />" rel="stylesheet" />
 		<script src="<%=request.getContextPath()%>/static/logsniffer.js"></script>
 		<script src="<%=request.getContextPath()%>/static/logsniffer.ng-core.js"></script>
@@ -42,7 +44,7 @@
 		</script>
 		<script type="text/javascript">
 			LogSniffer.config.contextPath = '${request.contextPath}';
-			var LogSnifferNgApp=angular.module('LogSnifferNgApp', ['LogSnifferCore', 'ui.bootstrap', 'angularSpinner', 'MessageCenterModule',${ngModules}]);
+			var LogSnifferNgApp=angular.module('LogSnifferNgApp', ['LogSnifferCore', 'ui.bootstrap', 'angularSpinner', 'MessageCenterModule', 'angularScreenfull',${ngModules}]);
 			LogSnifferNgApp.config(function($controllerProvider, $compileProvider, $filterProvider, $provide)
 		    {
 			    LogSnifferNgApp.controllerProvider = $controllerProvider;

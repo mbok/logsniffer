@@ -395,7 +395,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 			incrementalSearch(pointer);
 		};
 	   },
-	   link: function(scope, element, attrs, $timeout) {
+	   link: function(scope, element, attrs) {
 		var loadingEntries=false;
 		if (!$.LogSniffer._viewerEntries) {
 		    $.LogSniffer._viewerEntries = [];
@@ -407,6 +407,55 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		scope.backdropOverlay = $(element).find(".backdrop-overlay");
 		scope.fieldTypes = {};
 		scope.alerts = lsfAlerts.create();
+		scope.fullscreen = false;
+		scope.frameHeightBeforeFullscreen = null;
+		
+		scope.$on("fullscreenEnabled", function() {
+			scope.fullscreen = true;
+			$log.debug("Viewer switched to fullscreen");
+			var resizeViewer = function (count) {
+				$timeout(function() {
+					var searchPanelHeight = $(element).find(".viewer-search .panel-body:visible").outerHeight(true);
+					if (searchPanelHeight == null) {
+						searchPanelHeight = 0;
+					}
+					var viewerScreenHeight = $(element).find(".lsf-viewer").height() + 10;
+					var windowHeight = $(".viewer-fullscreen.fullscreen").height();
+					if (windowHeight == null) {
+						if (count > 3) {
+							$log.error("Failed to resize viewer in full screen, because no viewer with fullsreen class found");
+							return;
+						} else {
+							resizeViewer(count + 1);
+							return;
+						}
+					}
+					var currentEntriesFrameHeight = $(element).find("#log-entries-frame").height();
+					scope.frameHeightBeforeFullscreen = currentEntriesFrameHeight;
+					$log.debug("Fullscreen metrics: window, viewer, searchPanel, entriesFrameHeight height: ", windowHeight, viewerScreenHeight, searchPanelHeight, currentEntriesFrameHeight);
+					if (windowHeight < (viewerScreenHeight - searchPanelHeight)) {
+						var reduceTo = currentEntriesFrameHeight - (viewerScreenHeight - searchPanelHeight - windowHeight);
+						$log.debug("Reduce entries frame in fullscreen to:", reduceTo);
+						$(element).find("#log-entries-frame").height(reduceTo);
+					} else {
+						var incTo = currentEntriesFrameHeight + (windowHeight - viewerScreenHeight + searchPanelHeight);
+						$log.debug("Increase entries frame in fullscreen to:", incTo);
+						$(element).find("#log-entries-frame").height(incTo);				
+					}
+				}, 100);
+			};
+			resizeViewer(1);
+		});
+		scope.$on("fullscreenDisabled", function() {
+			scope.fullscreen = false;
+			$log.debug("Viewer switched to normal screen");
+			if (scope.frameHeightBeforeFullscreen) {
+				$log.debug("Set entries frame height back to:", scope.frameHeightBeforeFullscreen);
+				$(element).find("#log-entries-frame").height(scope.frameHeightBeforeFullscreen);
+				scope.frameHeightBeforeFullscreen = null;
+			}
+		});
+		
 		
 		function emptyViewerEntries() {
 		    $.LogSniffer._viewerEntries[viewerEntriesId] = {};
@@ -459,7 +508,8 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 			var entriesPadding=$(element).find("#log-entries-frame").outerHeight(true) - $(element).find("#log-entries-frame").innerHeight();
 			var entriesOffset=$(element).find("#log-entries-frame").offset();
 			var x=entriesOffset.left + 50;
-			var y = Math.max(scope.fixTopElementSelector ? $(scope.fixTopElementSelector).height() + 1 : 0, entriesOffset.top + entriesPadding / 2 - $(window).scrollTop());
+			var y = 3 + Math.max(!scope.fullscreen && scope.fixTopElementSelector ? $(scope.fixTopElementSelector).height() + 1 : 0, entriesOffset.top + entriesPadding / 2 - (scope.fullscreen ? 0 : $(window).scrollTop()));
+			$log.debug("Y: ",entriesOffset);
 			var elem=document.elementFromPoint(x, y);
 			if (true && (!elem || $(elem).parents("table").length==0)) {
 				// Select first row

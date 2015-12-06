@@ -366,7 +366,7 @@ LogPosition.prototype.resetToEnd = function() {
 					html += '<td class="text '
 							+ fieldsTypes[name]
 							+ '">';
-					if (e.lf_unformatted) {
+					if (e[name] == null && e.lf_unformatted) {
 						html += '- parsing error -';
 					} else {
 						html += (e[name] != null ? printFieldValue(

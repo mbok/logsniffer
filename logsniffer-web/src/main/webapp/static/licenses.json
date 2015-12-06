@@ -1,0 +1,16 @@
+[
+	{
+		name: "screenfull.js",
+		url: "https://github.com/sindresorhus/screenfull.js",
+		license: "MIT",
+		lastUpdate: "2015-12-04",
+		location: "/logsniffer-web/src/main/webapp/static/screenfull"
+	},
+	{
+		name: "angular-screenfull",
+		url: "https://github.com/hrajchert/angular-screenfull",
+		license: "MIT",
+		lastUpdate: "2015-12-04",
+		location: "/logsniffer-web/src/main/webapp/static/screenfull"
+	}
+]
