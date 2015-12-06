@@ -411,6 +411,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		scope.frameHeightBeforeFullscreen = null;
 		
 		scope.$on("fullscreenEnabled", function() {
+			scope.forceScrollToBottom = scope.isTailFollowOnHead();
 			scope.fullscreen = true;
 			$log.debug("Viewer switched to fullscreen");
 			var resizeViewer = function (count) {
@@ -419,7 +420,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 					if (searchPanelHeight == null) {
 						searchPanelHeight = 0;
 					}
-					var viewerScreenHeight = $(element).find(".lsf-viewer").height() + 10;
+					var viewerScreenHeight = $(element).find(".lsf-viewer").height();
 					var windowHeight = $(".viewer-fullscreen.fullscreen").height();
 					if (windowHeight == null) {
 						if (count > 3) {
@@ -434,13 +435,13 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 					scope.frameHeightBeforeFullscreen = currentEntriesFrameHeight;
 					$log.debug("Fullscreen metrics: window, viewer, searchPanel, entriesFrameHeight height: ", windowHeight, viewerScreenHeight, searchPanelHeight, currentEntriesFrameHeight);
 					if (windowHeight < (viewerScreenHeight - searchPanelHeight)) {
-						var reduceTo = currentEntriesFrameHeight - (viewerScreenHeight - searchPanelHeight - windowHeight);
+						var reduceTo = Math.max(250, currentEntriesFrameHeight - (viewerScreenHeight - searchPanelHeight - windowHeight)) + 10;
 						$log.debug("Reduce entries frame in fullscreen to:", reduceTo);
 						$(element).find("#log-entries-frame").height(reduceTo);
 					} else {
-						var incTo = currentEntriesFrameHeight + (windowHeight - viewerScreenHeight + searchPanelHeight);
+						var incTo = Math.max(250, currentEntriesFrameHeight + (windowHeight - viewerScreenHeight + searchPanelHeight)) - 10;
 						$log.debug("Increase entries frame in fullscreen to:", incTo);
-						$(element).find("#log-entries-frame").height(incTo);				
+						$(element).find("#log-entries-frame").height(incTo);
 					}
 				}, 100);
 			};
@@ -448,6 +449,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		});
 		scope.$on("fullscreenDisabled", function() {
 			scope.fullscreen = false;
+			scope.forceScrollToBottom = scope.isTailFollowOnHead();
 			$log.debug("Viewer switched to normal screen");
 			if (scope.frameHeightBeforeFullscreen) {
 				$log.debug("Set entries frame height back to:", scope.frameHeightBeforeFullscreen);
@@ -570,20 +572,20 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
         		    $log.debug("Truncating overflow entries from sliding window", overflow);
         		    var cutHeight = $(table).height();
         		    for (var i=0; i < overflow; i++) {
-        			var rowIndex = cutHead ? 0 : table.rows.length - 1;
-        			var row = $(table.rows[rowIndex]);
-        			var idCell = row.find("td.zoom a");
-        			if (idCell.length > 0) {
-        			    var entryId = idCell.attr("id");
-        			    delete logEntries[entryId];			    
-        			}
-        			table.deleteRow(rowIndex);
+	        			var rowIndex = cutHead ? 0 : table.rows.length - 1;
+	        			var row = $(table.rows[rowIndex]);
+	        			var idCell = row.find("td.zoom a");
+	        			if (idCell.length > 0) {
+	        			    var entryId = idCell.attr("id");
+	        			    delete logEntries[entryId];			    
+	        			}
+	        			table.deleteRow(rowIndex);
         		    }
         		    cutHeight = cutHeight - $(table).height();
         		    if (adaptScroll && cutHead && cutHeight > 0) {
-        			var newScroll = Math.max(10, oldScroll - cutHeight);
-        			$log.debug("Scrolling after truncation of sliding window from/to", oldScroll, newScroll);
-        			$(element).find('#log-entries-frame').scrollTop(newScroll);
+	        			var newScroll = Math.max(10, oldScroll - cutHeight);
+	        			$log.debug("Scrolling after truncation of sliding window from/to", oldScroll, newScroll);
+	        			$(element).find('#log-entries-frame').scrollTop(newScroll);
         		    }
         		    $log.debug("Truncated overflow entries from sliding window in ms", overflow, new Date().getTime() - now.getTime());
 		    }
@@ -792,6 +794,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 
 		var followTailTimeout;
 		var followSpinner;
+		scope.forceScrollToBottom = false;
 		function followTail(enabled, trigger) {
 			if (enabled && (trigger || scope.tailFollowEnabled)) {
 				if (!followSpinner) {
@@ -807,7 +810,8 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 					var scrollOnBottom=scrollTop+scrollArea.outerHeight() >= scrollHeight;
 					$(element).find('.log-entries tbody').append($.LogSniffer.entriesRows(scope.fieldTypes, data.entries, renderPrefixCells));
 					console.log("Jump to log tail: "+scrollOnBottom);
-					if (scrollOnBottom || trigger) {
+					if (scrollOnBottom || trigger || scope.forceScrollToBottom) {
+						scope.forceScrollToBottom = false;
 						adaptSlidingEntriesWindow(true, false);
 						scrollArea.scrollTop(scrollArea[0].scrollHeight);
 						updateLogPositioner(true, true);
@@ -844,7 +848,17 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 				followTailTimeout = null;
 			}
 		}
-		
+		scope.isTailFollowOnHead = function() {
+			if (scope.tailFollowEnabled) {
+				var scrollArea=$(element).find("#log-entries-frame");
+				var scrollTop=scrollArea.scrollTop();
+				var scrollHeight=scrollArea[0].scrollHeight;
+				var scrollOnBottom=scrollTop+scrollArea.outerHeight() >= scrollHeight;
+				return scrollOnBottom;
+			}
+			return false;
+		};
+
 		// Clean code
 		scope.$on('controlPositionChanged', function(event, args) {
 		   scope.mark = args.newPointer;
