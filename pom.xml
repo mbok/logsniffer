@@ -215,11 +215,6 @@
 				<version>0.2.3</version>
 			</dependency>
 			<dependency>
-				<groupId>com.google.visualization</groupId>
-				<artifactId>visualization-datasource</artifactId>
-				<version>1.1.1</version>
-			</dependency>
-			<dependency>
 				<groupId>org.elasticsearch</groupId>
 				<artifactId>elasticsearch</artifactId>
 				<version>1.4.2</version>

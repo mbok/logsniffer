@@ -149,11 +149,11 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 						}
 					}
 					entry = new LogEntry();
-					entry.setStartOffset(lastOffset);
 					text = new StringBuilder(line);
 					if (ctx != null) {
 						fillAttributes(entry, ctx);
 					}
+					entry.setStartOffset(lastOffset);
 				} else {
 					linesWithoutPattern++;
 					if (entry == null) {

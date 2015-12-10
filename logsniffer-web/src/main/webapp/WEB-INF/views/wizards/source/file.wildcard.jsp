@@ -10,7 +10,7 @@
 	<div class="row">
 		<t:ngFormFieldWrapper cssClass="form-group col-md-12 required" fieldName="pattern">
 			<lsf-info-label label="File path pattern:" for="pattern">
-				<div ng-include="contextPath + '/ng/help/logsByAntPathExpression.html'"></div>
+				<div ng-include="contextPath + '/ng/help/logsByAntPathExpression.html?v='+version"></div>
 			</lsf-info-label>
 			<input type="text" ng-model="bean.pattern" name="pattern" id="pattern" class="form-control pattern" required>
 		</t:ngFormFieldWrapper>

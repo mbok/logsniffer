@@ -35,11 +35,18 @@ public class ConfigBeanWizardProvider {
 	@Autowired(required = false)
 	private ConfigBeanWizard<?>[] wizards;
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <BeanType extends ConfiguredBean> ConfigBeanWizard<BeanType>[] getWizards(
-			Class<BeanType> supportType) {
-		ArrayList<ConfigBeanWizard<BeanType>> wzs = new ArrayList<ConfigBeanWizard<BeanType>>();
-		for (ConfigBeanWizard<?> wizard : wizards) {
+			final Class<BeanType> supportType) {
+		final ArrayList<ConfigBeanWizard<BeanType>> wzs = new ArrayList<ConfigBeanWizard<BeanType>>();
+		for (final ConfigBeanWizard<?> wizard : wizards) {
+			if (wizard instanceof ExclusiveConfigBeanWizard
+					&& ((ExclusiveConfigBeanWizard) wizard).getExclusiveType() != null) {
+				if (supportType == ((ExclusiveConfigBeanWizard) wizard).getExclusiveType()) {
+					wzs.add((ConfigBeanWizard<BeanType>) wizard);
+				}
+				continue;
+			}
 			if (supportType.isAssignableFrom(wizard.getBeanType())) {
 				wzs.add((ConfigBeanWizard<BeanType>) wizard);
 			}
@@ -47,10 +54,17 @@ public class ConfigBeanWizardProvider {
 		return wzs.toArray(new ConfigBeanWizard[wzs.size()]);
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <BeanType extends ConfiguredBean> ConfigBeanWizard<BeanType> getWizard(
-			Class<BeanType> actualBeanClass) {
-		for (ConfigBeanWizard<?> wizard : wizards) {
+			final Class<BeanType> actualBeanClass) {
+		for (final ConfigBeanWizard<?> wizard : wizards) {
+			if (wizard instanceof ExclusiveConfigBeanWizard
+					&& ((ExclusiveConfigBeanWizard) wizard).getExclusiveType() != null) {
+				if (actualBeanClass == ((ExclusiveConfigBeanWizard) wizard).getExclusiveType()) {
+					return (ConfigBeanWizard<BeanType>) wizard;
+				}
+			}
+
 			if (actualBeanClass.isAssignableFrom(wizard.getBeanType())) {
 				return (ConfigBeanWizard<BeanType>) wizard;
 			}

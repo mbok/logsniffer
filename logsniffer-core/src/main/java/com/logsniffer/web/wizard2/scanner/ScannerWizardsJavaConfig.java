@@ -20,6 +20,8 @@ package com.logsniffer.web.wizard2.scanner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.logsniffer.event.filter.EventFilter;
+import com.logsniffer.event.filter.support.EntriesFieldsDumper;
 import com.logsniffer.event.support.RegexPatternScanner;
 import com.logsniffer.web.wizard2.ConfigBeanWizard;
 import com.logsniffer.web.wizard2.SimpleBeanWizard;
@@ -35,10 +37,17 @@ public class ScannerWizardsJavaConfig {
 
 	@Bean
 	public ConfigBeanWizard<RegexPatternScanner> grokPatternScannerWizard() {
-		RegexPatternScanner template = new RegexPatternScanner();
+		final RegexPatternScanner template = new RegexPatternScanner();
 		template.getGrokBean().setSubStringSearch(true);
 		return new SimpleBeanWizard<RegexPatternScanner>("logsniffer.wizard.scanner.regexPattern",
 				"/ng/wizards/scanner/regexPattern.html", RegexPatternScanner.class, template);
 	}
 
+	@Bean
+	public ConfigBeanWizard<EntriesFieldsDumper> entriesFieldsDumperWizard() {
+		final EntriesFieldsDumper template = new EntriesFieldsDumper();
+		return new SimpleBeanWizard<EntriesFieldsDumper>("logsniffer.wizard.scanner.filter.entriesFieldsDumper",
+				"/ng/wizards/scanner/filter/entriesFieldsDumper.html", EntriesFieldsDumper.class, template,
+				EventFilter.class);
+	}
 }

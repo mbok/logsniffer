@@ -39,8 +39,7 @@ public class NavigationAppConfig {
 	 * @return the settings root node exposed by {@link Qualifier}
 	 *         {@value NavigationAppConfig#NAV_NODE_SETTINGS}.
 	 */
-	@Bean
-	@Qualifier(NAV_NODE_SETTINGS)
+	@Bean(name = NAV_NODE_SETTINGS)
 	public NavNode settingsNode() {
 		final NavNode settings = new NavNode("Settings", "settings");
 

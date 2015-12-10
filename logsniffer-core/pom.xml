@@ -161,12 +161,6 @@
 			<artifactId>named-regexp</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.google.visualization</groupId>
-			<artifactId>visualization-datasource</artifactId>
-			<!-- Not used now, deprecated code -->
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 		</dependency>

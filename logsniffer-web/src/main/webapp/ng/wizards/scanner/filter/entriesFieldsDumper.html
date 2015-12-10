@@ -1,0 +1,23 @@
+<div>
+	<lsf-info-label label="Copies fields of entries to event fields">
+		This filter copies fields from the first entry of the processed event directly to the event fields. 
+		The typical used cases for doing that are:
+		<ul>
+			<li>To access nested log entry fields by subsequent filters</li>
+			<li>To reduce the amount of indexed event data. Select for this purpose the deletion flag and exclude the raw log message from copying.</li>
+		</ul>
+		
+	</lsf-info-label>
+	<div class="row">
+		<div class="col-md-4">
+			<label for="deleteEntries" class="control-label">
+				<input type="checkbox" id="deleteEntries" ng-model="bean.deleteEntries"> Delete entries afterwards
+			</label>
+		</div>
+		<div class="col-md-4">
+			<label for="excludeRaw" class="control-label">
+				<input type="checkbox" id="excludeRaw" ng-model="bean.excludeRaw"> Exclude copying raw log message
+			</label>
+		</div>
+	</div>
+</div>

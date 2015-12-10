@@ -22,7 +22,7 @@
 	<t:ngFormFieldWrapper cssClass="form-group col-md-12 required" fieldName="subject">
 		<lsf-info-label label="Subject:" for="subject">The mail subject is rendered using Velocity template engine and enables to include event data passed
 				in attribute <code>event</code>.
-				<div ng-include="contextPath + '/ng/help/velocity4events.html'"></div>
+				<div ng-include="contextPath + '/ng/help/velocity4events.html?v='+version"></div>
 		</lsf-info-label>
 		<input type="text" name="subject" id="subject" ng-model="bean.subject" class="form-control" placeholder="Mail subject"
 			required="required">
@@ -33,7 +33,7 @@
 	<t:ngFormFieldWrapper cssClass="form-group col-md-12" fieldName="textMessage">
 		<lsf-info-label label="Text:" for="textMessage">The mail text is rendered using Velocity template engine and enables to include event data passed
 				in attribute <code>event</code>.
-				<div ng-include="contextPath + '/ng/help/velocity4events.html'"></div>
+				<div ng-include="contextPath + '/ng/help/velocity4events.html?v='+version"></div>
 		</lsf-info-label>
 		<textarea class="form-control" id="textMessage" rows="8" name="textMessage" ng-model="bean.textMessage" placeholder="Mail text"></textarea>
 	</t:ngFormFieldWrapper>

@@ -30,7 +30,12 @@
 		    $scope.scannerWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.event.Scanner', pageContext.response.locale))};
 			$scope.readerStrategyWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.event.LogEntryReaderStrategy', pageContext.response.locale))};
 		    $scope.publisherWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.event.Publisher', pageContext.response.locale))};
-			$scope.scannerFilterWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.fields.filter.FieldsFilter', pageContext.response.locale))};
+			$scope.scannerFilterWizards=${logfn:jsonify(
+					logfn:mergeLists(
+						logfn:wizardsInfo('com.logsniffer.fields.filter.FieldsFilter', pageContext.response.locale),
+						logfn:wizardsInfo('com.logsniffer.event.filter.EventFilter', pageContext.response.locale)
+					)
+				)};
 		    $scope.sharedScope = {};
 		    $scope.testSession = {};
 			$scope.formValidation = {

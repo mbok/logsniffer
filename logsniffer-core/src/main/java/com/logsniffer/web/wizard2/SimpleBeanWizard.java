@@ -27,19 +27,25 @@ import com.logsniffer.config.ConfiguredBean;
  * @param <BeanType>
  *            the bean type
  */
-public class SimpleBeanWizard<BeanType extends ConfiguredBean> implements
-		ConfigBeanWizard<BeanType> {
+public class SimpleBeanWizard<BeanType extends ConfiguredBean> implements ExclusiveConfigBeanWizard<BeanType> {
 	private final String nameKey;
 	private final String wizardView;
 	private final Class<BeanType> beanType;
 	private final BeanType template;
+	private Class<? super BeanType> exclusiveType;
 
-	public SimpleBeanWizard(final String nameKey, final String wizardView,
-			final Class<BeanType> beanType, final BeanType template) {
+	public SimpleBeanWizard(final String nameKey, final String wizardView, final Class<BeanType> beanType,
+			final BeanType template) {
 		this.nameKey = nameKey;
 		this.wizardView = wizardView;
 		this.beanType = beanType;
 		this.template = template;
+	}
+
+	public SimpleBeanWizard(final String nameKey, final String wizardView, final Class<BeanType> beanType,
+			final BeanType template, final Class<? super BeanType> exclusiveType) {
+		this(nameKey, wizardView, beanType, template);
+		this.exclusiveType = exclusiveType;
 	}
 
 	@Override
@@ -60,6 +66,14 @@ public class SimpleBeanWizard<BeanType extends ConfiguredBean> implements
 	@Override
 	public BeanType getTemplate() {
 		return template;
+	}
+
+	/**
+	 * @return the exclusiveType
+	 */
+	@Override
+	public Class<? super BeanType> getExclusiveType() {
+		return exclusiveType;
 	}
 
 }

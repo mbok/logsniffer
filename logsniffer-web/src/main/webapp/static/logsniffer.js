@@ -838,3 +838,12 @@ LogSniffer.hasKeysExpectOf = function(source, keys, startsWith) {
 	}
 	return total > matching;
 };
+
+LogSniffer.getFieldType = function (fields, fieldName) {
+	if (fields && fields["@types"] && fields["@types"][fieldName]) {
+	    return fields["@types"][fieldName];
+	} else {
+	    return null;
+	}
+};
+

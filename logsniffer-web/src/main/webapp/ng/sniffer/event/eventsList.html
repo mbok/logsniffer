@@ -139,14 +139,16 @@
 		</div>
 		<div>
 			<div class="event log" ng-repeat="event in eventsList.items" onmouseenter="$(this).find('.hidden2').fadeIn('fast')" onmouseleave="$(this).find('.hidden2').fadeOut('fast')">
-				<div class="thumbnail desc" ng-if="event.lf_entries[0].lf_raw">
-					<div class="text severity sc-{{event._[0].lf_severity.c}}">{{event.lf_entries[0].lf_raw | cut:false:1024:'...'}}</div>
+				<div class="thumbnail desc">
+					<div ng-if="event.lf_entries && event.lf_entries[0] && event.lf_entries[0].lf_raw" class="text severity sc-{{event._[0].lf_severity.c}}">{{event.lf_entries[0].lf_raw | cut:false:1024:'...'}}</div>
+					<div ng-if="!event.lf_entries || !event.lf_entries[0] || !event.lf_entries[0].lf_raw"><lsf-fields-teaser fields="event" limit="1024" exclude="teaserExcludeFields"></lsf-fields-teaser></div>
 				</div>
 				<div class="well well-sm post-desc">
 					<div class="clearfix">
 						<div class="pull-left hidden2" style="position:absolute">
 							<a class="btn btn-default btn-xs" href="#/{{event._id}}"><i class="glyphicon glyphicon-bullhorn"></i> Open event</a>
-							<a class="btn btn-default btn-xs" href="{{contextPath}}/c/sources/{{event.lf_logSourceId}}/show?log={{event.lf_logPath | escape}}#?pointer={{event.lf_entries[0].lf_startOffset.json | json:0 | escape}}"><i class="glyphicon glyphicon-list"></i> Open in log</a>
+							<a class="btn btn-default btn-xs" ng-if="event.lf_entries && event.lf_entries[0] && event.lf_entries[0].lf_startOffset" 
+								href="{{contextPath}}/c/sources/{{event.lf_logSourceId}}/show?log={{event.lf_logPath | escape}}#?pointer={{event.lf_entries[0].lf_startOffset.json | json:0 | escape}}"><i class="glyphicon glyphicon-list"></i> Open in log</a>
 							<!-- <a class="btn btn-default btn-xs" href="#"><i class="glyphicon glyphicon-bookmark"></i> Bookmark</a>
 							<a class="btn btn-default btn-xs" href="#"><i class="glyphicon glyphicon-eye-open"></i> Mark as read</a>
 							<a class="btn btn-default btn-xs" href ng-click="deleteEvent($index, event)"><i class="glyphicon glyphicon-trash"></i> Delete event</a>							

@@ -15,7 +15,7 @@
 	    <script type="text/javascript" src="<c:url value="/static/date.js" />"></script>
 		<script type="text/javascript" src="<c:url value="/static/angular/ng-google-chart.js" />"></script>
 
-	    <script type="text/javascript" src="<c:url value="/ng/sniffer/event/events.js" />"></script>
+	    <script type="text/javascript" src="<c:url value="/ng/sniffer/event/events.js?v=${logsnifferProps['logsniffer.version']}" />"></script>
 	
 		<script type="text/javascript">
 			angular.module('EventsRootModule',[])

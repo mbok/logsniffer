@@ -137,10 +137,11 @@ public class LogEntriesRestController {
 	@RequestMapping(value = "/sources/randomAccessEntries", method = RequestMethod.POST)
 	@ResponseBody
 	LogEntriesResult getRandomAccessEntries(@Valid @RequestBody final LogSource<LogInputStream> activeLogSource,
-			@RequestParam("log") final String logPath, @RequestParam(value = "mark") final String mark)
+			@RequestParam("log") final String logPath, @RequestParam(value = "mark") final String mark,
+			@RequestParam(value = "count") final int count)
 					throws IOException, FormatException, ResourceNotFoundException {
-		logger.debug("Start loading random access entries log={} from source={}, mark={}", logPath, activeLogSource,
-				mark);
+		logger.debug("Start loading random access entries log={} from source={}, mark={}, count={}", logPath,
+				activeLogSource, mark, count);
 		try {
 			final Log log = getLog(activeLogSource, logPath);
 			final LogRawAccess<LogInputStream> logAccess = activeLogSource.getLogAccess(log);
@@ -148,7 +149,7 @@ public class LogEntriesRestController {
 			if (StringUtils.isNotEmpty(mark)) {
 				pointer = logAccess.getFromJSON(mark);
 			}
-			final BufferedConsumer bc = new BufferedConsumer(SourcesController.DEFAULT_ENTRIES_COUNT + 1);
+			final BufferedConsumer bc = new BufferedConsumer(count + 1);
 			if (pointer != null) {
 				pointer = logAccess.createRelative(pointer, 0);
 				if (pointer.isEOF()) {
@@ -187,12 +188,14 @@ public class LogEntriesRestController {
 	@RequestMapping(value = "/sources/{logSource}/randomAccessEntries", method = RequestMethod.GET)
 	@ResponseBody
 	LogEntriesResult getRandomAccessEntries(@PathVariable("logSource") final long logSource,
-			@RequestParam("log") final String logPath, @RequestParam(value = "mark") final String mark)
+			@RequestParam("log") final String logPath, @RequestParam(value = "mark") final String mark,
+			@RequestParam(value = "count") final int count)
 					throws IOException, FormatException, ResourceNotFoundException {
-		logger.debug("Start loading random access entries log={} from source={}, mark={}", logPath, logSource, mark);
+		logger.debug("Start loading random access entries log={} from source={}, mark={}, count={}", logPath, logSource,
+				mark, count);
 		try {
 			final LogSource<LogInputStream> activeLogSource = getActiveLogSource(logSource);
-			return getRandomAccessEntries(activeLogSource, logPath, mark);
+			return getRandomAccessEntries(activeLogSource, logPath, mark, count);
 		} finally {
 			logger.debug("Finished loading random access entries from log={} and source={}", logPath, logSource);
 		}

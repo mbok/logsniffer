@@ -10,7 +10,7 @@
 <tpl:bodyFull title="${activeSniffer.name } - Edit" activeNavbar="sniffers" ngModules="'SnifferEditorModule'">
 	
 	<jsp:attribute name="htmlHead">
-		<script type="text/javascript" src="<c:url value="/ng/sniffer/snifferTest.js" />"></script>
+		<script type="text/javascript" src="<c:url value="/ng/sniffer/snifferTest.js?v=${logsnifferProps['logsniffer.version']}" />"></script>
 	</jsp:attribute>
 	<jsp:body>
 		<jsp:include page="sniffer.breadcrumb.jsp">

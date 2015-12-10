@@ -58,7 +58,7 @@ public class RegexPatternScanner extends SingleEntryIncrementalMatcher
 
 	@JsonProperty
 	@NotEmpty
-	private String sourceField;
+	private String sourceField = LogEntry.FIELD_RAW_CONTENT;
 
 	@Override
 	public Event matches(final LogEntry entry) throws FormatException {

@@ -4,7 +4,7 @@
 
 		$scope.showGroks = function () {
 			$modal.open({
-			      templateUrl: $scope.contextPath + '/ng/help/listGroks.html',
+			      templateUrl: $scope.contextPath + '/ng/help/listGroks.html?v=' + LogSniffer.config.version,
 			      controller: 'GroksListController',
 			      size: 'lg',
 			      windowClass: 'groks-list-modal',

@@ -32,9 +32,9 @@
 		<script src="<c:url value="/static/screenfull/screenfull.min.js" />"></script>
 		<script src="<c:url value="/static/screenfull/angular-screenfull.min.js" />"></script>
 		<link href="<c:url value="/static/fontawesome/css/font-awesome.min.css" />" rel="stylesheet" />
-		<script src="<%=request.getContextPath()%>/static/logsniffer.js"></script>
-		<script src="<%=request.getContextPath()%>/static/logsniffer.ng-core.js"></script>
-		<link href="<c:url value="/static/logsniffer.css" />" rel="stylesheet" />
+		<script src="<%=request.getContextPath()%>/static/logsniffer.js?v=${logsnifferProps['logsniffer.version']}"></script>
+		<script src="<%=request.getContextPath()%>/static/logsniffer.ng-core.js?v=${logsnifferProps['logsniffer.version']}"></script>
+		<link href="<c:url value="/static/logsniffer.css" />?v=${logsnifferProps['logsniffer.version']}" rel="stylesheet" />
 		<script type="text/javascript">
 			Spinner.defaults={ lines: 8, length: 4, width: 3, radius: 5 };
 			
@@ -44,6 +44,7 @@
 		</script>
 		<script type="text/javascript">
 			LogSniffer.config.contextPath = '${request.contextPath}';
+			LogSniffer.config.version = '${logsnifferProps['logsniffer.version']}';
 			var LogSnifferNgApp=angular.module('LogSnifferNgApp', ['LogSnifferCore', 'ui.bootstrap', 'angularSpinner', 'MessageCenterModule', 'angularScreenfull',${ngModules}]);
 			LogSnifferNgApp.config(function($controllerProvider, $compileProvider, $filterProvider, $provide)
 		    {
@@ -55,6 +56,7 @@
 			LogSnifferNgApp.controller("BeanWizardController", LogSniffer.ng.BeanWizardController);
 			LogSnifferNgApp.controller("LogSnifferRootController", ['$scope', '$modal', function($scope, $modal) {
 				$scope.contextPath = LogSniffer.config.contextPath;
+				$scope.version = LogSniffer.config.version;
 				
 			    $scope.zoomEntry = function (entry) {
 					$modal.open({

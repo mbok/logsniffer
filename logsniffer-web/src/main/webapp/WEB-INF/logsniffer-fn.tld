@@ -80,4 +80,9 @@
 		<function-class>com.logsniffer.web.tags.JstlFunctionsLibrary</function-class>
 		<function-signature>boolean contains(java.util.Collection, java.lang.Object)</function-signature>
 	</function>
+	<function>
+		<name>mergeLists</name>
+		<function-class>com.logsniffer.web.tags.JstlFunctionsLibrary</function-class>
+		<function-signature>java.util.List mergeLists(java.util.List, java.util.List)</function-signature>
+	</function>
 </taglib>

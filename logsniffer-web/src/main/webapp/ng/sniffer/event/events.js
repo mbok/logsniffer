@@ -28,14 +28,14 @@ angular
 					    '/',
 					    {
 						templateUrl : LogSniffer.config.contextPath
-							+ '/ng/sniffer/event/eventsList.html',
+							+ '/ng/sniffer/event/eventsList.html?v=' + LogSniffer.config.version,
 						controller : "EventsListController"
 					    })
 				    .when(
 					    '/:eventId',
 					    {
 						templateUrl : LogSniffer.config.contextPath
-							+ '/ng/sniffer/event/eventDetail.html',
+							+ '/ng/sniffer/event/eventDetail.html?v=' + LogSniffer.config.version,
 						controller : "EventsDetailController"
 					    })
 				    .otherwise({
@@ -60,6 +60,7 @@ angular
 			    $scope.Math = window.Math;
 			    $scope.eventsList = null;
 			    $scope.alerts = lsfAlerts.create();
+			    $scope.teaserExcludeFields = ['_id', 'lf_logSourceId', 'lf_snifferId', 'lf_logPath'];
 			    $scope.state = {
 			    	busy: false	
 			    };
@@ -156,7 +157,11 @@ angular
 						    $scope.items = $scope.eventsList.items;
 						    $log.info("Events loaded",
 							    data);
-						    $scope.updateTrendChart();
+						    try {
+						    	$scope.updateTrendChart();
+						    } catch(e) {
+						    	$log.error("Failed to update events trend chart", e);
+						    }
 						    loadingStatusStop();
 						})
 					.error(
@@ -204,43 +209,43 @@ angular
 			    };
 
 			    $scope.updateTrendChart = function() {
-				$scope.eventsTrendChart = {
-				    "type" : "ColumnChart",
-				    "displayed" : true,
-				    "data" : new LogSniffer.DataTableBinder(
-					    null, [ {
-						path : "time",
-						options : {
-						    type : "datetime",
-						    label : "Event occurrence"
-						}
-					    }, {
-						path : "count",
-						options : {
-						    type : "number",
-						    label : "Events count"
-						}
-					    } ])
-					    .bind()
-					    (
-						    $scope.eventsList.eventsCountHistogram.entries),
-				    "options" : {
-					chartArea : {
-					    width : "100%",
-					    top : 0
-					},
-					legend : {
-					    position : "none"
-					},
-					vAxis : {
-					    textPosition : "none"
-					},
-					bar : {
-					    groupWidth : "90%"
-					},
-				    },
-				    "formatters" : {}
-				};
+					$scope.eventsTrendChart = {
+					    "type" : "ColumnChart",
+					    "displayed" : true,
+					    "data" : new LogSniffer.DataTableBinder(
+						    null, [ {
+							path : "time",
+							options : {
+							    type : "datetime",
+							    label : "Event occurrence"
+							}
+						    }, {
+							path : "count",
+							options : {
+							    type : "number",
+							    label : "Events count"
+							}
+						    } ])
+						    .bind()
+						    (
+							    $scope.eventsList.eventsCountHistogram.entries),
+					    "options" : {
+						chartArea : {
+						    width : "100%",
+						    top : 0
+						},
+						legend : {
+						    position : "none"
+						},
+						vAxis : {
+						    textPosition : "none"
+						},
+						bar : {
+						    groupWidth : "90%"
+						},
+					    },
+					    "formatters" : {}
+					};
 			    };
 			    
 			    var addInterval = function (tmst, interval, amount) {
@@ -428,6 +433,12 @@ angular
 					);
 				}
 			    };
+			    
+			    $scope.$on('openLogPointer', function(event, pointer) {				   
+			 		  var url = $scope.contextPath+"/c/sources/"+$scope.event.lf_logSourceId+"/show?log="+encodeURIComponent($scope.event.lf_logPath)+"#?pointer="+JSON.stringify(pointer.json);
+			 		  $log.info("Opening log pointer", pointer, url);
+			 		  document.location.href = url;
+			 		});
 
 			    $scope.loadEvent();
 			}

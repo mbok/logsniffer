@@ -50,7 +50,7 @@
 		<div class="col-md-12">
 			<lsf-info-label label="Body:">HTTP {{bean.method}} body. The body text is rendered using Velocity template engine and enables to include event data passed
 				in attribute <code>event</code>.
-				<div ng-include="contextPath + '/ng/help/velocity4events.html'"></div>
+				<div ng-include="contextPath + '/ng/help/velocity4events.html?v='+version"></div>
 			</lsf-info-label>
 			<textarea rows="5" name="body2" id="body" ng-model="bean.body" class="form-control"></textarea>
 		</div>

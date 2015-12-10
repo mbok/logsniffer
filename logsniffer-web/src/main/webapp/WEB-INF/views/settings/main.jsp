@@ -13,7 +13,7 @@
 		<c:if test="${not empty activeNode.pageContext.jsFiles}">
 			<!-- NG page -->
 			<c:forEach var="jsFile" items="${activeNode.pageContext.jsFiles}">
-			    <script type="text/javascript" src="<c:url value="/${jsFile}" />"></script>
+			    <script type="text/javascript" src="<c:url value="/${jsFile}" />?v=${logsnifferProps['logsniffer.version']}"></script>
 			</c:forEach>
 		</c:if>
 		<script type="text/javascript">
@@ -138,7 +138,7 @@
 		
 		<div ng-controller="SettingsAbstractController">
 			<c:if test="${not empty activeNode.pageContext.module}">
-				<div ng-controller="${activeNode.pageContext.controller}" ng-include="'<c:url value="/${activeNode.pageContext.template}" />'"></div>
+				<div ng-controller="${activeNode.pageContext.controller}" ng-include="'<c:url value="/${activeNode.pageContext.template}" />?v=${logsnifferProps['logsniffer.version']}'"></div>
 			</c:if>
 		</div>
 	</jsp:body>

@@ -19,12 +19,11 @@ package com.logsniffer.web.tags;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-
-import net.sf.json.JSONObject;
 
 import org.elasticsearch.common.Base64;
 import org.slf4j.Logger;
@@ -38,6 +37,8 @@ import com.logsniffer.model.RollingLog;
 import com.logsniffer.web.wizard2.WizardInfo;
 import com.logsniffer.web.wizard2.WizardInfoController;
 
+import net.sf.json.JSONObject;
+
 /**
  * JSP functions library.
  * 
@@ -45,8 +46,7 @@ import com.logsniffer.web.wizard2.WizardInfoController;
  * 
  */
 public class JstlFunctionsLibrary {
-	private static Logger logger = LoggerFactory
-			.getLogger(JstlFunctionsLibrary.class);
+	private static Logger logger = LoggerFactory.getLogger(JstlFunctionsLibrary.class);
 	private static ObjectMapper jsonMapper = new ObjectMapper();
 
 	public static boolean isRollingLog(final Object log) {
@@ -69,10 +69,10 @@ public class JstlFunctionsLibrary {
 	 * @return string
 	 */
 	public static String bytesToSize(final long bytes, final int precision) {
-		double kilobyte = 1024;
-		double megabyte = kilobyte * 1024;
-		double gigabyte = megabyte * 1024;
-		double terabyte = gigabyte * 1024;
+		final double kilobyte = 1024;
+		final double megabyte = kilobyte * 1024;
+		final double gigabyte = megabyte * 1024;
+		final double terabyte = gigabyte * 1024;
 
 		if (bytes >= 0 && bytes < kilobyte) {
 			return bytes + " B";
@@ -102,8 +102,7 @@ public class JstlFunctionsLibrary {
 	 * @return rounded value
 	 */
 	public static double round(final double value, final int precision) {
-		return new BigDecimal(value).setScale(precision,
-				BigDecimal.ROUND_HALF_UP).doubleValue();
+		return new BigDecimal(value).setScale(precision, BigDecimal.ROUND_HALF_UP).doubleValue();
 	}
 
 	/**
@@ -127,7 +126,7 @@ public class JstlFunctionsLibrary {
 	public static String jsonify(final Object object) {
 		try {
 			return jsonMapper.writeValueAsString(object);
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			logger.error("JSON mapper error", e);
 			return null;
 		}
@@ -141,8 +140,7 @@ public class JstlFunctionsLibrary {
 	 * @return encoded string
 	 * @throws UnsupportedEncodingException
 	 */
-	public static String btoa(final String strToEncode)
-			throws UnsupportedEncodingException {
+	public static String btoa(final String strToEncode) throws UnsupportedEncodingException {
 		return Base64.encodeBytes(strToEncode.getBytes("UTF-8"));
 	}
 
@@ -157,7 +155,7 @@ public class JstlFunctionsLibrary {
 	public static JSONObject jsonObject(final String jsonStr) {
 		try {
 			return JSONObject.fromObject(jsonStr);
-		} catch (RuntimeException e) {
+		} catch (final RuntimeException e) {
 			logger.error("Failed to parse JSON: " + jsonStr, e);
 			return new JSONObject();
 		}
@@ -174,10 +172,23 @@ public class JstlFunctionsLibrary {
 	 * @throws ClassNotFoundException
 	 * @throws BeansException
 	 */
-	public static List<WizardInfo> getWizardsInfo(final String beanTypeStr,
-			final Locale locale) throws BeansException, ClassNotFoundException {
-		return ContextProvider.getContext().getBean(WizardInfoController.class)
-				.getWizardsInfo(beanTypeStr, locale);
+	public static List<WizardInfo> getWizardsInfo(final String beanTypeStr, final Locale locale)
+			throws BeansException, ClassNotFoundException {
+		return ContextProvider.getContext().getBean(WizardInfoController.class).getWizardsInfo(beanTypeStr, locale);
+	}
+
+	/**
+	 * Merges to lists into one.
+	 * 
+	 * @param col1
+	 * @param col2
+	 * @return
+	 */
+	public static List<Object> mergeLists(final List<Object> col1, final List<Object> col2) {
+		final List<Object> m = new ArrayList<>();
+		m.addAll(col1);
+		m.addAll(col2);
+		return m;
 	}
 
 	/**
@@ -187,8 +198,7 @@ public class JstlFunctionsLibrary {
 	 * @param value
 	 * @return true if value is contained in given collection
 	 */
-	public static boolean contains(final Collection<Object> list,
-			final Object value) {
+	public static boolean contains(final Collection<Object> list, final Object value) {
 		return list != null && value != null && list.contains(value);
 	}
 }

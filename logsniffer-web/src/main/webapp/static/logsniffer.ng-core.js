@@ -24,7 +24,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
             }
             if (!value) return '';
             max = parseInt(max, 10);
-            if (!max) return value;
+            if (!max || max < 0) return value;
             if (value.length <= max) return value;
 
             value = value.substr(0, max);
@@ -64,28 +64,31 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	   scope: {
 	       fields: '=',
 	       excludeRaw: '=',
-	       excludeFields: '='
+	       excludeFields: '=',
+	       include: '&'
 	   },
 	   controller: function($scope, $log) {
 		    $scope.rows = null;
 
-		    $scope.getFieldType = function (fieldName) {
-			var fields = $scope.fields;
-			if (fields && fields["@types"] && fields["@types"][fieldName]) {
-			    return fields["@types"][fieldName];
-			} else {
-			    $log.warn("Unknown field type for", fieldName);
-			    return "UNKNOWN";
-			}
-		    };
+		    var includeMap = {};
+		    if ($scope.include) {
+		    	var include = $scope.include();
+		    	if (include) {
+		    		for (var i=0;i<include.length;i++) {
+		    			includeMap[include[i]] = true;
+		    		}
+		    	}
+		    }
+		    
 		    var ignoreFields = {
-		    	"lf_startOffset": true,
-		    	"lf_endOffset": true,
+		    	"lf_startOffset": !includeMap["lf_startOffset"],
+		    	"lf_endOffset": !includeMap["lf_endOffset"],
 		    	"@types": true
 		    };
 		    if ($scope.excludeFields) {
 		    	for (var i=0; i<$scope.excludeFields.length; i++) {
-		    		ignoreFields[$scope.excludeFields[i]] = true;
+		    		var key = $scope.excludeFields[i];
+		    		ignoreFields[key] = !includeMap[key];
 		    	}
 		    }
 		    var internKeys = [];
@@ -110,7 +113,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 			    $scope.rows.push({
 	            	name: key,
 	            	value: $scope.fields[key],
-	            	type: $scope.getFieldType(key),
+	            	type: LogSniffer.getFieldType($scope.fields, key),
 	            	internal: key.indexOf("lf_")==0 || key.indexOf("_")==0
 	            });
 		    }
@@ -121,16 +124,44 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	      	'<table class="attributes table table-condensed table-striped table-bordered entries">'+
 	      		'<tr ng-repeat="row in rows">'+
 	      			'<th class="text">{{row.name}}</th>'+
-	      			'<td ng-class="row.type" ng-switch="row.type">'+
-	      				'<div ng-switch-when="SEVERITY" class="text"><span class="label label-default severity sc-{{row.value.c}}">{{row.value.n}}</span></div>'+
-	      				'<div ng-switch-when="DATE" class="text">{{row.value | date:\'medium\'}}</div>'+
-	      				'<div ng-switch-when="OBJECT" class="text"><json-formatter json="row.value" open="1"></json-formatter></div>'+
-	      				'<div ng-switch-default class="text">{{row.value}}</div>'+
-	      			'</td>'+
+	      			'<td><lsf-print-field type="row.type" value="row.value"></lsf-print-field></td>'+
 	      		'</tr>'+
 	      	 '</table>'+
 	      	'</div>'+
 	      	'<p ng-if="!rows" class="text-muted"> - no fields -</p></div>'
+       };
+   })
+   .directive('lsfPrintField', function() {
+       return {
+	   restrict: 'AE',
+	   replace: true,
+	   transclude: true,
+	   scope: {
+	       type: '&',
+	       value: '&',
+	       limit: '&'
+	   },
+	   controller: function($scope, $log) {
+	       $scope.t = $scope.type();
+	       $scope.v = $scope.value();
+	       $scope.l = $scope.limit ? $scope.limit() : -1;
+	       if (!$scope.l) {
+	    	   $scope.l = -1;
+	       }
+	       $scope.openLogPointer = function(pointer) {
+	    	   $log.info("Sending event to open log pointer", pointer);
+	    	   $scope.$emit('openLogPointer', pointer);
+	       };
+	   },
+	   template: 
+	      '<span ng-switch="t" ng-class="t">' +
+		  	'<span ng-switch-when="SEVERITY" class="label label-default severity sc-{{v.c}}">{{v.n}}</span>' +
+		  	'<span ng-switch-when="DATE">{{v | date:\'medium\'}}</span>' +
+		  	'<span ng-switch-when="OBJECT"><json-formatter json="v" open="1"></json-formatter></span>' +
+		  	'<span ng-switch-when="STRING">{{v | cut:false:l:\'...\'}}</span>' +
+		  	'<span ng-switch-when="LPOINTER"><a href ng-click="openLogPointer(v)"><i class="glyphicon glyphicon-list"></i> Open log entry reference</a></span>' +
+		  	'<span ng-switch-default>{{v}}</span>' +
+		  '</span>'
        };
    })
    .directive('lsfBusyContainer', function() {
@@ -203,6 +234,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	   },
 	   controller: function($scope) {
 	       	$scope.contextPath = LogSniffer.config.contextPath;
+	       	$scope.version = LogSniffer.config.version;
 	       	$scope.beanWrapper = [$scope.bean];
 		$scope.selectedWizard = null;
 		$scope.templateLoading = false;
@@ -253,9 +285,9 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		
 		$scope.getWizardView = function(selectedWizard) {
 		    if (selectedWizard.view.indexOf("/ng/") == 0) {
-			return LogSniffer.config.contextPath + selectedWizard.view;
+			return LogSniffer.config.contextPath + selectedWizard.view + '?v=' + LogSniffer.config.version;
 		    } else {			
-			return LogSniffer.config.contextPath + '/c/wizards/view?type=' + selectedWizard.beanType;
+			return LogSniffer.config.contextPath + '/c/wizards/view?type=' + selectedWizard.beanType + '&v=' + LogSniffer.config.version;
 		    }
 		};
 
@@ -303,7 +335,8 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	       searchFound: '&',
 	       followDisabled: '&',
 	       searchExpanded: '&',
-	       onError: '&'
+	       onError: '&',
+	       fullHeight: '@',
 	   },
 	   controller: function($scope) {
 		$scope.searchSettings= {
@@ -410,42 +443,52 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		scope.fullscreen = false;
 		scope.frameHeightBeforeFullscreen = null;
 		
+		
+		scope.resizeViewerToFullHeight = function (windowRef, count) {
+			$timeout(function() {
+				var searchPanelHeight = $(element).find(".viewer-search .panel-body:visible").outerHeight(true);
+				if (searchPanelHeight == null) {
+					searchPanelHeight = 0;
+				}
+				var viewerScreenHeight = $(element).find(".lsf-viewer").height();
+				var windowHeight = $(windowRef).height();
+				if (windowHeight == null) {
+					if (count > 3) {
+						$log.error("Failed to resize viewer, because window reference not found");
+						return;
+					} else {
+						scope.resizeViewerToFullHeight(windowRef, count + 1);
+						return;
+					}
+				}
+				// Reduce total window height by static header etc.
+				if (!scope.fullscreen && scope.fixTopElementSelector) {
+					windowHeight -= $(scope.fixTopElementSelector).height() + 1;
+				}
+				// Reduce total window height by upper elements height
+				var viewerOffset=$(element).find(".lsf-viewer").offset();
+				windowHeight -= viewerOffset.top;
+				
+				var currentEntriesFrameHeight = $(element).find("#log-entries-frame").height();
+				$log.debug("Fullscreen metrics: window, viewer, searchPanel, entriesFrameHeight height: ", windowHeight, viewerScreenHeight, searchPanelHeight, currentEntriesFrameHeight);
+				if (windowHeight < (viewerScreenHeight - searchPanelHeight)) {
+					var reduceTo = Math.max(450, currentEntriesFrameHeight - (viewerScreenHeight - searchPanelHeight - windowHeight)) + (scope.fullscreen ? 20 : 0);
+					$log.debug("Reduce entries frame after resizing to:", reduceTo);
+					$(element).find("#log-entries-frame").height(reduceTo);
+				} else {
+					var incTo = Math.max(450, currentEntriesFrameHeight + (windowHeight - viewerScreenHeight + searchPanelHeight)) - (scope.fullscreen ? 20 : 0);
+					$log.debug("Increase entries frame after resizing to:", incTo);
+					$(element).find("#log-entries-frame").height(incTo);
+				}
+			}, 100);
+		};
+
 		scope.$on("fullscreenEnabled", function() {
 			scope.forceScrollToBottom = scope.isTailFollowOnHead();
 			scope.fullscreen = true;
 			$log.debug("Viewer switched to fullscreen");
-			var resizeViewer = function (count) {
-				$timeout(function() {
-					var searchPanelHeight = $(element).find(".viewer-search .panel-body:visible").outerHeight(true);
-					if (searchPanelHeight == null) {
-						searchPanelHeight = 0;
-					}
-					var viewerScreenHeight = $(element).find(".lsf-viewer").height();
-					var windowHeight = $(".viewer-fullscreen.fullscreen").height();
-					if (windowHeight == null) {
-						if (count > 3) {
-							$log.error("Failed to resize viewer in full screen, because no viewer with fullsreen class found");
-							return;
-						} else {
-							resizeViewer(count + 1);
-							return;
-						}
-					}
-					var currentEntriesFrameHeight = $(element).find("#log-entries-frame").height();
-					scope.frameHeightBeforeFullscreen = currentEntriesFrameHeight;
-					$log.debug("Fullscreen metrics: window, viewer, searchPanel, entriesFrameHeight height: ", windowHeight, viewerScreenHeight, searchPanelHeight, currentEntriesFrameHeight);
-					if (windowHeight < (viewerScreenHeight - searchPanelHeight)) {
-						var reduceTo = Math.max(250, currentEntriesFrameHeight - (viewerScreenHeight - searchPanelHeight - windowHeight)) + 10;
-						$log.debug("Reduce entries frame in fullscreen to:", reduceTo);
-						$(element).find("#log-entries-frame").height(reduceTo);
-					} else {
-						var incTo = Math.max(250, currentEntriesFrameHeight + (windowHeight - viewerScreenHeight + searchPanelHeight)) - 10;
-						$log.debug("Increase entries frame in fullscreen to:", incTo);
-						$(element).find("#log-entries-frame").height(incTo);
-					}
-				}, 100);
-			};
-			resizeViewer(1);
+			scope.frameHeightBeforeFullscreen = $(element).find("#log-entries-frame").height();
+			scope.resizeViewerToFullHeight(".viewer-fullscreen.fullscreen", 1);
 		});
 		scope.$on("fullscreenDisabled", function() {
 			scope.fullscreen = false;
@@ -511,7 +554,6 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 			var entriesOffset=$(element).find("#log-entries-frame").offset();
 			var x=entriesOffset.left + 50;
 			var y = 3 + Math.max(!scope.fullscreen && scope.fixTopElementSelector ? $(scope.fixTopElementSelector).height() + 1 : 0, entriesOffset.top + entriesPadding / 2 - (scope.fullscreen ? 0 : $(window).scrollTop()));
-			$log.debug("Y: ",entriesOffset);
 			var elem=document.elementFromPoint(x, y);
 			if (true && (!elem || $(elem).parents("table").length==0)) {
 				// Select first row
@@ -603,12 +645,12 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 			var entriesCall = null;
 			if (scope.source.id) {
 			    entriesCall = $http({
-				    url: LogSniffer.config.contextPath + '/c/sources/'+ scope.source.id +'/randomAccessEntries?log=' + encodeURIComponent(scope.log.path) +'&mark=' + encodeURIComponent(pStr),
+				    url: LogSniffer.config.contextPath + '/c/sources/'+ scope.source.id +'/randomAccessEntries?log=' + encodeURIComponent(scope.log.path) +'&mark=' + encodeURIComponent(pStr) + '&count=' + defaultLoadCount,
 				    method: "GET"
 				});
 			} else {
 			    entriesCall = $http({
-				    url: LogSniffer.config.contextPath + '/c/sources/randomAccessEntries?log=' + encodeURIComponent(scope.log.path) +'&mark=' + encodeURIComponent(pStr),
+				    url: LogSniffer.config.contextPath + '/c/sources/randomAccessEntries?log=' + encodeURIComponent(scope.log.path) +'&mark=' + encodeURIComponent(pStr) + '&count=' + defaultLoadCount,
 				    method: "POST",
 				    data: scope.source
 				});
@@ -886,7 +928,13 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		    } else {
 			followTail(scope.tailFollowEnabled, true);
 		    }
-		};		
+		};
+		
+		// Init
+		if (scope.fullHeight=="true") {
+			scope.resizeViewerToFullHeight(window, 1);
+		}
+		
 	   },
 	   templateUrl: LogSniffer.config.contextPath + '/ng/entry/logViewer.html'
        };
@@ -1038,5 +1086,53 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
         	   }
 	       	};
 	   }
+       };
+   })
+   .directive('lsfFieldsTeaser', function() {
+       return {
+	   restrict: 'AE',
+	   replace: true,
+	   scope: {
+	       fields: '&',
+	       limit: '&',
+	       exclude: '&'
+	   },
+	   controller: function($scope) {
+	       $scope.teaserParts = [];
+	       var fields = $scope.fields();
+	       var limit = $scope.limit ? $scope.limit() : 10000;
+	       var exclude = $scope.exclude ? $scope.exclude() : [];
+	       var excludeMap = {};
+	       if (exclude) {
+		       for (var i=0; i < exclude.length; i++) {
+		    	   excludeMap[exclude[i]] = true;
+		       }
+	       }
+	       if (fields) {
+			    angular.forEach(fields, function(value, key) {
+			    	if (!value) {
+			    		return;
+			    	}
+			    	var type = LogSniffer.getFieldType(fields, key);
+			    	if (excludeMap[key] || limit < 0 || !type || type=="OBJECT" || type=="LPOINTER") {
+			    		return;
+			    	}
+			    	$scope.teaserParts.push({
+			    		key: key,
+			    		type: type,
+			    		value: value,
+			    		limit: limit
+			    	});
+			    	limit -= (value+"").length;
+			    });
+	       }
+	   },
+	   template: 
+	      '<span class="fields-teaser">' +
+		   	'<span ng-repeat="p in teaserParts" class="part">' +
+	      		'<span class="label label-default">{{p.key}}</span> <lsf-print-field type="p.type" value="p.value" limit="p.limit"></lsf-print-field>' +
+	      		'<span ng-if="!$last"> | </span>' +
+	      	'</span>' +
+		  '</span>'
        };
    });

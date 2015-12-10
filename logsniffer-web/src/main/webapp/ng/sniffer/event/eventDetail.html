@@ -21,7 +21,7 @@
 			<div class="event log" ng-init="logMsgCharLimit=1024">
 				<div>
 					<h4>Fields</h4>
-					<lfs-fields-table fields="event" exclude-fields="['lf_entries']"></lfs-fields-table>
+					<lfs-fields-table fields="event" exclude-fields="['lf_entries']" include="['lf_startOffset']"></lfs-fields-table>
 				</div>
 				<h4>Log entries</h4>
 				<div ng-repeat="entry in event.lf_entries track by $index">
