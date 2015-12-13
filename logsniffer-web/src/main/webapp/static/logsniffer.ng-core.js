@@ -1224,7 +1224,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 			$scope.addNewField = function(field) {
 				for (var i=0;i<$scope.configuredFields.length;i++) {
 					if ($scope.configuredFields[i].key == $scope.newField) {
-						$log.warn("Dupplicate field name to add", $scope.newField);
+						$log.warn("Duplicate field name to add", $scope.newField);
 						return;
 					}
 				}
