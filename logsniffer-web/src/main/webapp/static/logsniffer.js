@@ -154,7 +154,7 @@ LogPosition.prototype.initLogPartOption = function(sel, bytePos) {
 			}
 			bytePos -= size;
 		}
-	} else if (typeof bytePos != "undefined") {
+	} else if (typeof bytePos != "undefined" && bytePos != null) {
 		for (i = 0; i < sel.options.length - 1; i++) {
 			if (sel.options[i].value == bytePos.p) {
 				break;

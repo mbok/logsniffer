@@ -449,8 +449,9 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		};
 		$scope.$on("viewerFieldsChanged", function(event, viewerFields) {
 			$log.info("Changed viewer fields, reloading viewer content from current position", viewerFields);
+			var topPointer = $scope.getTopLogPointer();
 			$scope.viewerFields = viewerFields;
-			$scope.loadRandomAccessEntries($scope.getTopLogPointer());
+			$scope.loadRandomAccessEntries(topPointer);
 		});
 	   },
 	   link: function(scope, element, attrs) {
@@ -1185,7 +1186,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	       fieldTypes: '=',
 	       configuredFields: '=',
 	   },
-	   controller: function($scope) {
+	   controller: function($scope, $log) {
 		   if (!$scope.configuredFields) {
 			   $scope.configuredFields = [];
 		   }
@@ -1221,6 +1222,12 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 				$scope.configuredFields.splice(index, 1);
 			};
 			$scope.addNewField = function(field) {
+				for (var i=0;i<$scope.configuredFields.length;i++) {
+					if ($scope.configuredFields[i].key == $scope.newField) {
+						$log.warn("Dupplicate field name to add", $scope.newField);
+						return;
+					}
+				}
 				$scope.configuredFields.push({
 					key: $scope.newField,
 					type: "UNKNOWN",
