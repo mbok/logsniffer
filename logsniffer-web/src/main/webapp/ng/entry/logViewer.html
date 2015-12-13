@@ -139,9 +139,6 @@
 	</div>
 	
 	<div class="text-right">
-		<button type="button" class="btn btn-default" ng-class="fullscreen ? 'btn-info' : 'btn-default'" ngsf-toggle-fullscreen>
-			<i class="glyphicon" ng-class="fullscreen ? 'glyphicon-resize-small' : 'glyphicon-fullscreen'" title="Resize log viewer to full screen"></i>
-		</button>
 		<span ng-if="isFollowEnabled">
 			<span style="visibility:hidden" id="slow-following-popup" data-toggle="popover" data-placement="left" data-content="The log is being written to fast in the background. Following is lagging behind the tail...">x</span>
 			<button type="button" class="btn tail-follow"
@@ -151,6 +148,12 @@
 				<i class="fa fa-refresh" ng-class="{'fa-spin': tailFollowEnabled}"></i> tail &amp; follow
 			</button>
 		</span>
+		<button type="button" class="btn btn-default" ng-disabled="tailFollowEnabled" ng-click="configureFields()">
+			<i class="glyphicon glyphicon-th" title="Resize log viewer to full screen"></i> Configure fields
+		</button>
+		<button type="button" class="btn btn-default" ng-class="fullscreen ? 'btn-info' : 'btn-default'" ngsf-toggle-fullscreen>
+			<i class="glyphicon" ng-class="fullscreen ? 'glyphicon-resize-small' : 'glyphicon-fullscreen'" title="Resize log viewer to full screen"></i>
+		</button>
 	</div>
 </div>
 </div>

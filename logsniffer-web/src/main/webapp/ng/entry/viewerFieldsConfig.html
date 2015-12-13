@@ -1,0 +1,21 @@
+<div class="modal-header">
+	<h4 class="modal-title">Viewer fields configuration</h4>
+	<small>Adjust the log viewer view regarding the fields you like to see. This is a private configuration not sharred with other users.</small>
+</div>
+<div class="modal-body">
+	<div ng-if="viewerFields">
+		<lsf-log-viewer-fields-selection 
+			field-types="fieldTypes" 
+			configured-fields="viewerFields"></lsf-log-viewer-fields-selection>
+	</div>
+	<div ng-if="!viewerFields">
+		<p class="alert alert-info">No specific fields visibility configured, thus actually all fields are rendered in the viewer.</p>
+	</div>
+
+</div>
+<div class="modal-footer">
+	<button class="btn btn-primary" ng-click="apply()">Apply</button>
+	<button ng-if="!viewerFields" type="button" class="btn btn-success" ng-click="enableConfig()">Enable fields configuration</button>
+	<button ng-if="viewerFields" type="button" class="btn btn-default" ng-click="disableConfig()">Reset to defaults</button>
+	<button class="btn btn-default" ng-click="cancel()">Cancel</button>
+</div>

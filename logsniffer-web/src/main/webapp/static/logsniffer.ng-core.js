@@ -314,7 +314,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		'</div><div ng-transclude></div></div>'
        };
    })
-   .directive('lsfLogViewer', ['$timeout', '$location', '$anchorScroll', '$log', '$http', 'lsfAlerts', function($timeout, $location, $anchorScroll, $log, $http, lsfAlerts) {
+   .directive('lsfLogViewer', ['$timeout', '$location', '$anchorScroll', '$log', '$http', 'lsfAlerts', '$modal', function($timeout, $location, $anchorScroll, $log, $http, lsfAlerts, $modal) {
 	var defaultLoadCount = 100;
 	var tailMaxFollowInterval=1500;
 	var tailMinFollowInterval=50;
@@ -428,6 +428,30 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 			}; // incrementalSearch
 			incrementalSearch(pointer);
 		};
+		
+		$scope.configureFields = function() {
+			$modal.open({
+			      templateUrl: LogSniffer.config.contextPath + '/ng/entry/viewerFieldsConfig.html',
+			      controller: 'ViewerFieldsConfigCtrl',
+			      size: 'lg',
+			      scope: $scope,
+			      resolve: {
+			        viewerFields: function () {
+						$log.info("Inject fields to configure visibility: ", $scope.viewerFields);
+						return $scope.viewerFields;
+			        },
+			        fieldTypes: function () {
+						return $scope.source.reader.fieldTypes;
+			        }
+			      }
+			    });
+
+		};
+		$scope.$on("viewerFieldsChanged", function(event, viewerFields) {
+			$log.info("Changed viewer fields, reloading viewer content from current position", viewerFields);
+			$scope.viewerFields = viewerFields;
+			$scope.loadRandomAccessEntries($scope.getTopLogPointer());
+		});
 	   },
 	   link: function(scope, element, attrs) {
 		var loadingEntries=false;
@@ -665,6 +689,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 			    scope.handleHttpError("Failed to load entries", data, status, headers, config, statusText);
 			});
 		};
+		scope.loadRandomAccessEntries = loadRandomAccessEntries;
 
 		function loadEntries(jsonMark, fromTail, skipTailFollowCleanup) {
 		    	if (!skipTailFollowCleanup) {
@@ -940,6 +965,21 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	   templateUrl: LogSniffer.config.contextPath + '/ng/entry/logViewer.html'
        };
    }])
+   .controller('ViewerFieldsConfigCtrl', function($scope, $modalInstance) {
+	   $scope.enableConfig = function() {
+		   $scope.viewerFields = [];
+	   };
+	   $scope.disableConfig = function() {
+		   $scope.viewerFields = null;
+	   };
+	   $scope.cancel = function() {
+		   $modalInstance.close();
+	   };
+	   $scope.apply = function() {
+		   $scope.$emit('viewerFieldsChanged', $scope.viewerFields);
+		   $modalInstance.close();
+	   };
+   })
    .directive('lsfLogPosition', function($timeout) {
        return {
 	   restrict: 'AE',

@@ -295,7 +295,7 @@
 						</lsf-busy-container>
 					</div>
 					<div ng-if="!beanWrapper[0].uiSettings.viewerFields">
-						<p>No fields visibility configured, thus all fields will be rendered in the viewer.</p>
+						<p class="alert alert-info">No fields visibility configured, thus all fields will be rendered in the viewer.</p>
 						
 						<div class="row">
 							<div class="col-md-12">
