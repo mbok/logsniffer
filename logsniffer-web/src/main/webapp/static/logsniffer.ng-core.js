@@ -327,6 +327,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	       source: '=',
 	       log: '=',
 	       mark: '=pointer',
+	       viewerFields: '=',
 	       fixTopElementSelector: '@',
 	       pointerTpl: '&',
 	       initTail: '&',
@@ -508,7 +509,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		};
 		function renderTableHead(fieldTypes) {
 		    scope.fieldTypes = fieldTypes;
-		    var entriesTableHead=$.LogSniffer.entriesHead(fieldTypes, function() {return '<th style="width:18px"></th>';});
+		    var entriesTableHead=$.LogSniffer.entriesHead(fieldTypes, scope.viewerFields, function() {return '<th style="width:18px"></th>';});
 		    $(element).find(".log-entries thead").html(entriesTableHead);
 		};
 
@@ -685,7 +686,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 			  .success(function(data) {
 			    	emptyViewerEntries();
 			    	renderTableHead(data.fieldTypes);
-			    	$(element).find('.log-entries tbody').empty().append($.LogSniffer.entriesRows(data.fieldTypes, data.entries, renderPrefixCells));
+			    	$(element).find('.log-entries tbody').empty().append($.LogSniffer.entriesRows(data.fieldTypes, scope.viewerFields, data.entries, renderPrefixCells));
 				if (fromTail) {
 				    $(element).find('#log-entries-frame').scrollTop($(element).find('#log-entries-frame')[0].scrollHeight);
 				    // $location.hash("entry-"+(logEntries.length-1));
@@ -713,7 +714,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 				if (entries != null) {
 				    	emptyViewerEntries();
 					$(element).find('.log-entries tbody').empty();
-					$(element).find('.log-entries tbody').append($.LogSniffer.entriesRows(scope.fieldTypes, entries, renderPrefixCells));
+					$(element).find('.log-entries tbody').append($.LogSniffer.entriesRows(scope.fieldTypes, scope.viewerFields, entries, renderPrefixCells));
 					$(element).find('#log-entries-frame').scrollTop(10);
 			    		if (entries.length>0) {
 			    		    scope.setPointer(entries[0].lf_startOffset.json);
@@ -791,7 +792,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 				};
 			    	scope.getLoadLogEntriesHttpCall(mark, defaultLoadCount)
 			    		.success(function(data) {
-						$(element).find('.log-entries tbody').append($.LogSniffer.entriesRows(scope.fieldTypes, data.entries, renderPrefixCells));
+						$(element).find('.log-entries tbody').append($.LogSniffer.entriesRows(scope.fieldTypes, scope.viewerFields, data.entries, renderPrefixCells));
 						always();
 			    		}).error(function(data, status, headers, config, statusText) {
 					    always();
@@ -816,7 +817,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 			    	};
 			    	scope.getLoadLogEntriesHttpCall(mark, -defaultLoadCount)
 		    		.success(function(data) {
-					$(element).find('.log-entries tbody').prepend($.LogSniffer.entriesRows(scope.fieldTypes, data.entries, renderPrefixCells));
+					$(element).find('.log-entries tbody').prepend($.LogSniffer.entriesRows(scope.fieldTypes, scope.viewerFields, data.entries, renderPrefixCells));
 				        var h = $(scrollArea)[0].scrollHeight - oldHeight;
 				        $(scrollArea).scrollTop(oldScroll + h);
 					always();
@@ -850,7 +851,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 					var scrollTop=scrollArea.scrollTop();
 					var scrollHeight=scrollArea[0].scrollHeight;
 					var scrollOnBottom=scrollTop+scrollArea.outerHeight() >= scrollHeight;
-					$(element).find('.log-entries tbody').append($.LogSniffer.entriesRows(scope.fieldTypes, data.entries, renderPrefixCells));
+					$(element).find('.log-entries tbody').append($.LogSniffer.entriesRows(scope.fieldTypes, scope.viewerFields, data.entries, renderPrefixCells));
 					console.log("Jump to log tail: "+scrollOnBottom);
 					if (scrollOnBottom || trigger || scope.forceScrollToBottom) {
 						scope.forceScrollToBottom = false;
@@ -1015,16 +1016,16 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	       alerts: '=',
 	   },
 	   controller: function($scope) {
-	       $scope.remove = function (index) {
-		   $scope.alerts.remove(index);
+	       $scope.removeAlert = function (index) {
+	    	   $scope.alerts.remove(index);
 	       };
 	   },
 	   template: 
-	      '<div ng-repeat="alert in alerts.alerts" class="alert alert-{{alert.type}}">'+
-	      // '<a href class="close" ng-click="mother.remove($index)">&times;</a>'+
+	      '<div><div ng-repeat="alert in alerts.alerts" class="alert alert-{{alert.type}}">'+
+	      '<a href class="close" ng-click="removeAlert($index)">&times;</a>'+
 	      '{{alert.message}}'+
 	       '<div ng-if="alert.detail"><div class="log" ng-show="expanded" style="margin:1em 0"><div class="text nowrap" style="overflow-x: auto">{{alert.detail}}</div></div><a href="#" ng-click="expanded=!expanded" onclick="return false"><i class="glyphicon" ng-class="{\'glyphicon-chevron-down\':!expanded,\'glyphicon-chevron-up\':expanded}"></i> <span ng-if="!expanded">show details</span><span ng-if="expanded">hide details</span></a></div>'+
-	      '</div>'
+	      '</div></div>'
        };
    })
    .factory('lsfAlerts', function() {
@@ -1135,4 +1136,87 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	      	'</span>' +
 		  '</span>'
        };
-   });
+   })
+.directive('lsfLogViewerFieldsSelection', function() {
+    return {
+	   restrict: 'AE',
+	   replace: true,
+	   scope: {
+	       fieldTypes: '=',
+	       configuredFields: '=',
+	   },
+	   controller: function($scope) {
+		   if (!$scope.configuredFields) {
+			   $scope.configuredFields = [];
+		   }
+			$scope.$watch('fieldTypes', function(newValue, oldValue) {
+				if (newValue) {
+					var hasEnabled = false;
+					for (var i=0;i<$scope.configuredFields.length;i++) {
+						if ($scope.configuredFields[i].enabled) {
+							hasEnabled = true;
+							break;
+						}
+					}
+					for (var f in newValue) {
+						var insert = true;
+						for (var i=0;i<$scope.configuredFields.length;i++) {
+							if ($scope.configuredFields[i].key == f) {
+								insert = false;
+								break;
+							}
+						}
+						if (insert) {
+							$scope.configuredFields.push({
+								key: f,
+								type: newValue[f],
+								enabled: !hasEnabled && !(!hasEnabled && f=="lf_raw")
+							});
+						}
+					}
+				}
+			});
+			
+			$scope.deleteField = function(index) {
+				$scope.configuredFields.splice(index, 1);
+			};
+			$scope.addNewField = function(field) {
+				$scope.configuredFields.push({
+					key: $scope.newField,
+					type: "UNKNOWN",
+					enabled: true
+				});
+				$scope.newField = "";
+			};
+			$scope.moveUpField = function(index) {
+				if (index > 0) {
+					var tmp = $scope.configuredFields[index-1];
+					$scope.configuredFields[index-1] = $scope.configuredFields[index];
+					$scope.configuredFields[index] = tmp;
+				}
+			};
+			$scope.moveDownField = function(index) {
+				if (index < $scope.configuredFields.length-1) {
+					var tmp = $scope.configuredFields[index+1];
+					$scope.configuredFields[index+1] = $scope.configuredFields[index];
+					$scope.configuredFields[index] = tmp;
+				}
+			};
+	   },
+	   template: 
+		      '<div><div class="panel panel-default">'+
+		      	'<table class="attributes table table-condensed table-striped table-bordered entries">'+
+		      		'<tr><th>Visible</th><th>Name</th><th>Type</th><th colspan="3">Actions</th></tr>'+
+		      		'<tr ng-repeat="f in configuredFields">'+
+	      				'<th><input type="checkbox" ng-model="f.enabled"></th>'+
+		      			'<th class="text">{{f.key}}</th>'+
+		      			'<td class="text">{{f.type}}</td>'+
+		      				'<td style="width:1em;border-right:none"><button ng-if="!$first" class="btn btn-default" type="button" ng-click="moveUpField($index)"><i class="glyphicon glyphicon-chevron-up"></i></button></td>' +
+		      				'<td style="width:1em;border-left:none;border-right:none"><button ng-if="!$last" class="btn btn-default" type="button" ng-click="moveDownField($index)"><i class="glyphicon glyphicon-chevron-down"></i></button></td>' +
+		      				'<td style="width:1em;border-left:none;"><button class="btn btn-default" type="button" ng-click="deleteField($index)"><i class="glyphicon glyphicon-trash"></i></button></td>' +
+		      		'</tr>'+
+		      		'<tr><td></td><td><div class="input-group"><input type="text" ng-model="newField" placeholder="Add a new field" class="form-control"><div class="input-group-btn"><button class="btn btn-default" type="button" ng-click="addNewField(newField)"><i class="glyphicon glyphicon-plus"></i></button></div></td></tr>'+
+		      	 '</table>'+
+		      	'</div>'
+    };
+});

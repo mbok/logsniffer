@@ -252,7 +252,7 @@ public class FieldsMap extends LinkedHashMap<String, Object> implements FieldsMa
 					}
 				}
 			} else {
-				LOGGER.warn("Missing field type information, type-safe deserialization will not be supported for: {}",
+				LOGGER.debug("Missing field type information, type-safe deserialization will not be supported for: {}",
 						readTree);
 			}
 
@@ -271,7 +271,8 @@ public class FieldsMap extends LinkedHashMap<String, Object> implements FieldsMa
 						int i = 0;
 						while ((nextToken = fieldValueParser.nextToken()) != null && nextToken != JsonToken.END_ARRAY) {
 							final Class<?>[] nestedTypes = types.get(key);
-							final Class<?> targetType = i < nestedTypes.length ? nestedTypes[i] : null;
+							final Class<?> targetType = nestedTypes != null && i < nestedTypes.length ? nestedTypes[i]
+									: null;
 							if (targetType != null) {
 								final Object o = getContextualValueDeserializer(targetType, ctxt)
 										.deserialize(fieldValueParser, ctxt);

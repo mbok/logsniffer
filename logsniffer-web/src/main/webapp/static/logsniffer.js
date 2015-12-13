@@ -322,15 +322,15 @@ LogPosition.prototype.resetToEnd = function() {
 
 (function() {
 
-	function entriesHead(fieldsTypes, cellsBeforeCallback, cellsAfterCallback) {
+	function entriesHead(fieldsTypes, enabledViewerFields, cellsBeforeCallback, cellsAfterCallback) {
 		var html = '<tr class="entries capitalized">';
 		if (cellsBeforeCallback) {
 			html += cellsBeforeCallback(fieldsTypes);
 		}
-		for ( var name in fieldsTypes) {
-			if ($.LogSniffer.entriesIgnoreFields[name]) {
-				continue;
-			}
+		var fields2render = getFieldsToRender(fieldsTypes, enabledViewerFields);
+
+		for (var z=0;z<fields2render.length;z++) {
+			var name = fields2render[z];
 			html += '<th>' + name + '</th>';
 		}
 		if (cellsAfterCallback) {
@@ -338,16 +338,37 @@ LogPosition.prototype.resetToEnd = function() {
 		}
 		html += "</tr>";
 		return html;
-	}
-	;
+	};
+	
+	function getFieldsToRender(fieldsTypes, enabledViewerFields) {
+		var fields = [];
+		if (angular.isArray(enabledViewerFields) && enabledViewerFields.length > 0) {
+			for(var i = 0; i < enabledViewerFields.length;i++) {
+				var e = enabledViewerFields[i];
+				if (e.enabled) {
+					fields.push(e.key);
+				}
+			}
+			if (fields.length > 0) {
+				return fields;
+			}
+		}
+		for (var name in fieldsTypes) {
+			if ($.LogSniffer.entriesIgnoreFields[name]) {
+				continue;
+			}
+			fields.push(name);
+		}
+		return fields;
+	};
 
-	function entriesRows(fieldsTypes, entries, cellsBeforeCallback,
+	function entriesRows(fieldsTypes, enabledViewerFields, entries, cellsBeforeCallback,
 			cellsAfterCallback) {
 		var html = "";
-		var fLength = 0;
-		for ( var name in fieldsTypes) {
-			fLength++;
-		}
+		
+		var fields2render = getFieldsToRender(fieldsTypes, enabledViewerFields);
+		var fLength = fields2render.length;
+
 		for (var i = 0; i < entries.length; i++) {
 			var e = entries[i];
 			if (fLength > 0) {
@@ -359,10 +380,8 @@ LogPosition.prototype.resetToEnd = function() {
 				if (cellsBeforeCallback) {
 					html += cellsBeforeCallback(fieldsTypes, e);
 				}
-				for ( var name in fieldsTypes) {
-					if ($.LogSniffer.entriesIgnoreFields[name]) {
-						continue;
-					}
+				for (var z=0;z<fields2render.length;z++) {
+					var name = fields2render[z];
 					html += '<td class="text '
 							+ fieldsTypes[name]
 							+ '">';
@@ -403,16 +422,21 @@ LogPosition.prototype.resetToEnd = function() {
 
 	function printFieldValue(fieldType, fieldValue) {
 		if (typeof fieldValue!="undefined") {
+			var html="";
 			switch (fieldType) {
 			case "SEVERITY":
-				return fieldValue.n;
+				html = '<span class="label label-default severity sc-'+fieldValue.c+'">'+fieldValue.n+'</span>';
+				break;
 			case "DATE":
-				return new Date(fieldValue);
+				html = LogSniffer.ng.dateFilter(fieldValue, 'medium');
+				break;
 			case "OBJECT":
-				return JSON.stringify(fieldValue);
+				html = JSON.stringify(fieldValue);
+				break;
 			default:
-				return fieldValue;
+				html = fieldValue;
 			}
+			return '<span class="'+fieldType+'">'+html+'</span>';
 		} else {
 			return null;
 		}

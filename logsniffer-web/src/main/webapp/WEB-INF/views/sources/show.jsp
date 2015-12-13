@@ -84,7 +84,7 @@
 
 
 		<lsf-log-viewer source="source" log="log" pointer="pointer" fix-top-element-selector=".navbar-fixed-top"
-			init-tail="initTail" search-wizards="scannerWizards" full-height="true"></lsf-log-viewer>
+			init-tail="initTail" search-wizards="scannerWizards" full-height="true" viewer-fields="source.uiSettings.viewerFields"></lsf-log-viewer>
 
 	</div>
   </jsp:body>

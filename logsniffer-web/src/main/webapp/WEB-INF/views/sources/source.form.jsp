@@ -19,7 +19,8 @@
 <script type="text/javascript">
 	LogSnifferNgApp.controller(
 			"SourceBeanWizardControllerWrapper",
-			function($scope, $http, $log, $modal) {
+			function($scope, $http, $log, $modal, lsfAlerts) {
+				$scope.alerts = lsfAlerts.create();
 				$scope.sourceWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.model.LogSource', pageContext.response.locale))};
 				$scope.readerWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.reader.LogEntryReader', pageContext.response.locale))};
 				$scope.readerFilterWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.fields.filter.FieldsFilter', pageContext.response.locale))};
@@ -31,7 +32,8 @@
 				$scope.formValidation = {
 					main: false,
 					reader: false,
-					filters: false
+					filters: false,
+					ui: false,
 				};
 				
 				$scope.$watch('beanWrapper[0]', function(newValue, oldValue) {
@@ -121,9 +123,48 @@
 				$scope.filtersFormValid = function(form, valid) {
 					$scope.formValidation.filters = valid;
 				};
+				$scope.uiFormValid = function(form, valid) {
+					$scope.formValidation.ui = valid;
+				};
+				
+				
+				$scope.enableFieldsVisibility = function() {
+					if (!$scope.beanWrapper[0].uiSettings) {
+						$scope.beanWrapper[0].uiSettings = {};
+					}
+					$scope.beanWrapper[0].uiSettings.viewerFields = [];
+					$scope.reloadPotentialFields();
+				};
+				
+				$scope.reloadPotentialFields = function() {
+					$log.info("Resolving potential fields for source: ", $scope.beanWrapper[0]);
+					$scope.loadingPotentialFields = true;
+					$http({
+			        		url : $scope.contextPath + "/c/sources/potentialFields",
+			        		method : "POST",
+			        		data: $scope.beanWrapper[0]
+			        	})
+			        	.success(
+			        		function(data, status, headers, config) {
+			        		    $scope.loadingPotentialFields = false;
+			        		    $scope.potentialFields = data;
+			        		    $log.info("Potential fields loaded: ", $scope.potentialFields);
+			        		})
+			        	.error(
+			        		function(data, status, headers, config, statusText) {
+			        		    $scope.loadingPotentialFields = false;
+			        		    $scope.alerts.httpError("Failed to load known fields, please check the log source configuration", data, status, headers, config, statusText);
+			        		}
+			        	);
+				};
+
+				$scope.disableFieldsVisibility = function() {
+					$scope.beanWrapper[0].uiSettings.viewerFields = null;
+				};
 			});
 </script>
 <div id="source-editor" ng-controller="SourceBeanWizardControllerWrapper" ng-form="form2">
+	<div lsf-alerts alerts="alerts"></div>
 	<tabset>
     	<tab>
     		<tab-heading>
@@ -227,6 +268,46 @@
 					</div>
 				</div>
 			</div>
+		</tab>
+		<tab ng-if="beanWrapper[0]['@type']">
+    		<tab-heading>
+				UI settings <i class="glyphicon muted" ng-class="{'glyphicon-ok-circle': formValidation.ui, 'glyphicon-remove-circle': !formValidation.ui}"></i>
+			</tab-heading>
+			<div ng-form="uiForm">
+				<div id="source-ui" ng-form="form">
+					<lsf-form-valid-observer form="uiForm" on-valid-change="uiFormValid" />
+					<h4>Viewer fields <small>Configures fields which should be visible by default in the viewer</small></h4>
+					<div ng-if="beanWrapper[0].uiSettings.viewerFields">
+						<lsf-busy-container busy="loadingPotentialFields">
+							<lsf-log-viewer-fields-selection 
+								field-types="potentialFields" 
+								configured-fields="beanWrapper[0].uiSettings.viewerFields"></lsf-log-viewer-fields-selection>					
+							<div class="row">
+								<div class="col-md-12">
+									<button type="button" class="btn btn-default btn-xs" ng-click="reloadPotentialFields()">
+										<i class="glyphicon glyphicon-repeat"></i> Refresh known fields
+									</button>
+									<button type="button" class="btn btn-default btn-xs" ng-click="disableFieldsVisibility()">
+										<i class="glyphicon glyphicon-off"></i> Disable field visibility settings
+									</button>
+							 	</div>
+							 </div>
+						</lsf-busy-container>
+					</div>
+					<div ng-if="!beanWrapper[0].uiSettings.viewerFields">
+						<p>No fields visibility configured, thus all fields will be rendered in the viewer.</p>
+						
+						<div class="row">
+							<div class="col-md-12">
+								<button type="button" class="btn btn-default btn-xs" ng-click="enableFieldsVisibility()">
+									<i class="glyphicon glyphicon-wrench"></i> Enable field visibility settings
+								</button>
+						 	</div>
+						 </div>
+					</div>
+				</div>
+			</div>
+
 		</tab>
 	</tabset>
 	<hr>

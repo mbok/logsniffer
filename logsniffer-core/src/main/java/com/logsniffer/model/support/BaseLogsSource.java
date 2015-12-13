@@ -24,6 +24,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.logsniffer.fields.FieldsMap;
 import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.reader.filter.FilteredLogEntryReader;
@@ -50,6 +51,9 @@ public abstract class BaseLogsSource<STREAMTYPE extends LogInputStream> implemen
 	@Valid
 	@JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
 	private FilteredLogEntryReader<STREAMTYPE> reader = new FilteredLogEntryReader<>();
+
+	@JsonProperty
+	private FieldsMap uiSettings = new FieldsMap();
 
 	/**
 	 * @return the id
@@ -97,6 +101,22 @@ public abstract class BaseLogsSource<STREAMTYPE extends LogInputStream> implemen
 	 */
 	public void setReader(final FilteredLogEntryReader<STREAMTYPE> reader) {
 		this.reader = reader;
+	}
+
+	/**
+	 * @return the uiSettings
+	 */
+	@Override
+	public FieldsMap getUiSettings() {
+		return uiSettings;
+	}
+
+	/**
+	 * @param uiSettings
+	 *            the uiSettings to set
+	 */
+	public void setUiSettings(final FieldsMap uiSettings) {
+		this.uiSettings = uiSettings;
 	}
 
 }

@@ -57,7 +57,7 @@
 			LogSnifferNgApp.controller("LogSnifferRootController", ['$scope', '$modal', function($scope, $modal) {
 				$scope.contextPath = LogSniffer.config.contextPath;
 				$scope.version = LogSniffer.config.version;
-				
+				LogSniffer.ng.dateFilter = angular.injector(["ng"]).get("$filter")("date");
 			    $scope.zoomEntry = function (entry) {
 					$modal.open({
 				      templateUrl: $scope.contextPath + '/ng/entry/zoomEntry.html',

@@ -23,6 +23,7 @@ import java.util.List;
 
 import com.logsniffer.config.ConfiguredBean;
 import com.logsniffer.config.WrappedBean;
+import com.logsniffer.fields.FieldsMap;
 import com.logsniffer.reader.filter.FilteredLogEntryReader;
 
 /**
@@ -31,8 +32,7 @@ import com.logsniffer.reader.filter.FilteredLogEntryReader;
  * @author mbok
  * 
  */
-public interface LogSource<STREAMTYPE extends LogInputStream> extends
-		ConfiguredBean, LogRawAccessor<STREAMTYPE, Log> {
+public interface LogSource<STREAMTYPE extends LogInputStream> extends ConfiguredBean, LogRawAccessor<STREAMTYPE, Log> {
 	/**
 	 * @return the id
 	 */
@@ -47,6 +47,8 @@ public interface LogSource<STREAMTYPE extends LogInputStream> extends
 	 * @return the reader
 	 */
 	public FilteredLogEntryReader<STREAMTYPE> getReader();
+
+	public FieldsMap getUiSettings();
 
 	// public int resolveLogs();
 
@@ -72,12 +74,11 @@ public interface LogSource<STREAMTYPE extends LogInputStream> extends
 	 * @author mbok
 	 * 
 	 */
-	public static abstract class LogSourceWrapper implements
-			LogSource<LogInputStream>, WrappedBean<LogSource<LogInputStream>> {
+	public static abstract class LogSourceWrapper
+			implements LogSource<LogInputStream>, WrappedBean<LogSource<LogInputStream>> {
 		private LogSource<LogInputStream> wrapped;
 
-		public static final LogSource<LogInputStream> unwrap(
-				final LogSource<LogInputStream> possiblyWrapped) {
+		public static final LogSource<LogInputStream> unwrap(final LogSource<LogInputStream> possiblyWrapped) {
 			if (possiblyWrapped instanceof LogSourceWrapper) {
 				return ((LogSourceWrapper) possiblyWrapped).getSource();
 			}
@@ -117,9 +118,13 @@ public interface LogSource<STREAMTYPE extends LogInputStream> extends
 		}
 
 		@Override
-		public LogRawAccess<LogInputStream> getLogAccess(final Log log)
-				throws IOException {
+		public LogRawAccess<LogInputStream> getLogAccess(final Log log) throws IOException {
 			return getSource().getLogAccess(log);
+		}
+
+		@Override
+		public FieldsMap getUiSettings() {
+			return getSource().getUiSettings();
 		}
 
 	}
@@ -127,8 +132,7 @@ public interface LogSource<STREAMTYPE extends LogInputStream> extends
 	public static final LogSource<LogInputStream> NULL_SOURCE = new LogSource<LogInputStream>() {
 
 		@Override
-		public LogRawAccess<LogInputStream> getLogAccess(final Log log)
-				throws IOException {
+		public LogRawAccess<LogInputStream> getLogAccess(final Log log) throws IOException {
 			return null;
 		}
 
@@ -154,6 +158,11 @@ public interface LogSource<STREAMTYPE extends LogInputStream> extends
 
 		@Override
 		public Log getLog(final String path) throws IOException {
+			return null;
+		}
+
+		@Override
+		public FieldsMap getUiSettings() {
 			return null;
 		}
 
