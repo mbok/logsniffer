@@ -327,7 +327,9 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	       source: '=',
 	       log: '=',
 	       mark: '=pointer',
-	       viewerFields: '=',
+	       configuredViewerFields: '&',
+	       defaultViewerFields: '&',
+	       viewerFieldsConfigEnabled: '&',
 	       fixTopElementSelector: '@',
 	       pointerTpl: '&',
 	       initTail: '&',
@@ -438,7 +440,10 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 			      resolve: {
 			        viewerFields: function () {
 						$log.info("Inject fields to configure visibility: ", $scope.viewerFields);
-						return $scope.viewerFields;
+						return $scope.viewerFields ? angular.copy($scope.viewerFields) : null;
+			        },
+			        defaultViewerFields: function () {
+			        	return $scope.defaultViewerFields ? angular.copy($scope.defaultViewerFields()) : null;
 			        },
 			        fieldTypes: function () {
 						return $scope.source.reader.fieldTypes;
@@ -468,7 +473,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		scope.alerts = lsfAlerts.create();
 		scope.fullscreen = false;
 		scope.frameHeightBeforeFullscreen = null;
-		
+		scope.viewerFields = scope.configuredViewerFields();
 		
 		scope.resizeViewerToFullHeight = function (windowRef, count) {
 			$timeout(function() {
@@ -967,11 +972,15 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
        };
    }])
    .controller('ViewerFieldsConfigCtrl', function($scope, $modalInstance) {
+	   $scope.$watch('viewerFields', function(newValue, oldValue) {
+		  var d = $scope.defaultViewerFields ? $scope.defaultViewerFields() : null;
+		  $scope.isDefault = angular.equals(newValue, d); 
+	   }, true);
 	   $scope.enableConfig = function() {
 		   $scope.viewerFields = [];
 	   };
 	   $scope.disableConfig = function() {
-		   $scope.viewerFields = null;
+		   $scope.viewerFields = $scope.defaultViewerFields ? angular.copy($scope.defaultViewerFields()) : null;
 	   };
 	   $scope.cancel = function() {
 		   $modalInstance.close();
@@ -1255,8 +1264,8 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		      	'<table class="attributes table table-condensed table-striped table-bordered entries">'+
 		      		'<tr><th>Visible</th><th>Name</th><th>Type</th><th colspan="3">Actions</th></tr>'+
 		      		'<tr ng-repeat="f in configuredFields">'+
-	      				'<th><input type="checkbox" ng-model="f.enabled"></th>'+
-		      			'<th class="text">{{f.key}}</th>'+
+	      				'<th><input type="checkbox" ng-model="f.enabled" id="cf-{{f.key}}"></th>'+
+		      			'<th class="text"><label for="cf-{{f.key}}">{{f.key}}</label></th>'+
 		      			'<td class="text">{{f.type}}</td>'+
 		      				'<td style="width:1em;border-right:none"><button ng-if="!$first" class="btn btn-default" type="button" ng-click="moveUpField($index)"><i class="glyphicon glyphicon-chevron-up"></i></button></td>' +
 		      				'<td style="width:1em;border-left:none;border-right:none"><button ng-if="!$last" class="btn btn-default" type="button" ng-click="moveDownField($index)"><i class="glyphicon glyphicon-chevron-down"></i></button></td>' +

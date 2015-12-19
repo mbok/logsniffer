@@ -33,7 +33,9 @@
 		var LogShowModule=angular.module('LogShowModule', ['ui.bootstrap', 'angularSpinner']);
 		LogShowModule.controller(
 			"LogShowController",
-			function($scope, $location, $log) {
+			function($scope, $location, $log, $http, lsfAlerts) {
+				$scope.alerts = lsfAlerts.create();
+				
 				$scope.scannerWizards=${logfn:jsonify(filterScannerWizards)};
 
 				$scope.source=${logfn:jsonify(activeSource)};
@@ -44,7 +46,19 @@
 				$scope.pointerTpl = ${pointerTpl.json};
 				$scope.pointer = {};
 				$scope.initTail = $location.hash()=="tail";
+
+				$scope.viewerFields = null;
+				var userProfileViewerFields = ${logfn:jsonify(userProfileViewerFields)};
+				if (userProfileViewerFields) {
+					$scope.viewerFields = userProfileViewerFields.fields;
+				}
+				if (!$scope.viewerFields && $scope.source && $scope.source.uiSettings && $scope.source.uiSettings.viewerFields) {
+					$log.info("Viewer fields not configured in profile settings, the default source settings are used");
+					$scope.viewerFields = $scope.source.uiSettings.viewerFields;
+				}
+				$log.info("Using viewer fields config", $scope.viewerFields);
 				
+
 				var pointerParam = $location.search().pointer;
 				if (pointerParam && typeof pointerParam == "string") {
 					try {
@@ -55,9 +69,28 @@
 					    $log.warn("Failed to init log viewer with erroneous JSON pointer: ", pointerParam, e);
 					}
 				}
-				// $scope.$watch('pointer', function(newValue, oldValue) {
-				//	$location.search("pointer", JSON.stringify(newValue));
-				//}, true);
+
+				$scope.$on("viewerFieldsChanged", function(event, viewerFields) {
+					$log.info("Saving changed viewer fields as profile settings", viewerFields);
+					$http(
+						{
+						    url : $scope.contextPath + "/c/user/profile/settings/logSource/"+$scope.source.id+"/viewerFields",
+						    method : "POST",
+						    data : {
+						    	fields: viewerFields
+						    }
+						})
+						.success(
+							function(data, status, headers, config) {
+							    $log.info("Viefer fields stored to profile settings");
+							})
+						.error(
+							function(data, status, headers, config, statusText) {
+							    $scope.alerts.httpError("Failed to save viewer fields configuration", data, status, headers, config, statusText);
+							}
+						);
+				});
+
 
 			}
 		);
@@ -82,9 +115,11 @@
 
 	<div class="container-fluid well log" ng-controller="LogShowController">
 
+		<div lsf-alerts alerts="alerts"></div>
 
 		<lsf-log-viewer source="source" log="log" pointer="pointer" fix-top-element-selector=".navbar-fixed-top"
-			init-tail="initTail" search-wizards="scannerWizards" full-height="true" viewer-fields="source.uiSettings.viewerFields"></lsf-log-viewer>
+			init-tail="initTail" search-wizards="scannerWizards" full-height="true" configured-viewer-fields="viewerFields"
+			default-viewer-fields="source.uiSettings.viewerFields" viewer-fields-config-enabled="true"></lsf-log-viewer>
 
 	</div>
   </jsp:body>

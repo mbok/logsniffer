@@ -148,7 +148,7 @@
 				<i class="fa fa-refresh" ng-class="{'fa-spin': tailFollowEnabled}"></i> tail &amp; follow
 			</button>
 		</span>
-		<button type="button" class="btn btn-default" ng-disabled="tailFollowEnabled" ng-click="configureFields()">
+		<button ng-if="viewerFieldsConfigEnabled()" type="button" class="btn btn-default" ng-disabled="tailFollowEnabled" ng-click="configureFields()">
 			<i class="glyphicon glyphicon-th" title="Resize log viewer to full screen"></i> Configure fields
 		</button>
 		<button type="button" class="btn btn-default" ng-class="fullscreen ? 'btn-info' : 'btn-default'" ngsf-toggle-fullscreen>

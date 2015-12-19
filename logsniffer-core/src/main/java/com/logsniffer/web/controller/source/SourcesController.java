@@ -18,8 +18,12 @@
 package com.logsniffer.web.controller.source;
 
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -34,6 +38,8 @@ import com.logsniffer.model.Log;
 import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.model.LogSourceProvider;
+import com.logsniffer.user.profile.ProfileSettingsStorage;
+import com.logsniffer.user.profile.ProfileSettingsTokenProvider;
 import com.logsniffer.web.ViewController;
 import com.logsniffer.web.controller.exception.ResourceNotFoundException;
 import com.logsniffer.web.wizard2.WizardInfo;
@@ -42,7 +48,9 @@ import com.logsniffer.web.wizard2.WizardInfoController;
 @ViewController
 public class SourcesController {
 
-	public static final int DEFAULT_ENTRIES_COUNT = 50;
+	public static final int DEFAULT_ENTRIES_COUNT = 100;
+
+	public static final String PROFILE_SETTINGS_VIEWER_FIELDS = "/logSource/{0}/viewerFields";
 
 	@Autowired
 	private LogSourceProvider logsSourceProvider;
@@ -50,16 +58,20 @@ public class SourcesController {
 	@Autowired
 	private WizardInfoController wizardController;
 
+	@Autowired
+	private ProfileSettingsTokenProvider tokenProvider;
+
+	@Autowired
+	private ProfileSettingsStorage profileSettingsStorage;
+
 	@ModelAttribute("filterScannerWizards")
 	public List<WizardInfo> filterScannerWizards(final Locale locale) {
 		return wizardController.getWizardsInfo(Scanner.class, locale);
 	}
 
-	private LogSource<LogInputStream> getAndFillActiveLogSource(
-			final ModelAndView mv, final long logSourceId)
+	private LogSource<LogInputStream> getAndFillActiveLogSource(final ModelAndView mv, final long logSourceId)
 			throws ResourceNotFoundException {
-		LogSource<LogInputStream> activeLogSource = logsSourceProvider
-				.getSourceById(logSourceId);
+		final LogSource<LogInputStream> activeLogSource = logsSourceProvider.getSourceById(logSourceId);
 		if (activeLogSource != null) {
 			mv.addObject("activeSource", activeLogSource);
 			return activeLogSource;
@@ -69,41 +81,35 @@ public class SourcesController {
 		}
 	}
 
-	private Log getAndFillLog(final ModelAndView mv,
-			final LogSource<LogInputStream> activeLogSource,
+	private Log getAndFillLog(final ModelAndView mv, final LogSource<LogInputStream> activeLogSource,
 			final String logPath) throws IOException, ResourceNotFoundException {
 		if (logPath == null) {
 			return null;
 		}
-		Log log = activeLogSource.getLog(logPath);
+		final Log log = activeLogSource.getLog(logPath);
 		if (log != null) {
 			mv.addObject("activeLog", log);
 			return log;
 		} else {
 			throw new ResourceNotFoundException(Log.class, logPath,
-					"Log not found in source " + activeLogSource + ": "
-							+ logPath);
+					"Log not found in source " + activeLogSource + ": " + logPath);
 		}
 	}
 
 	@RequestMapping(value = "/sources", method = RequestMethod.GET)
 	ModelAndView listSources() {
-		ModelAndView mv = new ModelAndView("sources/list");
-		List<LogSource<LogInputStream>> logSources = logsSourceProvider
-				.getSources();
+		final ModelAndView mv = new ModelAndView("sources/list");
+		final List<LogSource<LogInputStream>> logSources = logsSourceProvider.getSources();
 		mv.addObject("logSources", logSources);
 		return mv;
 	}
 
 	@RequestMapping(value = "/sources/{logSourceId}/logs", method = RequestMethod.GET)
-	ModelAndView listSourceLogs(
-			@PathVariable("logSourceId") final long logSourceId)
+	ModelAndView listSourceLogs(@PathVariable("logSourceId") final long logSourceId)
 			throws IOException, ResourceNotFoundException {
-		ModelAndView mv = new ModelAndView("sources/logs");
-		LogSource<LogInputStream> activeSource = getAndFillActiveLogSource(mv,
-				logSourceId);
-		List<LogSource<LogInputStream>> logSources = logsSourceProvider
-				.getSources();
+		final ModelAndView mv = new ModelAndView("sources/logs");
+		final LogSource<LogInputStream> activeSource = getAndFillActiveLogSource(mv, logSourceId);
+		final List<LogSource<LogInputStream>> logSources = logsSourceProvider.getSources();
 		mv.addObject("logSources", logSources);
 		mv.addObject("logs", activeSource.getLogs());
 		mv.addObject("defaultCount", DEFAULT_ENTRIES_COUNT);
@@ -111,25 +117,25 @@ public class SourcesController {
 	}
 
 	@RequestMapping(value = "/sources/{logSource}/info", method = RequestMethod.GET)
-	ModelAndView info(@PathVariable("logSource") final long logSource,
-			@RequestParam("log") final String logPath) throws IOException,
-			ResourceNotFoundException {
-		ModelAndView mv = new ModelAndView("sources/info");
+	ModelAndView info(@PathVariable("logSource") final long logSource, @RequestParam("log") final String logPath)
+			throws IOException, ResourceNotFoundException {
+		final ModelAndView mv = new ModelAndView("sources/info");
 		getAndFillLog(mv, getAndFillActiveLogSource(mv, logSource), logPath);
 		return mv;
 	}
 
 	@RequestMapping(value = "/sources/{logSource}/show", method = RequestMethod.GET)
-	ModelAndView showStart(@PathVariable("logSource") final long logSourceId,
-			@RequestParam("log") final String logPath) throws IOException,
-			ResourceNotFoundException {
-		ModelAndView mv = new ModelAndView("sources/show");
-		LogSource<LogInputStream> logSource = getAndFillActiveLogSource(mv,
-				logSourceId);
-		Log log = getAndFillLog(mv, logSource, logPath);
+	ModelAndView showStart(@PathVariable("logSource") final long logSourceId, @RequestParam("log") final String logPath,
+			final HttpServletRequest request, final HttpServletResponse response)
+					throws IOException, ResourceNotFoundException {
+		final ModelAndView mv = new ModelAndView("sources/show");
+		final LogSource<LogInputStream> logSource = getAndFillActiveLogSource(mv, logSourceId);
+		final Log log = getAndFillLog(mv, logSource, logPath);
 		mv.addObject("defaultCount", DEFAULT_ENTRIES_COUNT);
-		mv.addObject("pointerTpl",
-				logSource.getLogAccess(log).createRelative(null, 1));
+		mv.addObject("pointerTpl", logSource.getLogAccess(log).createRelative(null, 1));
+		mv.addObject("userProfileViewerFields",
+				profileSettingsStorage.getSettings(tokenProvider.getToken(request, response),
+						MessageFormat.format(PROFILE_SETTINGS_VIEWER_FIELDS, logSourceId), false));
 		return mv;
 	}
 

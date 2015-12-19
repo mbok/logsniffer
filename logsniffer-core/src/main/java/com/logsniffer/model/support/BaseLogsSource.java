@@ -53,6 +53,7 @@ public abstract class BaseLogsSource<STREAMTYPE extends LogInputStream> implemen
 	private FilteredLogEntryReader<STREAMTYPE> reader = new FilteredLogEntryReader<>();
 
 	@JsonProperty
+	@JsonView(Views.Info.class)
 	private FieldsMap uiSettings = new FieldsMap();
 
 	/**

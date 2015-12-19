@@ -14,7 +14,8 @@
 		</div>
 		<div ng-if="settings.testLog">
 			<lsf-log-viewer source="source" log="settings.testLog" pointer="settings.logPointer" 
-				init-tail="false" follow-disabled="true" on-error="logViewerErrorHandler"></lsf-log-viewer>
+				init-tail="false" follow-disabled="true" on-error="logViewerErrorHandler"
+				configured-viewer-fields="source.uiSettings.viewerFields"></lsf-log-viewer>
 		</div>
 	</lsf-busy-container>
 </div>
