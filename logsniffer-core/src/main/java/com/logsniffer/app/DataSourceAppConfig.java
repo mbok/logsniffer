@@ -23,6 +23,8 @@ import java.sql.SQLException;
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.MigrationVersion;
 import org.h2.jdbcx.JdbcConnectionPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +46,8 @@ import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
  */
 @Configuration
 public class DataSourceAppConfig {
+	private static final String DB_SETUP_VERSION = "0.5.1";
+
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	@Value(value = "${logsniffer.h2.user}")
@@ -82,20 +86,26 @@ public class DataSourceAppConfig {
 	 */
 	@Bean(destroyMethod = "dispose")
 	public DataSource dataSource() throws SQLException {
-		JdbcConnectionPool pool = JdbcConnectionPool.create(url, user, password);
+		final JdbcConnectionPool pool = JdbcConnectionPool.create(url, user, password);
 		pool.setMaxConnections(maxPoolConnections);
 		Connection con = null;
 		con = pool.getConnection();
-		JdbcTemplate tpl = new JdbcTemplate(pool);
+
+		final Flyway flyway = new Flyway();
+		flyway.setLocations("classpath:sql/migration");
+		flyway.setDataSource(pool);
+		flyway.setSqlMigrationPrefix("VOS-");
+
+		final JdbcTemplate tpl = new JdbcTemplate(pool);
 		if (tpl.queryForObject("select count(*) from information_schema.tables where table_name = 'LOG_SOURCES'",
 				int.class) == 0) {
 			logger.info("H2 database not found, creating new schema and populate with default data");
+			flyway.setBaselineVersion(MigrationVersion.fromVersion(DB_SETUP_VERSION));
+			flyway.setBaselineOnMigrate(true);
 			try {
-				ResourceDatabasePopulator dbPopulator = new ResourceDatabasePopulator();
+				final ResourceDatabasePopulator dbPopulator = new ResourceDatabasePopulator();
 				dbPopulator.addScript(new ClassPathResource("/sql/quartz/tables_h2.sql"));
 				dbPopulator.addScript(new ClassPathResource("/sql/model/schema_h2.sql"));
-				// dbPopulator.addScript(new
-				// ClassPathResource("/sql/model/schema_h2_data.sql"));
 				dbPopulator.populate(con);
 				newSchema = true;
 				logger.info("Established H2 connection pool with new database");
@@ -106,14 +116,26 @@ public class DataSourceAppConfig {
 			}
 		} else {
 			logger.info("Established H2 connection pool with existing database");
+			if (tpl.queryForObject("select count(*) from information_schema.tables where table_name = 'schema_version'",
+					int.class) == 0) {
+				logger.info("Flyway's DB migration not setup in this version, set baseline version to 0.5.0");
+				flyway.setBaselineVersion(MigrationVersion.fromVersion("0.5.0"));
+				flyway.setBaselineOnMigrate(true);
+			}
 		}
+
+		logger.debug("Migrating database, base version is: {}", flyway.getBaselineVersion());
+		flyway.migrate();
+		logger.debug("Database migrated from base version: {}", flyway.getBaselineVersion());
+
 		return pool;
 	}
 
 	@PostConstruct
 	public void populateNewSchema() throws Exception {
 		if (newSchema) {
-			for (DBInitPopulator pop : ContextProvider.getContext().getBeansOfType(DBInitPopulator.class).values()) {
+			for (final DBInitPopulator pop : ContextProvider.getContext().getBeansOfType(DBInitPopulator.class)
+					.values()) {
 				pop.populate();
 			}
 		}
