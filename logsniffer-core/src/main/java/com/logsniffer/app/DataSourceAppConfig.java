@@ -20,7 +20,6 @@ package com.logsniffer.app;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 
 import org.flywaydb.core.Flyway;
@@ -65,19 +64,18 @@ public class DataSourceAppConfig {
 	private boolean newSchema = false;
 
 	/**
-	 * Used to populate DB settings when DB is initialized first.
+	 * Used to indicate if DB is initialized the first time. It helps to drive
+	 * further DB initializations.
 	 * 
 	 * @author mbok
 	 * 
 	 */
-	public static interface DBInitPopulator {
+	public static interface DBInitIndicator {
 		/**
-		 * Populates DB settings when DB is initialized first.
+		 * Returns true if DB was initialized.
 		 * 
-		 * @throws Exception
-		 *             in case of errors
 		 */
-		void populate() throws Exception;
+		boolean isNewSchema();
 	}
 
 	/**
@@ -131,20 +129,21 @@ public class DataSourceAppConfig {
 		return pool;
 	}
 
-	@PostConstruct
-	public void populateNewSchema() throws Exception {
-		if (newSchema) {
-			for (final DBInitPopulator pop : ContextProvider.getContext().getBeansOfType(DBInitPopulator.class)
-					.values()) {
-				pop.populate();
-			}
-		}
-	}
-
 	@Bean
 	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 	@Autowired
 	public JdbcTemplate jdbcTemplate(final DataSource dataSource) {
 		return new JdbcTemplate(dataSource);
+	}
+
+	@Bean
+	public DBInitIndicator dbInitPopulate() {
+		return new DBInitIndicator() {
+
+			@Override
+			public boolean isNewSchema() {
+				return newSchema;
+			}
+		};
 	}
 }

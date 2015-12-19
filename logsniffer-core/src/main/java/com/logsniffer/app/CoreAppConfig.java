@@ -69,6 +69,9 @@ public class CoreAppConfig {
 	public static final String LOGSNIFFER_PROPERTIES_FILE = "config.properties";
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
+	@Autowired
+	private ApplicationContext context;
+
 	/**
 	 * Registers the {@link ContextProvider}.
 	 * 
@@ -76,6 +79,7 @@ public class CoreAppConfig {
 	 */
 	@Bean
 	public ContextProvider contextProvider() {
+		ContextProvider.setContext(context);
 		return new ContextProvider();
 	}
 
