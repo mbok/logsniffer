@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Error handler for REST validation.
@@ -47,7 +48,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * @author mbok
  * 
  */
-@ControllerAdvice
+@ControllerAdvice(annotations = RestController.class)
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class RestErrorHandler {
 	static final String REST_SPECIFIC_ERROR_HANDLER = "restSpecificErrorHandler";
@@ -57,7 +58,7 @@ public class RestErrorHandler {
 	@Autowired
 	private MessageSource messageSource;
 
-	@ControllerAdvice
+	@ControllerAdvice(annotations = RestController.class)
 	@Order(Ordered.LOWEST_PRECEDENCE)
 	public static class ThrowableRestErrorHandler {
 

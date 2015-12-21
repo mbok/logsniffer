@@ -11,10 +11,8 @@
 	</li>
 </ul>
 
-<div class="events">
+<div class="events" lsf-busy-container busy="state.busy">
 	<div mc-messages></div>
-	<div class="backdrop-overlay" style="display:none"></div>
-	<div ng-if="!event" us-spinner spinner-key="eventLoading"></div>
 
 	<tabset ng-if="event">
 		<tab heading="Event">

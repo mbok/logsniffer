@@ -357,54 +357,49 @@ angular
 			    $scope.Math = window.Math;
 			    $scope.event = null;
 			    $scope.eventId = $routeParams.eventId;
+			    $scope.state = {
+			    	busy: false	
+			    };
 			    $scope.loadEvent = function() {
-				var eventId = $scope.eventId;
-				$log.info("Loading event for id", eventId);
-				$(".backdrop-overlay").show();
-				$timeout(function() {
-				    usSpinnerService.spin('eventLoading');
-				});
-				var always = function() {
-				    $(".backdrop-overlay").hide();
-				    usSpinnerService.stop('eventLoading');
-				};
-				$http(
-					{
-					    url : $scope.contextPath
-						    + "/c/sniffers/"
-						    + $scope.sniffer.id
-						    + "/events/" + eventId,
-					    method : "GET"
-					})
-				.success(
-					function(data, status, headers, config) {
-					    $scope.event = data;
-					    $log.info("Event loaded", data);
-					    always();
-					})
-				.error(
-					function(data, status, headers, config) {
-					    always();
-					    if (status==404) {
-						messageCenterService.add('danger', 'Event not found. It doesn\'t longer exist or is deleted.');
-					    } else {
-						messageCenterService.add('danger', 'Failed to load event: ' + status);
-					    }
-					}
-				);
+			    	$scope.state.busy = true;
+			    	var eventId = $scope.eventId;
+					$log.info("Loading event for id", eventId);
+					var always = function() {
+						$scope.state.busy = false;
+					};
+					$http(
+						{
+						    url : $scope.contextPath
+							    + "/c/sniffers/"
+							    + $scope.sniffer.id
+							    + "/events/" + eventId,
+						    method : "GET"
+						})
+					.success(
+						function(data, status, headers, config) {
+						    $scope.event = data;
+						    $log.info("Event loaded", data);
+						    always();
+						})
+					.error(
+						function(data, status, headers, config) {
+						    always();
+						    if (status==404) {
+							messageCenterService.add('danger', 'Event not found. It doesn\'t longer exist or is deleted.');
+						    } else {
+							messageCenterService.add('danger', 'Failed to load event: ' + status);
+						    }
+						}
+					);
 			    };
 			    
 			    $scope.deleteEvent = function () {
 				var eventId = $scope.eventId;
 				if ($scope.event && confirm("Delete really?")) {
 					$log.info("Deleting event for id", eventId);
-					$(".backdrop-overlay").show();
-					$timeout(function() {
-					    usSpinnerService.spin('eventLoading');
-					});
+					$scope.state.busy = true;
 					var always = function() {
-					    $(".backdrop-overlay").hide();
-					    usSpinnerService.stop('eventLoading');
+						$scope.state.busy = false;
 					};
 					$http(
 						{
