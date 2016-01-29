@@ -12,5 +12,21 @@
 		license: "MIT",
 		lastUpdate: "2015-12-04",
 		location: "/logsniffer-web/src/main/webapp/static/screenfull"
+	},
+	{
+		name: "ngclipboard",
+		version: "v1.1.0 - 2015-12-30",
+		url: "https://github.com/sachinchoolur/ngclipboard",
+		license: "MIT",
+		lastUpdate: "2016-01-29",
+		location: "/logsniffer-web/src/main/webapp/static/ngclipboard"
+	},
+	{
+		name: "clipboard.js",
+		version: "v1.5.5",
+		url: "https://zenorocha.github.io/clipboard.js",
+		license: "MIT",
+		lastUpdate: "2016-01-29",
+		location: "/logsniffer-web/src/main/webapp/static/ngclipboard"
 	}
 ]

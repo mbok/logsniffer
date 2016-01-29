@@ -96,22 +96,8 @@
 		);
 	
 	</script>
-	<ul class="breadcrumb">
-		<li><a href="<c:url value="/c/sources" />"><spring:message code="logsniffer.breadcrumb.sources" /></a></li>
-		<li><a href="<c:url value="/c/sources/${activeSource.id}/logs" />">${activeSource.name}</a></li>
-		<li class="active">${logfn:fileName(activeLog.path)}<!-- in ${logfn:filePath(activeLog.path)}  --></li>
-	</ul>
 
-	<ul class="nav nav-tabs">
-		<c:url var="showHref" value="/c/sources/${activeSource.id}/show">
-			<c:param name="log" value="${activeLog.path }" />
-		</c:url>
-		<li class="active"><a href="${showHref}">Browse</a></li>
-		<c:url var="infoHref" value="/c/sources/${activeSource.id}/info">
-			<c:param name="log" value="${activeLog.path }" />
-		</c:url>
-		<li><a href="${infoHref}">Info</a></li>
-	</ul>
+	<jsp:include page="show.breadcrumb.jsp" />
 
 	<div class="container-fluid well log" ng-controller="LogShowController">
 

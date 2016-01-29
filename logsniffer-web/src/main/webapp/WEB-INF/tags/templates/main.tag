@@ -31,6 +31,8 @@
 		<script src="<c:url value="/static/json-formatter/json-formatter.min.js" />"></script>	
 		<script src="<c:url value="/static/screenfull/screenfull.min.js" />"></script>
 		<script src="<c:url value="/static/screenfull/angular-screenfull.min.js" />"></script>
+		<script src="<c:url value="/static/ngclipboard/clipboard.min.js" />"></script>
+		<script src="<c:url value="/static/ngclipboard/ngclipboard.min.js" />"></script>
 		<link href="<c:url value="/static/fontawesome/css/font-awesome.min.css" />" rel="stylesheet" />
 		<script src="<%=request.getContextPath()%>/static/logsniffer.js?v=${logsnifferProps['logsniffer.version']}"></script>
 		<script src="<%=request.getContextPath()%>/static/logsniffer.ng-core.js?v=${logsnifferProps['logsniffer.version']}"></script>
@@ -45,7 +47,7 @@
 		<script type="text/javascript">
 			LogSniffer.config.contextPath = '${request.contextPath}';
 			LogSniffer.config.version = '${logsnifferProps['logsniffer.version']}';
-			var LogSnifferNgApp=angular.module('LogSnifferNgApp', ['LogSnifferCore', 'ui.bootstrap', 'angularSpinner', 'MessageCenterModule', 'angularScreenfull',${ngModules}]);
+			var LogSnifferNgApp=angular.module('LogSnifferNgApp', ['LogSnifferCore', 'ui.bootstrap', 'angularSpinner', 'MessageCenterModule', 'angularScreenfull','ngclipboard',${ngModules}]);
 			LogSnifferNgApp.config(function($controllerProvider, $compileProvider, $filterProvider, $provide)
 		    {
 			    LogSnifferNgApp.controllerProvider = $controllerProvider;
@@ -58,15 +60,19 @@
 				$scope.contextPath = LogSniffer.config.contextPath;
 				$scope.version = LogSniffer.config.version;
 				LogSniffer.ng.dateFilter = angular.injector(["ng"]).get("$filter")("date");
-			    $scope.zoomEntry = function (entry) {
+			    $scope.zoomEntry = function (entry, sourceId, logPath) {
 					$modal.open({
 				      templateUrl: $scope.contextPath + '/ng/entry/zoomEntry.html',
 				      controller: 'ZoomLogEntryCtrl',
 				      size: 'lg',
 				      windowClass: 'zoom-entry-modal',
 				      resolve: {
-				        entry: function () {
-				          return entry;
+				        context: function () {
+				          return {
+				        	  "entry": entry,
+				        	  "sourceId": sourceId,
+				        	  "logPath": logPath
+				          }
 				        }
 				      }
 				    });
@@ -76,8 +82,8 @@
 			LogSnifferNgApp.filter('escape', function() {
 				  return window.encodeURIComponent;
 			});
-			$.LogSniffer.zoomLogEntry = function(entry) {
-				angular.element(document.body).scope().zoomEntry(entry);
+			$.LogSniffer.zoomLogEntry = function(entry, sourceId, logPath) {
+				angular.element(document.body).scope().zoomEntry(entry, sourceId, logPath);
 			};
 		</script>
 		<jsp:invoke fragment="htmlHead"/>

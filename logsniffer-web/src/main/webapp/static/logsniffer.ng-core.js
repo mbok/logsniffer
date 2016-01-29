@@ -633,7 +633,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		    	entriesStaticCounter++;
 		    	var id = 'entry-' + entriesStaticCounter;
 		    	logEntries[id] = e;
-			return '<td class="zoom"><a href="#" title="Open full entry" onclick="$.LogSniffer.zoomLogEntry($.LogSniffer._viewerEntries['+viewerEntriesId+'][this.id])" id="'+id+'"><i class="glyphicon glyphicon-zoom-in"/></a></td>';
+			return '<td class="zoom"><a href="#" title="Open entry details" onclick="$.LogSniffer.zoomLogEntry($.LogSniffer._viewerEntries['+viewerEntriesId+'][this.id],\''+scope.source.id+'\',\''+scope.log.path+'\')" id="'+id+'"><i class="glyphicon glyphicon-zoom-in"/></a></td>';
 		}
 
 		function adaptSlidingEntriesWindow(cutHead, adaptScroll) {
@@ -1035,10 +1035,16 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	   templateUrl: LogSniffer.config.contextPath + '/ng/entry/logPosition.html'
        };
    })
-   .controller("ZoomLogEntryCtrl", ['$scope', '$modalInstance', 'entry', function($scope, $modalInstance, entry) {
-       $scope.entry = entry;
+   .controller("ZoomLogEntryCtrl", ['$scope', '$modalInstance', '$log', 'context', function($scope, $modalInstance, $log, context) {
+	   $log.debug("Openning entry details", context);
+       $scope.entry = context.entry;
+       if (context.sourceId && context.logPath && context.entry.lf_startOffset && context.entry.lf_startOffset.json) {
+    	   $scope.entryViewerLink = LogSniffer.config.contextPath + '/c/sources/'+ context.sourceId +'/show?log=' + encodeURIComponent(context.logPath) +'#?zoom=1&pointer='+ encodeURIComponent(JSON.stringify(context.entry.lf_startOffset.json));
+    	   var p = window.location.href.split("/");
+    	   $scope.absEntryViewerLink = p[0] + "//" + p[2] + $scope.entryViewerLink;
+       }
        $scope.close = function () {
-	   $modalInstance.close();
+    	   $modalInstance.close();
        };
    }])
    .directive('lsfFormGroup', function() {
