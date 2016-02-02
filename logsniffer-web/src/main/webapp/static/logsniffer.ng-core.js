@@ -68,56 +68,58 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	       include: '&'
 	   },
 	   controller: function($scope, $log) {
-		    $scope.rows = null;
-
-		    var includeMap = {};
-		    if ($scope.include) {
-		    	var include = $scope.include();
-		    	if (include) {
-		    		for (var i=0;i<include.length;i++) {
-		    			includeMap[include[i]] = true;
-		    		}
-		    	}
-		    }
-		    
-		    var ignoreFields = {
-		    	"lf_startOffset": !includeMap["lf_startOffset"],
-		    	"lf_endOffset": !includeMap["lf_endOffset"],
-		    	"@types": true
+		    function applayFields(fields) {
+			    $scope.rows = null;
+	
+			    var includeMap = {};
+			    if ($scope.include) {
+			    	var include = $scope.include();
+			    	if (include) {
+			    		for (var i=0;i<include.length;i++) {
+			    			includeMap[include[i]] = true;
+			    		}
+			    	}
+			    }
+			    
+			    var ignoreFields = {
+			    	"lf_startOffset": !includeMap["lf_startOffset"],
+			    	"lf_endOffset": !includeMap["lf_endOffset"],
+			    	"@types": true
+			    };
+			    if ($scope.excludeFields) {
+			    	for (var i=0; i<$scope.excludeFields.length; i++) {
+			    		var key = $scope.excludeFields[i];
+			    		ignoreFields[key] = !includeMap[key];
+			    	}
+			    }
+			    var internKeys = [];
+			    var customKeys = [];
+			    angular.forEach(fields, function(value, key) {
+			        if (!($scope.excludeRaw && key=="lf_raw") && !ignoreFields[key]) {
+			        	if (key.indexOf("lf_")==0 || key.indexOf("_")==0) {
+			        		internKeys.push(key);
+			        	} else {
+			        		customKeys.push(key);
+			        	}
+			        }
+			    });
+			    internKeys.sort();
+			    customKeys.sort();
+			    var keys = internKeys.concat(customKeys);
+				if (!$scope.rows) {
+				    $scope.rows = [];
+				}
+			    for (var i = 0; i < keys.length; i++) {
+			    	var key = keys[i];
+				    $scope.rows.push({
+		            	name: key,
+		            	value: fields[key],
+		            	type: LogSniffer.getFieldType(fields, key),
+		            	internal: key.indexOf("lf_")==0 || key.indexOf("_")==0
+		            });
+			    }
 		    };
-		    if ($scope.excludeFields) {
-		    	for (var i=0; i<$scope.excludeFields.length; i++) {
-		    		var key = $scope.excludeFields[i];
-		    		ignoreFields[key] = !includeMap[key];
-		    	}
-		    }
-		    var internKeys = [];
-		    var customKeys = [];
-		    angular.forEach($scope.fields, function(value, key) {
-		        if (!($scope.excludeRaw && key=="lf_raw") && !ignoreFields[key]) {
-		        	if (key.indexOf("lf_")==0 || key.indexOf("_")==0) {
-		        		internKeys.push(key);
-		        	} else {
-		        		customKeys.push(key);
-		        	}
-		        }
-		    });
-		    internKeys.sort();
-		    customKeys.sort();
-		    var keys = internKeys.concat(customKeys);
-			if (!$scope.rows) {
-			    $scope.rows = [];
-			}
-		    for (var i = 0; i < keys.length; i++) {
-		    	var key = keys[i];
-			    $scope.rows.push({
-	            	name: key,
-	            	value: $scope.fields[key],
-	            	type: LogSniffer.getFieldType($scope.fields, key),
-	            	internal: key.indexOf("lf_")==0 || key.indexOf("_")==0
-	            });
-		    }
-
+		    $scope.$watch('fields', applayFields);
 	   },
 	   template: 
 	      '<div><div class="panel panel-default" ng-if="rows">'+
@@ -314,7 +316,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		'</div><div ng-transclude></div></div>'
        };
    })
-   .directive('lsfLogViewer', ['$timeout', '$location', '$anchorScroll', '$log', '$http', 'lsfAlerts', '$modal', function($timeout, $location, $anchorScroll, $log, $http, lsfAlerts, $modal) {
+   .directive('lsfLogViewer', ['$timeout', '$location', '$anchorScroll', '$log', '$http', 'lsfAlerts', '$modal', '$q', function($timeout, $location, $anchorScroll, $log, $http, lsfAlerts, $modal, $q) {
 	var defaultLoadCount = 100;
 	var tailMaxFollowInterval=1500;
 	var tailMinFollowInterval=50;
@@ -461,12 +463,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	   },
 	   link: function(scope, element, attrs) {
 		var loadingEntries=false;
-		if (!$.LogSniffer._viewerEntries) {
-		    $.LogSniffer._viewerEntries = [];
-		};
-		var viewerEntriesId = $.LogSniffer._viewerEntries.length;
-		$.LogSniffer._viewerEntries[viewerEntriesId] = {};
-		var logEntries = $.LogSniffer._viewerEntries[viewerEntriesId];
+		var logEntries = {};
 		var entriesStaticCounter = 0;
 		scope.backdropOverlay = $(element).find(".backdrop-overlay");
 		scope.fieldTypes = {};
@@ -534,8 +531,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		
 		
 		function emptyViewerEntries() {
-		    $.LogSniffer._viewerEntries[viewerEntriesId] = {};
-		    logEntries = $.LogSniffer._viewerEntries[viewerEntriesId];
+		    logEntries = {};
 		};
 		function renderTableHead(fieldTypes) {
 		    scope.fieldTypes = fieldTypes;
@@ -629,11 +625,56 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 			return new Spinner().spin($(element).find("#log-entries-frame .spinner.top")[0]);
 		}
 
+		scope.zoomViewerEntry = function (id) {
+			var entryLoader = function (dir, loaderContext, noScroll) {
+      		  var loaderPromise = $q.defer();
+    		  if (!loaderContext.id) {
+    			  loaderContext.id = id;
+    		  }
+    		  var currentRow = $(element).find('#log-entries-frame tr td.zoom a#'+loaderContext.id).parent().parent("tr");
+    		  var nextId = null;
+    		  var nextRow = null;
+    		  if (dir > 0) {
+    			  nextRow = $(currentRow).next();
+    		  } else {
+    			  nextRow = $(currentRow).prev();	        			  
+    		  }
+    		  if (nextRow.length > 0) {
+    			  nextId = nextRow.find("td a.zoom").attr("id");
+    		  } else if (dir < 0 && !noScroll) {
+    			  // Header reached, try to scroll up
+    			  scrollCallback(0, 0, 'prev', function() {
+    				  entryLoader(dir, loaderContext, true).then(
+    						  function(entry) { loaderPromise.resolve(entry); },
+    						  function(entry) { loaderPromise.reject(); }
+    				  );
+    			  }, function() {
+    				  loaderPromise.reject();
+    			  });
+    			  return loaderPromise.promise;
+    		  }
+    		  $log.debug("Next id to switch to", nextId);
+    		  if (nextId && logEntries[nextId]) {
+    			  $(nextRow).scrollintoview();
+    			  loaderContext.id = nextId;
+    			  loaderPromise.resolve(logEntries[nextId]);
+    		  } else {
+    			  loaderPromise.reject();
+    		  }
+    		  return loaderPromise.promise;
+    	  };
+			$.LogSniffer.zoomLogEntry({
+	        	  "entry": logEntries[id],
+	        	  "sourceId": scope.source.id,
+	        	  "logPath": scope.log.path,
+	        	  "entryLoader": entryLoader
+	          });
+		};
 		function renderPrefixCells(fieldsTypes, e) {
 		    	entriesStaticCounter++;
 		    	var id = 'entry-' + entriesStaticCounter;
 		    	logEntries[id] = e;
-			return '<td class="zoom"><a href="#" title="Open entry details" onclick="$.LogSniffer.zoomLogEntry($.LogSniffer._viewerEntries['+viewerEntriesId+'][this.id],\''+scope.source.id+'\',\''+scope.log.path+'\')" id="'+id+'"><i class="glyphicon glyphicon-zoom-in"/></a></td>';
+			return '<td class="zoom"><a href="#" class="zoom" title="Open entry details" onclick="angular.element(this).scope().zoomViewerEntry(this.id)" id="'+id+'"><i class="glyphicon glyphicon-zoom-in"/></a></td>';
 		}
 
 		function adaptSlidingEntriesWindow(cutHead, adaptScroll) {
@@ -789,6 +830,75 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		// Init 1
 		scope.reset();
 
+		var scrollCallback = function(fireSequence, pageSequence, scrollDirection, loadingSuccessCallback, loadingErrorCallback) {
+			if (loadingEntries) {
+				return true;
+			}
+		    if (scrollDirection == 'next' && $(element).find('.log-entries tbody tr:last').attr('eof')!='true' && !scope.tailFollowEnabled) {
+		    	loadingEntries=true;
+		    	var spinner=bottomSpinner();
+		    	var mark=$(element).find('.log-entries tbody tr:last').attr('end');
+		    	console.log('Tailing forward ' + defaultLoadCount + ' entries from mark: ' + mark);
+		    	var always = function() {
+		    		updateLogControls(true);
+					spinner.stop();
+					loadingEntries=false;
+					if (!scope.tailFollowEnabled) {
+				    	adaptSlidingEntriesWindow(true, true);
+					}
+		    	};
+		    	scope.getLoadLogEntriesHttpCall(mark, defaultLoadCount)
+			    	.success(function(data) {
+						$(element).find('.log-entries tbody').append($.LogSniffer.entriesRows(scope.fieldTypes, scope.viewerFields, data.entries, renderPrefixCells));
+						always();
+						if (angular.isFunction(loadingSuccessCallback)) {
+							loadingSuccessCallback();
+	    				}
+			    	})
+			    	.error(function(data, status, headers, config, statusText) {
+					    always();
+					    scope.handleHttpError("Failed to load entries", data, status, headers, config, statusText);
+					    if (angular.isFunction(loadingErrorCallback)) {
+	    					loadingErrorCallback();
+	    				}
+			    	});
+		    	return true;
+		    } else if (scrollDirection != 'next' && $(element).find('.log-entries tbody tr:first').attr('sof')!='true') {
+		    	loadingEntries=true;
+		    	var spinner=topSpinner();
+		    	var scrollArea=$(element).find('#log-entries-frame');
+		    	var mark=$(element).find('.log-entries tbody tr:first').attr('start');
+		    	console.log('Loading backward ' + defaultLoadCount + ' entries from mark: ' + mark);
+		    	var oldScroll = $(scrollArea).scrollTop();
+		    	var oldHeight = $(scrollArea)[0].scrollHeight;
+		    	var always = function() {
+					updateLogControls(true);
+					spinner.stop();
+					loadingEntries=false;
+					if (!scope.tailFollowEnabled) {
+					    adaptSlidingEntriesWindow(false, true);
+					}
+		    	};
+		    	scope.getLoadLogEntriesHttpCall(mark, -defaultLoadCount)
+	    			.success(function(data) {
+	    				$(element).find('.log-entries tbody').prepend($.LogSniffer.entriesRows(scope.fieldTypes, scope.viewerFields, data.entries, renderPrefixCells));
+	    				var h = $(scrollArea)[0].scrollHeight - oldHeight;
+	    				$(scrollArea).scrollTop(oldScroll + h);
+	    				always();
+	    				if (angular.isFunction(loadingSuccessCallback)) {
+							loadingSuccessCallback();
+	    				}
+	    			})
+	    			.error(function(data, status, headers, config, statusText) {
+	    				always();
+	    				scope.handleHttpError("Failed to load entries", data, status, headers, config, statusText);
+	    				if (angular.isFunction(loadingErrorCallback)) {
+	    					loadingErrorCallback();
+	    				}
+	    			});
+		    }
+		    return true;
+		  };
 		// Init 2
 		{			
 			var lastEntriesScrollTop=-1;
@@ -804,62 +914,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 			  loader:'',
 			  ceaseFireOnEmpty: false,
 			  inflowPixels: 300,
-			  callback: function(fireSequence, pageSequence, scrollDirection) {
-				if (loadingEntries) {
-					return true;
-				}
-			    if (scrollDirection == 'next' && $(element).find('.log-entries tbody tr:last').attr('eof')!='true' && !scope.tailFollowEnabled) {
-			    	loadingEntries=true;
-			    	var spinner=bottomSpinner();
-			    	var mark=$(element).find('.log-entries tbody tr:last').attr('end');
-			    	console.log('Tailing forward ' + defaultLoadCount + ' entries from mark: ' + mark);
-			    	var always = function() {
-					updateLogControls(true);
-					spinner.stop();
-					loadingEntries=false;
-					if (!scope.tailFollowEnabled) {
-					    adaptSlidingEntriesWindow(true, true);
-					}
-				};
-			    	scope.getLoadLogEntriesHttpCall(mark, defaultLoadCount)
-			    		.success(function(data) {
-						$(element).find('.log-entries tbody').append($.LogSniffer.entriesRows(scope.fieldTypes, scope.viewerFields, data.entries, renderPrefixCells));
-						always();
-			    		}).error(function(data, status, headers, config, statusText) {
-					    always();
-					    scope.handleHttpError("Failed to load entries", data, status, headers, config, statusText);
-			    		});
-				return true;
-			    } else if (scrollDirection != 'next' && $(element).find('.log-entries tbody tr:first').attr('sof')!='true') {
-			    	loadingEntries=true;
-			    	var spinner=topSpinner();
-			    	var scrollArea=this;
-			    	var mark=$(element).find('.log-entries tbody tr:first').attr('start');
-			    	console.log('Loading backward ' + defaultLoadCount + ' entries from mark: ' + mark);
-			    	var oldScroll = $(scrollArea).scrollTop();
-			    	var oldHeight = $(scrollArea)[0].scrollHeight;
-			    	var always = function() {
-					updateLogControls(true);
-					spinner.stop();
-					loadingEntries=false;
-					if (!scope.tailFollowEnabled) {
-					    adaptSlidingEntriesWindow(false, true);
-					}
-			    	};
-			    	scope.getLoadLogEntriesHttpCall(mark, -defaultLoadCount)
-		    		.success(function(data) {
-					$(element).find('.log-entries tbody').prepend($.LogSniffer.entriesRows(scope.fieldTypes, scope.viewerFields, data.entries, renderPrefixCells));
-				        var h = $(scrollArea)[0].scrollHeight - oldHeight;
-				        $(scrollArea).scrollTop(oldScroll + h);
-					always();
-		    		})
-		    		.error(function(data, status, headers, config, statusText) {
-				    always();
-				    scope.handleHttpError("Failed to load entries", data, status, headers, config, statusText);
-		    		});
-			    }
-			    return true;
-			  },
+			  callback: scrollCallback,
 			  ceaseFire: function(fireSequence, pageSequence, scrollDirection) {
 				return false;
 			  }
@@ -1035,14 +1090,40 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	   templateUrl: LogSniffer.config.contextPath + '/ng/entry/logPosition.html'
        };
    })
-   .controller("ZoomLogEntryCtrl", ['$scope', '$modalInstance', '$log', 'context', function($scope, $modalInstance, $log, context) {
+   .controller("ZoomLogEntryCtrl", ['$scope', '$modalInstance', '$log', 'lsfAlerts', 'context', function($scope, $modalInstance, $log, lsfAlerts, context) {
+	   $scope.alerts = lsfAlerts.create();
+       $scope.busy = false;
 	   $log.debug("Openning entry details", context);
        $scope.entry = context.entry;
-       if (context.sourceId && context.logPath && context.entry.lf_startOffset && context.entry.lf_startOffset.json) {
-    	   $scope.entryViewerLink = LogSniffer.config.contextPath + '/c/sources/'+ context.sourceId +'/show?log=' + encodeURIComponent(context.logPath) +'#?zoom=1&pointer='+ encodeURIComponent(JSON.stringify(context.entry.lf_startOffset.json));
-    	   var p = window.location.href.split("/");
-    	   $scope.absEntryViewerLink = p[0] + "//" + p[2] + $scope.entryViewerLink;
+       var loaderContext = {};
+       function updatePermalinks() {
+	       if (context.sourceId && context.logPath && $scope.entry.lf_startOffset && $scope.entry.lf_startOffset.json) {
+	    	   $scope.entryViewerLink = LogSniffer.config.contextPath + '/c/sources/'+ context.sourceId +'/show?log=' + encodeURIComponent(context.logPath) +'#?zoom=1&pointer='+ encodeURIComponent(JSON.stringify($scope.entry.lf_startOffset.json));
+	    	   var p = window.location.href.split("/");
+	    	   $scope.absEntryViewerLink = p[0] + "//" + p[2] + $scope.entryViewerLink;
+	       } else {
+	    	   $scope.absEntryViewerLink = null;
+	       }
        }
+       updatePermalinks();
+       if (angular.isFunction(context.entryLoader)) {
+    	   $scope.entryNavigationEnabled = true;
+       }
+       $scope.nextEntry = function (dir) {
+    	   $scope.busy = true;
+    	   context.entryLoader(dir, loaderContext).then(
+    			   function(e) {
+    	    		   $scope.entry = e;
+    	    		   $log.debug("Switching to new entry", dir, e);
+    	    		   updatePermalinks();
+    	    		   $scope.busy = false;
+    			   },
+    			   function () {
+    	    		   $scope.busy = false;
+    	    		   $scope.alerts.warn("Failed to navigate to the " + (dir > 0 ? "next": "previous") + " log entry. A relaod of the viewer could help.")    				   
+    			   }
+    	   );    	   
+       };
        $scope.close = function () {
     	   $modalInstance.close();
        };
@@ -1126,7 +1207,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
         	       this.add('success', msg, detail);	       
         	   },
         	   warn: function (msg, detail) {
-        	       this.add('warn', msg, detail);	       
+        	       this.add('warning', msg, detail);	       
         	   },
         	   buildFromMessages: function (messages) {
         		   if (messages) {

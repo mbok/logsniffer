@@ -8,11 +8,20 @@
 	<h4 class="modal-title">Log entry details</h4>
 </div>
 <div class="modal-body" class="zoom-entry-modal">
-	<tabset>
-    	<tab heading="Fields"><lfs-fields-table fields="entry" exclude-raw="true"></lfs-fields-table></tab>
-    	<tab heading="Raw content"><div class="log"><div class="text nowrap"><div class="raw">{{entry.lf_raw}}</div></div></div></tab>
-    	<tab heading="JSON"><json-formatter json="entry" open="2"></json-formatter></tab>
-    </tabset>
+	<lsf-busy-container busy="busy">
+		<div lsf-alerts alerts="alerts"></div>
+		<tabset>
+	    	<tab heading="Fields"><lfs-fields-table fields="entry" exclude-raw="true"></lfs-fields-table></tab>
+	    	<tab heading="Raw content"><div class="log"><div class="text nowrap"><div class="raw">{{entry.lf_raw}}</div></div></div></tab>
+	    	<tab heading="JSON"><json-formatter json="entry" open="2"></json-formatter></tab>
+			<div class="pull-right" style="padding:0.5em 0">
+				<button class="btn btn-default btn-xs" ng-if="entryNavigationEnabled" 
+					ng-disabled="entry.lf_startOffset.sof || busy" ng-click="nextEntry(-1)"><i class="fa fa-arrow-left"></i> Prev</button>
+				<button class="btn btn-default btn-xs" ng-if="entryNavigationEnabled"
+					ng-disabled="entry.lf_endOffset.eof || busy" ng-click="nextEntry(+1)"><i class="fa fa-arrow-right"></i> Next</button>
+			</div>
+	    </tabset>
+	</lsf-busy-container>
 </div>
 <div class="modal-footer">
 	<div ng-if="entryViewerLink" class="btn-group" style="text-align:left" dropdown>

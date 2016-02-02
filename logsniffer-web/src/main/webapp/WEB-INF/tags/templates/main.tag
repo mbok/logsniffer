@@ -18,22 +18,23 @@
 		<script type="text/javascript" src="<c:url value="/static/angular/1.3.15/angular-route.min.js" />"></script>
 		<script type="text/javascript" src="<c:url value="/static/angular/1.3.15/angular-animate.min.js" />"></script>
 		<script src="<c:url value="/static/angular/ui-bootstrap-tpls-0.12.0.min.js" />"></script>			
-		<script type="text/javascript" src="<c:url value="/static/angular/message-center-master/message-center.js" />"></script>
+		<script type="text/javascript" src="<c:url value="/static/angular/message-center-master/message-center.js?v=${logsnifferProps['logsniffer.version']}" />"></script>
 		<script
 			src="<%=request.getContextPath()%>/static/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 		<script
-			src="<%=request.getContextPath()%>/static/jquery/jquery.endless-scroll.js"></script>
-		<script src="<%=request.getContextPath()%>/static/jquery/spin.min.js"></script>
-		<script type="text/javascript" src="<c:url value="/static/angular/angular-spinner.min.js" />"></script>
-		<link href="<c:url value="/static/slider/css/slider.css" />" rel="stylesheet" />
-		<script src="<c:url value="/static/slider/js/bootstrap-slider.js" />"></script>
-		<link href="<c:url value="/static/json-formatter/json-formatter.min.css" />" rel="stylesheet" />
-		<script src="<c:url value="/static/json-formatter/json-formatter.min.js" />"></script>	
-		<script src="<c:url value="/static/screenfull/screenfull.min.js" />"></script>
-		<script src="<c:url value="/static/screenfull/angular-screenfull.min.js" />"></script>
-		<script src="<c:url value="/static/ngclipboard/clipboard.min.js" />"></script>
-		<script src="<c:url value="/static/ngclipboard/ngclipboard.min.js" />"></script>
-		<link href="<c:url value="/static/fontawesome/css/font-awesome.min.css" />" rel="stylesheet" />
+			src="<%=request.getContextPath()%>/static/jquery/jquery.endless-scroll.js?v=${logsnifferProps['logsniffer.version']}"></script>
+		<script src="<%=request.getContextPath()%>/static/jquery/spin.min.js?v=${logsnifferProps['logsniffer.version']}"></script>
+		<script type="text/javascript" src="<c:url value="/static/angular/angular-spinner.min.js?v=${logsnifferProps['logsniffer.version']}" />"></script>
+		<link href="<c:url value="/static/slider/css/slider.css?v=${logsnifferProps['logsniffer.version']}" />" rel="stylesheet" />
+		<script src="<c:url value="/static/slider/js/bootstrap-slider.js?v=${logsnifferProps['logsniffer.version']}" />"></script>
+		<link href="<c:url value="/static/json-formatter/json-formatter.min.css?v=${logsnifferProps['logsniffer.version']}" />" rel="stylesheet" />
+		<script src="<c:url value="/static/json-formatter/json-formatter.min.js?v=${logsnifferProps['logsniffer.version']}" />"></script>	
+		<script src="<c:url value="/static/screenfull/screenfull.min.js?v=${logsnifferProps['logsniffer.version']}" />"></script>
+		<script src="<c:url value="/static/screenfull/angular-screenfull.min.js?v=${logsnifferProps['logsniffer.version']}" />"></script>
+		<script src="<c:url value="/static/ngclipboard/clipboard.min.js?v=${logsnifferProps['logsniffer.version']}" />"></script>
+		<script src="<c:url value="/static/ngclipboard/ngclipboard.min.js?v=${logsnifferProps['logsniffer.version']}" />"></script>
+		<script src="<c:url value="/static/scrollintoview/jquery.scrollintoview.min.js?v=${logsnifferProps['logsniffer.version']}" />"></script>
+		<link href="<c:url value="/static/fontawesome/css/font-awesome.min.css?v=${logsnifferProps['logsniffer.version']}" />" rel="stylesheet" />
 		<script src="<%=request.getContextPath()%>/static/logsniffer.js?v=${logsnifferProps['logsniffer.version']}"></script>
 		<script src="<%=request.getContextPath()%>/static/logsniffer.ng-core.js?v=${logsnifferProps['logsniffer.version']}"></script>
 		<link href="<c:url value="/static/logsniffer.css" />?v=${logsnifferProps['logsniffer.version']}" rel="stylesheet" />
@@ -60,7 +61,7 @@
 				$scope.contextPath = LogSniffer.config.contextPath;
 				$scope.version = LogSniffer.config.version;
 				LogSniffer.ng.dateFilter = angular.injector(["ng"]).get("$filter")("date");
-			    $scope.zoomEntry = function (entry, sourceId, logPath) {
+			    $scope.zoomEntry = function (context) {
 					$modal.open({
 				      templateUrl: $scope.contextPath + '/ng/entry/zoomEntry.html',
 				      controller: 'ZoomLogEntryCtrl',
@@ -68,11 +69,7 @@
 				      windowClass: 'zoom-entry-modal',
 				      resolve: {
 				        context: function () {
-				          return {
-				        	  "entry": entry,
-				        	  "sourceId": sourceId,
-				        	  "logPath": logPath
-				          }
+				          return context;
 				        }
 				      }
 				    });
@@ -82,8 +79,8 @@
 			LogSnifferNgApp.filter('escape', function() {
 				  return window.encodeURIComponent;
 			});
-			$.LogSniffer.zoomLogEntry = function(entry, sourceId, logPath) {
-				angular.element(document.body).scope().zoomEntry(entry, sourceId, logPath);
+			$.LogSniffer.zoomLogEntry = function(context) {
+				angular.element(document.body).scope().zoomEntry(context);
 			};
 		</script>
 		<jsp:invoke fragment="htmlHead"/>
