@@ -239,6 +239,11 @@ ul.bordered-list li {
 	border-color: #eed3d7;
 }
 
+.log-viewer tr.selected {
+	background-color: #d9edf7;
+	font-weight: bold;
+}
+
 /** Misc **/
 .busy-container {
 	position: relative;

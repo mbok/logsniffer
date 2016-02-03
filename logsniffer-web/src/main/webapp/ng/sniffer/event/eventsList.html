@@ -148,7 +148,7 @@
 						<div class="pull-left hidden2" style="position:absolute">
 							<a class="btn btn-default btn-xs" href="#/{{event._id}}"><i class="glyphicon glyphicon-bullhorn"></i> Open event</a>
 							<a class="btn btn-default btn-xs" ng-if="event.lf_entries && event.lf_entries[0] && event.lf_entries[0].lf_startOffset" 
-								href="{{contextPath}}/c/sources/{{event.lf_logSourceId}}/show?log={{event.lf_logPath | escape}}#?pointer={{event.lf_entries[0].lf_startOffset.json | json:0 | escape}}"><i class="glyphicon glyphicon-list"></i> Open in log</a>
+								href="{{contextPath}}/c/sources/{{event.lf_logSourceId}}/show?log={{event.lf_logPath | escape}}#?highlight=true&pointer={{event.lf_entries[0].lf_startOffset.json | json:0 | escape}}"><i class="glyphicon glyphicon-list"></i> Open in log</a>
 							<!-- <a class="btn btn-default btn-xs" href="#"><i class="glyphicon glyphicon-bookmark"></i> Bookmark</a>
 							<a class="btn btn-default btn-xs" href="#"><i class="glyphicon glyphicon-eye-open"></i> Mark as read</a>
 							<a class="btn btn-default btn-xs" href ng-click="deleteEvent($index, event)"><i class="glyphicon glyphicon-trash"></i> Delete event</a>							

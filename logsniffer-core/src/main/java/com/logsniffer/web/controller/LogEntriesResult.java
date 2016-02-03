@@ -34,10 +34,13 @@ public class LogEntriesResult {
 
 	private List<LogEntry> entries;
 
-	public LogEntriesResult(final LinkedHashMap<String, FieldBaseTypes> fieldTypes,
-			final List<LogEntry> entries) {
+	private int highlightEntry;
+
+	public LogEntriesResult(final LinkedHashMap<String, FieldBaseTypes> fieldTypes, final List<LogEntry> entries,
+			int highlightEntry) {
 		this.fieldTypes = fieldTypes;
 		this.entries = entries;
+		this.highlightEntry = highlightEntry;
 	}
 
 	public LogEntriesResult() {
@@ -72,6 +75,14 @@ public class LogEntriesResult {
 	 */
 	public void setEntries(final List<LogEntry> entries) {
 		this.entries = entries;
+	}
+
+	public int getHighlightEntry() {
+		return highlightEntry;
+	}
+
+	public void setHighlightEntry(int highlightEntry) {
+		this.highlightEntry = highlightEntry;
 	}
 
 }

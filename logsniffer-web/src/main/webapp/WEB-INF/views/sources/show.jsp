@@ -69,6 +69,7 @@
 					    $log.warn("Failed to init log viewer with erroneous JSON pointer: ", pointerParam, e);
 					}
 				}
+				$scope.highlightPointer = $location.search().highlight=="true";
 
 				$scope.$on("viewerFieldsChanged", function(event, viewerFields) {
 					$log.info("Saving changed viewer fields as profile settings", viewerFields);
@@ -105,7 +106,7 @@
 
 		<lsf-log-viewer source="source" log="log" pointer="pointer" fix-top-element-selector=".navbar-fixed-top"
 			init-tail="initTail" search-wizards="scannerWizards" full-height="true" configured-viewer-fields="viewerFields"
-			default-viewer-fields="source.uiSettings.viewerFields" viewer-fields-config-enabled="true"></lsf-log-viewer>
+			default-viewer-fields="source.uiSettings.viewerFields" viewer-fields-config-enabled="true" highlight-pointer="highlightPointer"></lsf-log-viewer>
 
 	</div>
   </jsp:body>

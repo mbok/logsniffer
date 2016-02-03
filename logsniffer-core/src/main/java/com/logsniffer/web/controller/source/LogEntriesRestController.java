@@ -81,6 +81,35 @@ public class LogEntriesRestController {
 		}
 	}
 
+	private int getHighlightEntryIndex(LogPointer desiredPointer, int desiredCount, List<LogEntry> entries) {
+		if (!entries.isEmpty()) {
+			if (desiredCount >= 0) {
+				if (desiredPointer == null) {
+					return 0;
+				} else {
+					for (int i = 0; i < entries.size(); i++) {
+						if (desiredPointer.equals(entries.get(i).getStartOffset())) {
+							return i;
+						}
+					}
+				}
+
+			} else {
+				if (desiredPointer == null) {
+					return entries.size() - 1;
+				} else {
+					for (int i = entries.size() - 1; i >= 0; i--) {
+						if (desiredPointer.equals(entries.get(i).getEndOffset())) {
+							return i;
+						}
+					}
+
+				}
+			}
+		}
+		return -1;
+	}
+
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@RequestMapping(value = "/sources/entries", method = RequestMethod.POST)
 	@ResponseBody
@@ -106,10 +135,13 @@ public class LogEntriesRestController {
 			if (count > 0) {
 				final BufferedConsumer bc = new BufferedConsumer(count);
 				activeLogSource.getReader().readEntries(log, logAccess, pointer, bc);
-				return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(), bc.getBuffer());
+				return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(), bc.getBuffer(),
+						getHighlightEntryIndex(pointer, count, bc.getBuffer()));
 			} else {
-				return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(),
-						new BackwardReader(activeLogSource.getReader()).readEntries(log, logAccess, pointer, count));
+				List<LogEntry> readEntries = new BackwardReader(activeLogSource.getReader()).readEntries(log, logAccess,
+						pointer, count);
+				return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(), readEntries,
+						getHighlightEntryIndex(pointer, count, readEntries));
 			}
 
 		} finally {
@@ -154,8 +186,10 @@ public class LogEntriesRestController {
 				pointer = logAccess.createRelative(pointer, 0);
 				if (pointer.isEOF()) {
 					// End pointer, return the last 10 simply
-					return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(),
-							new BackwardReader(activeLogSource.getReader()).readEntries(log, logAccess, pointer, -10));
+					List<LogEntry> readEntries = new BackwardReader(activeLogSource.getReader()).readEntries(log,
+							logAccess, pointer, -10);
+					return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(), readEntries,
+							getHighlightEntryIndex(pointer, -10, readEntries));
 				}
 			}
 			activeLogSource.getReader().readEntries(log, logAccess,
@@ -166,19 +200,20 @@ public class LogEntriesRestController {
 				final LogEntry last = entries.get(entries.size() - 1);
 				if (!first.getStartOffset().isSOF() && last.getEndOffset().isEOF() && entries.size() < 10) {
 					// Hm, EOF reached
-					return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(),
-							new BackwardReader(activeLogSource.getReader()).readEntries(log, logAccess,
-									last.getEndOffset(), -10));
+					List<LogEntry> readEntries = new BackwardReader(activeLogSource.getReader()).readEntries(log,
+							logAccess, last.getEndOffset(), -10);
+					return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(), readEntries, -1);
 				} else if (logAccess.getDifference(pointer, first.getStartOffset()) == 0) {
 					// -1 without effect, return from beginning
-					return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(), entries);
+					return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(), entries,
+							getHighlightEntryIndex(pointer, 0, entries));
 				} else {
 					// Return from the second one
 					return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(),
-							entries.subList(1, entries.size()));
+							entries.subList(1, entries.size()), getHighlightEntryIndex(pointer, 0, entries) - 1);
 				}
 			} else {
-				return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(), entries);
+				return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(), entries, -1);
 			}
 		} finally {
 			logger.debug("Finished loading random access entries from log={} and source={}", logPath, activeLogSource);
@@ -299,7 +334,7 @@ public class LogEntriesRestController {
 			logger.debug("Found next entry of interest in {} at: {}", log, searchResult.lastPointer);
 			final BufferedConsumer bc = new BufferedConsumer(Math.abs(count));
 			source.getReader().readEntries(log, logAccess, searchResult.lastPointer, bc);
-			searchResult.entries = new LogEntriesResult(source.getReader().getFieldTypes(), bc.getBuffer());
+			searchResult.entries = new LogEntriesResult(source.getReader().getFieldTypes(), bc.getBuffer(), 0);
 		} else if (searchResult.sofReached) {
 			// Return start pointer
 			searchResult.lastPointer = logAccess.createRelative(null, 0);

@@ -342,6 +342,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	       searchExpanded: '&',
 	       onError: '&',
 	       fullHeight: '@',
+	       highlightPointer: '&'
 	   },
 	   controller: function($scope) {
 		$scope.searchSettings= {
@@ -401,7 +402,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 						$scope.searchStatus="hit";
 						$('#search-progress-modal').modal("hide");
 						entriesUpdCallback(data.entries.entries);
-						$("#log-entries-frame tbody tr:eq(0)").addClass("info");
+						$("#log-entries-frame tbody tr:eq(0)").addClass("selected");
 						if (document.location.hash!="search-control") {
 							document.location.hash="search-control";
 						}
@@ -653,8 +654,14 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
     			  });
     			  return loaderPromise.promise;
     		  }
+    		  if (currentRow.hasClass("fromzoom") && currentRow.hasClass("selected")) {
+    			  currentRow.removeClass("selected").removeClass("fromzoom");
+    		  }
     		  $log.debug("Next id to switch to", nextId);
     		  if (nextId && logEntries[nextId]) {
+    			  if (!nextRow.hasClass("selected")) {
+    				  nextRow.addClass("selected").addClass("fromzoom");
+    			  }
     			  $(nextRow).scrollintoview();
     			  loaderContext.id = nextId;
     			  loaderPromise.resolve(logEntries[nextId]);
@@ -671,10 +678,14 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	          });
 		};
 		function renderPrefixCells(fieldsTypes, e) {
-		    	entriesStaticCounter++;
-		    	var id = 'entry-' + entriesStaticCounter;
-		    	logEntries[id] = e;
-			return '<td class="zoom"><a href="#" class="zoom" title="Open entry details" onclick="angular.element(this).scope().zoomViewerEntry(this.id)" id="'+id+'"><i class="glyphicon glyphicon-zoom-in"/></a></td>';
+		    entriesStaticCounter++;
+		    var id = 'entry-' + entriesStaticCounter;
+		    logEntries[id] = e;
+		    var entryViewerLink = null;
+		    if (scope.source.id && scope.log.path && e.lf_startOffset) {
+		    	entryViewerLink = LogSniffer.config.contextPath + '/c/sources/'+ scope.source.id +'/show?log=' + encodeURIComponent(scope.log.path) +'#?highlight=true&pointer='+ encodeURIComponent(JSON.stringify(e.lf_startOffset.json));
+		    }
+			return '<td class="zoom"><a href'+(entryViewerLink?'="'+entryViewerLink+'"':'')+' class="zoom" title="Open entry details" onclick="angular.element(this).scope().zoomViewerEntry(this.id);event.stopPropagation();return false" id="'+id+'"><i class="glyphicon glyphicon-zoom-in"/></a></td>';
 		}
 
 		function adaptSlidingEntriesWindow(cutHead, adaptScroll) {
@@ -705,7 +716,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		    }
 		};
 		
-		function loadRandomAccessEntries(jsonMark) {
+		function loadRandomAccessEntries(jsonMark, highlight) {
 		    	scope.disableTailFollow();
 			var entriesUpdCallback = scope.getEntriesUpdateCallback();
 			var pStr = "";
@@ -730,7 +741,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 			entriesCall.success(function(data, status, headers, config) {
 			      emptyViewerEntries();
 			      renderTableHead(data.fieldTypes);
-			      entriesUpdCallback(data.entries);
+			      entriesUpdCallback(data.entries, highlight ? data.highlightEntry : -1);
 			}).error(function(data, status, headers, config, statusText) {
 			    entriesUpdCallback(null);
 			    scope.handleHttpError("Failed to load entries", data, status, headers, config, statusText);
@@ -782,11 +793,14 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		scope.getEntriesUpdateCallback = function() {
 			loadingEntries=true;
 			var spinner=new Spinner().spin($(element).find("#log-entries-frame")[0]);
-			return function(entries) {
+			return function(entries, highlightIndex) {
 				if (entries != null) {
 				    	emptyViewerEntries();
 					$(element).find('.log-entries tbody').empty();
 					$(element).find('.log-entries tbody').append($.LogSniffer.entriesRows(scope.fieldTypes, scope.viewerFields, entries, renderPrefixCells));
+					if (highlightIndex >= 0) {
+						$(element).find('.log-entries tbody tr:eq('+highlightIndex+')').addClass("selected");
+					}
 					$(element).find('#log-entries-frame').scrollTop(10);
 			    		if (entries.length>0) {
 			    		    scope.setPointer(entries[0].lf_startOffset.json);
@@ -814,9 +828,9 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 
 		
 		// Init 1
-		scope.reset = function() {
+		scope.reset = function(start) {
         		if (angular.isObject(scope.mark) && LogSniffer.objSize(scope.mark)>0) {
-        			loadRandomAccessEntries(scope.mark);
+        			loadRandomAccessEntries(scope.mark, start && scope.highlightPointer()===true);
         		} else {
         		    	loadEntries(scope.mark, scope.initTail());
         		}
@@ -828,7 +842,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		});
 
 		// Init 1
-		scope.reset();
+		scope.reset(true);
 
 		var scrollCallback = function(fireSequence, pageSequence, scrollDirection, loadingSuccessCallback, loadingErrorCallback) {
 			if (loadingEntries) {
@@ -1098,7 +1112,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
        var loaderContext = {};
        function updatePermalinks() {
 	       if (context.sourceId && context.logPath && $scope.entry.lf_startOffset && $scope.entry.lf_startOffset.json) {
-	    	   $scope.entryViewerLink = LogSniffer.config.contextPath + '/c/sources/'+ context.sourceId +'/show?log=' + encodeURIComponent(context.logPath) +'#?zoom=1&pointer='+ encodeURIComponent(JSON.stringify($scope.entry.lf_startOffset.json));
+	    	   $scope.entryViewerLink = LogSniffer.config.contextPath + '/c/sources/'+ context.sourceId +'/show?log=' + encodeURIComponent(context.logPath) +'#?highlight=true&pointer='+ encodeURIComponent(JSON.stringify($scope.entry.lf_startOffset.json));
 	    	   var p = window.location.href.split("/");
 	    	   $scope.absEntryViewerLink = p[0] + "//" + p[2] + $scope.entryViewerLink;
 	       } else {

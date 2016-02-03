@@ -376,7 +376,7 @@ LogPosition.prototype.resetToEnd = function() {
 						+ getSeverityClass(e.lf_severity) + '" sof=\''
 						+ e.lf_endOffset.sof + '\' start=\''
 						+ JSON.stringify(e.lf_startOffset.json) + '\' eof=\'' + e.lf_endOffset.eof
-						+ '\' end=\'' + JSON.stringify(e.lf_endOffset.json) + '\'>';
+						+ '\' end=\'' + JSON.stringify(e.lf_endOffset.json) + '\' onclick="$(this).toggleClass(\'selected\')">';
 				if (cellsBeforeCallback) {
 					html += cellsBeforeCallback(fieldsTypes, e);
 				}

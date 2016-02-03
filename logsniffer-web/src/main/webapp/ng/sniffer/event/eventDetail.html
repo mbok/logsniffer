@@ -30,7 +30,7 @@
 						<div class="clearfix">
 							<div class="pull-left" style="position:absolute">
 								<a class="btn btn-default btn-xs" href="#" ng-click="zoomEntry({entry:entry})" onclick="return false"><i class="glyphicon glyphicon-zoom-in"></i> Show entry details</a>
-								<a class="btn btn-default btn-xs" href="{{contextPath}}/c/sources/{{event.lf_logSourceId}}/show?log={{event.lf_logPath | escape}}#?pointer={{entry.lf_startOffset.json | json:0 | escape}}"><i class="glyphicon glyphicon-list"></i> Open in log</a>
+								<a class="btn btn-default btn-xs" href="{{contextPath}}/c/sources/{{event.lf_logSourceId}}/show?log={{event.lf_logPath | escape}}#?highlight=true&pointer={{entry.lf_startOffset.json | json:0 | escape}}"><i class="glyphicon glyphicon-list"></i> Open in log</a>
 							</div>
 							<div class="pull-right text-muted">
 								{{event.lf_logPath}}

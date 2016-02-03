@@ -97,19 +97,15 @@ public class ReaderWizardTester {
 	LogEntriesResult testReading(@RequestBody @Valid final TestContext testCtx)
 			throws UnsupportedEncodingException, IOException, FormatException {
 		final ArrayList<LogEntry> entries = new ArrayList<LogEntry>();
-		ByteArrayLog tempLog = new ByteArrayLog(testCtx.getTestLogData()
-				.getBytes("UTF-8"));
-		testCtx.getReader().readEntries(tempLog, tempLog, null,
-				new LogEntryConsumer() {
-					@Override
-					public boolean consume(final Log log,
-							final LogPointerFactory pointerFactory,
-							final LogEntry entry) throws IOException {
-						entries.add(entry);
-						return true;
-					}
-				});
-		return new LogEntriesResult(testCtx.getReader().getFieldTypes(),
-				entries);
+		ByteArrayLog tempLog = new ByteArrayLog(testCtx.getTestLogData().getBytes("UTF-8"));
+		testCtx.getReader().readEntries(tempLog, tempLog, null, new LogEntryConsumer() {
+			@Override
+			public boolean consume(final Log log, final LogPointerFactory pointerFactory, final LogEntry entry)
+					throws IOException {
+				entries.add(entry);
+				return true;
+			}
+		});
+		return new LogEntriesResult(testCtx.getReader().getFieldTypes(), entries, -1);
 	}
 }

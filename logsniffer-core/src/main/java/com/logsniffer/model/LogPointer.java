@@ -20,7 +20,9 @@ package com.logsniffer.model;
 import com.fasterxml.jackson.annotation.JsonRawValue;
 
 /**
- * Abstraction of pointing a byte position inside a log.
+ * Abstraction of pointing a byte position inside a log. The
+ * {@link #equals(Object)} method has to be implemented properly to compare
+ * pointers.
  * 
  * @author mbok
  * 
