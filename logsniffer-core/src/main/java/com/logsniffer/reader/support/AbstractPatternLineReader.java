@@ -20,6 +20,8 @@ package com.logsniffer.reader.support;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.LinkedHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
@@ -45,6 +47,8 @@ import com.logsniffer.util.value.Configured;
  * 
  */
 public abstract class AbstractPatternLineReader<MatcherContext> implements LogEntryReader<ByteLogInputStream> {
+	private static final int STRING_BUILDER_CAPACITY = 4096;
+
 	public static final String PROP_LOGSNIFFER_READER_MAX_MULTIPLE_LINES = "logsniffer.reader.pattern.maxUnformattedLines";
 
 	public static final int DEFAULT_MAX_UNFORMATTED_LINES = 500;
@@ -88,20 +92,25 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 		logger.debug("Init {} with max multiple lines without matching pattern: {}", getClass(), maxUnfomattedLines);
 	}
 
-	/**
-	 * @return a matcher context in case of a matching line or null if doesn't.
-	 */
-	protected abstract MatcherContext matches(String line) throws FormatException;
+	public interface ReadingContext<MatcherContext> {
+		/**
+		 * @return a matcher context in case of a matching line or null if
+		 *         doesn't.
+		 */
+		MatcherContext matches(String line) throws FormatException;
 
-	/**
-	 * Fills the attributes from the matcher context.
-	 * 
-	 * @param entry
-	 *            entry to fill attributes to
-	 * @param ctx
-	 *            the matcher context
-	 */
-	protected abstract void fillAttributes(LogEntry entry, MatcherContext ctx) throws FormatException;
+		/**
+		 * Fills the attributes from the matcher context.
+		 * 
+		 * @param entry
+		 *            entry to fill attributes to
+		 * @param ctx
+		 *            the matcher context
+		 */
+		void fillAttributes(LogEntry entry, MatcherContext ctx) throws FormatException;
+	}
+
+	protected abstract ReadingContext<MatcherContext> getReadingContext() throws FormatException;
 
 	/**
 	 * Called in case of a line not matching the format pattern and which is
@@ -121,10 +130,253 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 	 */
 	protected abstract String getPatternInfo();
 
+	private abstract class ParallelReadingExecutor {
+		private final LineInputStream inputStream;
+		private final Semaphore threadSemaphore;
+		private boolean finished;
+		private final LinkedBlockingQueue<ParallelReadingContext> lineBuffer = new LinkedBlockingQueue<>();
+		private final Object processingSemaphore = new Object();
+		private final Object readingSemaphore = new Object();
+		private Exception terminationException;
+		private final int parallelCount;
+		private PatternMatcherThread processingThread;
+
+		public ParallelReadingExecutor(final LineInputStream lis, final int parallelCount) {
+			inputStream = lis;
+			this.parallelCount = parallelCount;
+			threadSemaphore = new Semaphore(parallelCount);
+		}
+
+		protected void processParsingResults(final PatternMatcherThread thread) {
+			if (this.processingThread != null) {
+				return;
+			}
+			synchronized (processingSemaphore) {
+				this.processingThread = thread;
+				ParallelReadingContext peek = null;
+				try {
+					while ((peek = lineBuffer.peek()) != null && peek.finished && !finished) {
+						lineBuffer.poll();
+						if (peek.exception != null) {
+							terminationException = peek.exception;
+							finished = true;
+							break;
+						}
+						try {
+							if (!processParsingResult(peek.line, peek.offset, thread.readingContext,
+									peek.matcherResult)) {
+								finished = true;
+							}
+						} catch (final Exception e) {
+							finished = true;
+							terminationException = e;
+							break;
+						}
+					}
+				} finally {
+					this.processingThread = null;
+				}
+			}
+
+		}
+
+		protected abstract boolean processParsingResult(String line, LogPointer offset,
+				ReadingContext<MatcherContext> readingContext, MatcherContext mCtx) throws IOException;
+
+		private ParallelReadingContext readNextLine() {
+			synchronized (readingSemaphore) {
+				try {
+					final String line = inputStream.readNextLine();
+					final LogPointer pointer = inputStream.getPointer();
+					if (line != null && pointer != null) {
+						final ParallelReadingContext pline = new ParallelReadingContext(line, pointer);
+						lineBuffer.add(pline);
+						return pline;
+					}
+				} catch (final IOException e) {
+					return new ParallelReadingContext(e);
+				}
+				return null;
+			}
+		}
+
+		public void executeParallel() throws IOException {
+			synchronized (processingSemaphore) {
+				for (int i = 0; i < parallelCount; i++) {
+					try {
+						new PatternMatcherThread(this, getReadingContext()).start();
+					} catch (final InterruptedException e) {
+						finished = true;
+						terminationException = e;
+					}
+				}
+			}
+			try {
+				threadSemaphore.acquire(parallelCount);
+			} catch (final InterruptedException e) {
+				logger.error("Failed to wait for parallel threads", e);
+			}
+			// Probably not all processed lines
+			processParsingResults(null);
+			if (terminationException != null) {
+				if (terminationException instanceof IOException) {
+					throw (IOException) terminationException;
+				} else if (terminationException instanceof RuntimeException) {
+					throw (RuntimeException) terminationException;
+				} else {
+					throw new RuntimeException("Parallel reading aborted with an exception", terminationException);
+				}
+			}
+		}
+	}
+
+	private class ParallelReadingContext {
+		private String line;
+		private LogPointer offset;
+		private MatcherContext matcherResult;
+		private boolean finished;
+		private Exception exception;
+
+		public ParallelReadingContext(final String line, final LogPointer offset) {
+			super();
+			this.line = line;
+			this.offset = offset;
+		}
+
+		public ParallelReadingContext(final Exception e) {
+			this.exception = e;
+		}
+
+	}
+
+	private class PatternMatcherThread extends Thread {
+		private final ParallelReadingExecutor executor;
+		private long count = 0;
+		final ReadingContext<MatcherContext> readingContext;
+
+		public PatternMatcherThread(final AbstractPatternLineReader<MatcherContext>.ParallelReadingExecutor executor,
+				final ReadingContext<MatcherContext> readingContext) throws InterruptedException {
+			super();
+			this.executor = executor;
+			this.readingContext = readingContext;
+			executor.threadSemaphore.acquire(1);
+		}
+
+		@Override
+		public void run() {
+			try {
+				ParallelReadingContext lineCtx = null;
+				while (!executor.finished && (lineCtx = executor.readNextLine()) != null) {
+					count++;
+					try {
+						lineCtx.matcherResult = readingContext.matches(lineCtx.line);
+					} catch (final FormatException e) {
+						lineCtx.exception = e;
+					} finally {
+						lineCtx.finished = true;
+						executor.processParsingResults(this);
+					}
+				}
+			} finally {
+				logger.debug("Thread {} processed {} lines", this, count);
+				executor.threadSemaphore.release(1);
+			}
+		}
+
+	}
+
+	private static class SequentialContext {
+		int linesWithoutPattern = 0;
+		LogEntry entry = null;
+		StringBuilder text = new StringBuilder(STRING_BUILDER_CAPACITY);
+		LogPointer lastOffset;
+
+	}
+
 	@Override
 	public final void readEntries(final Log log, final LogRawAccess<ByteLogInputStream> logAccess,
+			final LogPointer startOffset, final LogEntryConsumer consumer) throws IOException {
+		init();
+		LineInputStream lis = null;
+		try {
+			final SequentialContext sCtx = new SequentialContext();
+
+			lis = new LineInputStream(logAccess, logAccess.getInputStream(startOffset), getCharset());
+			sCtx.lastOffset = lis.getPointer();
+			if (sCtx.lastOffset == null) {
+				sCtx.lastOffset = logAccess.createRelative(null, 0);
+			}
+
+			final int coreSize = Math.max(2, Runtime.getRuntime().availableProcessors() / 2);
+			logger.debug("Start reading log '{}' accoridng the pattern '{}' in parallel with {} threads", log.getPath(),
+					getPatternInfo(), coreSize);
+			new ParallelReadingExecutor(lis, coreSize) {
+				@Override
+				protected boolean processParsingResult(final String line, final LogPointer currentOffset,
+						final ReadingContext<MatcherContext> readingContext, final MatcherContext ctx)
+								throws IOException {
+					if (ctx != null) {
+						sCtx.linesWithoutPattern = 0;
+						if (sCtx.entry != null) {
+							sCtx.entry.setRawContent(sCtx.text.toString());
+							sCtx.entry.setEndOffset(sCtx.lastOffset);
+							if (!consumer.consume(log, logAccess, sCtx.entry)) {
+								return false;
+							}
+						}
+						sCtx.entry = new LogEntry();
+						sCtx.text = new StringBuilder(STRING_BUILDER_CAPACITY).append(line);
+						if (ctx != null) {
+							readingContext.fillAttributes(sCtx.entry, ctx);
+						}
+						sCtx.entry.setStartOffset(sCtx.lastOffset);
+					} else {
+						sCtx.linesWithoutPattern++;
+						if (sCtx.entry == null) {
+							sCtx.entry = new LogEntry();
+							sCtx.entry.setStartOffset(sCtx.lastOffset);
+							sCtx.entry.setUnformatted(true);
+						}
+						if (sCtx.text.length() > 0) {
+							sCtx.text.append("\n");
+						}
+						sCtx.text.append(line);
+						attachOverflowLine(sCtx.entry, line);
+						if (sCtx.linesWithoutPattern >= maxUnfomattedLines) {
+							logger.warn(
+									"Pattern {} for log '{}' didn't matched any of read {} lines, adding unmatching data to previous log entry",
+									getPatternInfo(), log.getPath(), sCtx.linesWithoutPattern);
+							sCtx.entry.setRawContent(sCtx.text.toString());
+							sCtx.entry.setEndOffset(sCtx.lastOffset);
+							if (!consumer.consume(log, logAccess, sCtx.entry)) {
+								return false;
+							}
+							sCtx.entry = null;
+							sCtx.text = new StringBuilder(STRING_BUILDER_CAPACITY);
+							sCtx.linesWithoutPattern = 0;
+						}
+
+					}
+					sCtx.lastOffset = currentOffset;
+					return true;
+				}
+
+			}.executeParallel();
+
+			if (sCtx.entry != null) {
+				sCtx.entry.setRawContent(sCtx.text.toString());
+				sCtx.entry.setEndOffset(sCtx.lastOffset);
+				consumer.consume(log, logAccess, sCtx.entry);
+			}
+		} finally {
+			lis.close();
+		}
+	}
+
+	public final void readEntriesOld(final Log log, final LogRawAccess<ByteLogInputStream> logAccess,
 			final LogPointer startOffset, final LogEntryConsumer consumer) throws IOException, FormatException {
 		init();
+		final ReadingContext<MatcherContext> readingContext = getReadingContext();
 		LineInputStream lis = null;
 		try {
 			int linesWithoutPattern = 0;
@@ -138,7 +390,7 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 			}
 			LogPointer currentOffset = null;
 			while ((line = lis.readNextLine()) != null && (currentOffset = lis.getPointer()) != null) {
-				final MatcherContext ctx = matches(line);
+				final MatcherContext ctx = readingContext.matches(line);
 				if (ctx != null) {
 					linesWithoutPattern = 0;
 					if (entry != null) {
@@ -151,7 +403,7 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 					entry = new LogEntry();
 					text = new StringBuilder(line);
 					if (ctx != null) {
-						fillAttributes(entry, ctx);
+						readingContext.fillAttributes(entry, ctx);
 					}
 					entry.setStartOffset(lastOffset);
 				} else {

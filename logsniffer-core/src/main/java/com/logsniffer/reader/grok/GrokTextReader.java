@@ -36,6 +36,7 @@ import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.SeverityLevel;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.support.AbstractPatternLineReader;
+import com.logsniffer.reader.support.AbstractPatternLineReader.ReadingContext;
 import com.logsniffer.util.grok.GrokConsumerConstructor;
 import com.logsniffer.util.grok.GrokConsumerConstructor.GrokConsumer;
 import com.logsniffer.util.grok.GrokMatcher;
@@ -51,7 +52,7 @@ import com.logsniffer.util.grok.GroksRegistry;
  */
 @PostConstructed(constructor = GrokConsumerConstructor.class)
 public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher>
-		implements GrokConsumer, GrokPatternBeanJsonModel {
+		implements GrokConsumer, GrokPatternBeanJsonModel, ReadingContext<GrokMatcher> {
 
 	private static final Logger logger = LoggerFactory.getLogger(GrokTextReader.class);
 
@@ -89,14 +90,19 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher>
 	}
 
 	@Override
-	protected GrokMatcher matches(final String line) throws FormatException {
+	public GrokMatcher matches(final String line) throws FormatException {
 		final GrokMatcher m = grokBean.getGrok(groksRegistry).matcher(line);
 		return m.matches() ? m : null;
 	}
 
 	@Override
-	protected void fillAttributes(final LogEntry entry, final GrokMatcher ctx) throws FormatException {
+	public void fillAttributes(final LogEntry entry, final GrokMatcher ctx) throws FormatException {
 		ctx.setMatchingGroupsToFields(entry, false);
+	}
+
+	@Override
+	protected ReadingContext<GrokMatcher> getReadingContext() throws FormatException {
+		return this;
 	}
 
 	@Override

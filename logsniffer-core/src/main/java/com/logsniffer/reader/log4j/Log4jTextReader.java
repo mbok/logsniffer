@@ -178,6 +178,16 @@ public class Log4jTextReader extends FormattedTextReader {
 		protected FieldBaseTypes getFieldType() {
 			return FieldBaseTypes.STRING;
 		}
+
+		@Override
+		public Specifier clone() throws CloneNotSupportedException {
+			// Clone not thread-safe date format
+			final TimeSpecifier c = (TimeSpecifier) super.clone();
+			if (dateFormat != null) {
+				c.dateFormat = new SimpleDateFormat(dateFormat.toPattern());
+			}
+			return c;
+		}
 	}
 
 	/**

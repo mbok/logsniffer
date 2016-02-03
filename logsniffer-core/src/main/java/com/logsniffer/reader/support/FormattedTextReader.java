@@ -43,7 +43,7 @@ import com.logsniffer.reader.FormatException;
 public abstract class FormattedTextReader extends AbstractPatternLineReader<Matcher> {
 	private static final Logger logger = LoggerFactory.getLogger(FormattedTextReader.class);
 
-	public abstract static class Specifier {
+	public abstract static class Specifier implements Cloneable {
 		private int minWidth;
 		private int maxWidth;
 		private String modifier;
@@ -135,6 +135,11 @@ public abstract class FormattedTextReader extends AbstractPatternLineReader<Matc
 				return lengthPattern + "{" + minWidth + ",}";
 			}
 			return withoutLengthPattern != null ? withoutLengthPattern : lengthPattern;
+		}
+
+		@Override
+		public Specifier clone() throws CloneNotSupportedException {
+			return (Specifier) super.clone();
 		}
 	}
 
@@ -285,6 +290,35 @@ public abstract class FormattedTextReader extends AbstractPatternLineReader<Matc
 		}
 	}
 
+	@Override
+	protected ReadingContext<Matcher> getReadingContext() throws FormatException {
+		// Cloning specifiers for thread-safety
+		final Specifier[] localParsingSpecifiers = new Specifier[parsingSpecifiers.length];
+		for (int i = 0; i < parsingSpecifiers.length; i++) {
+			try {
+				localParsingSpecifiers[i] = parsingSpecifiers[i].clone();
+			} catch (final CloneNotSupportedException e) {
+				throw new FormatException("Failed to clone specifier: " + parsingSpecifiers[i], e);
+			}
+		}
+		return new ReadingContext<Matcher>() {
+			@Override
+			public Matcher matches(final String line) {
+				final Matcher m = parsingPattern.matcher(line);
+				return m.matches() ? m : null;
+			}
+
+			@Override
+			public void fillAttributes(final LogEntry entry, final Matcher ctx) throws FormatException {
+				int specNumber = 1;
+				for (final Specifier spec : localParsingSpecifiers) {
+					final String match = ctx.group(specNumber++);
+					spec.set(entry, match);
+				}
+			}
+		};
+	}
+
 	/**
 	 * @return the formatPattern
 	 */
@@ -299,21 +333,6 @@ public abstract class FormattedTextReader extends AbstractPatternLineReader<Matc
 	public void setFormatPattern(final String formatPattern) {
 		this.formatPattern = formatPattern;
 		this.parsingPattern = null;
-	}
-
-	@Override
-	protected Matcher matches(final String line) {
-		final Matcher m = parsingPattern.matcher(line);
-		return m.matches() ? m : null;
-	}
-
-	@Override
-	protected void fillAttributes(final LogEntry entry, final Matcher ctx) throws FormatException {
-		int specNumber = 1;
-		for (final Specifier spec : parsingSpecifiers) {
-			final String match = ctx.group(specNumber++);
-			spec.set(entry, match);
-		}
 	}
 
 	@Override
