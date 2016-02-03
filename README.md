@@ -21,6 +21,6 @@ For bugs, questions and discussions please use the [Github Issues](https://githu
 
 ## License
 
-Copyright 2015 Scaleborn UG (haftungsbeschränkt)
+Copyright 2016 Scaleborn UG (haftungsbeschränkt)
 
 Licensed under the GNU Lesser General Public License v3.0.
