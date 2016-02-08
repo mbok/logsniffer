@@ -11,6 +11,15 @@ public class LogInstance {
 	private LogEntryReader<LogInputStream> reader;
 	private Log log;
 
+	public LogInstance(final long logSourceId, final Log log, final LogRawAccess<LogInputStream> logAccess,
+			final LogEntryReader<LogInputStream> reader) {
+		super();
+		this.logSourceId = logSourceId;
+		this.log = log;
+		this.logAccess = logAccess;
+		this.reader = reader;
+	}
+
 	/**
 	 * @return the logSourceId
 	 */

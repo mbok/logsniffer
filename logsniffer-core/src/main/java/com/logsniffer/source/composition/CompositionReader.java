@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +30,12 @@ import com.logsniffer.source.composition.ComposedLogPointer.PointerPart;
 
 public class CompositionReader implements LogEntryReader<ComposedLogInputStream> {
 	private static final Logger logger = LoggerFactory.getLogger(CompositionReader.class);
-	private List<LogInstance> composedLogs;
+	private final List<LogInstance> composedLogs;
+
+	public CompositionReader(final List<LogInstance> composedLogs) {
+		super();
+		this.composedLogs = composedLogs;
+	}
 
 	@Override
 	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
@@ -74,55 +80,85 @@ public class CompositionReader implements LogEntryReader<ComposedLogInputStream>
 	}
 
 	private abstract class CompositionReaderExecutor {
+		private static final int BUFFER_SIZE_PER_THREAD = 10;
 		private final Semaphore processingSemaphore = new Semaphore(1);
 		private Semaphore threadSemaphore;
 		private boolean running;
+		private boolean blockedBuffer = true;
 		private Exception terminationException;
-		private final Set<LogInstanceEntry> instanceEntries = Collections.synchronizedSet(new TreeSet<>());
+		private final TreeSet<LogInstanceEntry> instanceEntries = new TreeSet<>();
 		private final List<SubReaderThread> activeThreads = new ArrayList<>();
-		private int[] instanceCounters;
-		private PointerPart[] lastOffsets;
+		private Semaphore[] instanceEntryBuffer;
+		private AtomicInteger[] instanceCounters;
+		private final PointerPart[] lastOffsets;
 
-		protected boolean process(final LogInstanceEntry instanceEntry) {
-			instanceEntries.add(instanceEntry);
-			// TODO snyc
-			instanceCounters[instanceEntry.instanceIndex]++;
-			if (processingSemaphore.tryAcquire()) {
-				synchronized (activeThreads) {
-					while (!instanceEntries.isEmpty() && running) {
-						// Check first all thread have filled the buffers
-						for (final SubReaderThread t : activeThreads) {
-							if (instanceCounters[t.logInstanceIndex] == 0) {
-								return running;
+		public CompositionReaderExecutor(final PointerPart[] lastOffsets) {
+			super();
+			this.lastOffsets = lastOffsets;
+		}
+
+		protected boolean process(final LogInstanceEntry instanceEntry, final SubReaderThread subReaderThread) {
+			try {
+				if (instanceEntry != null) {
+					if (blockedBuffer) {
+						instanceEntryBuffer[instanceEntry.instanceIndex].acquire();
+					}
+					synchronized (instanceEntries) {
+						instanceEntries.add(instanceEntry);
+					}
+					instanceCounters[instanceEntry.instanceIndex].incrementAndGet();
+				}
+				if (processingSemaphore.tryAcquire()) {
+					try {
+						synchronized (activeThreads) {
+							while (!instanceEntries.isEmpty() && running) {
+								// Check first all thread have filled the
+								// buffers
+								for (final SubReaderThread t : activeThreads) {
+									if (instanceCounters[t.logInstanceIndex].get() == 0) {
+										return running;
+									}
+								}
+								// Gather the next ordered entry, rewrite the
+								// pointers
+								// and
+								// delegate to the consumer
+								LogInstanceEntry nextEntryInstance = null;
+								synchronized (instanceEntries) {
+									nextEntryInstance = instanceEntries.pollFirst();
+								}
+								final LogEntry nextEntry = nextEntryInstance.entry;
+								lastOffsets[nextEntryInstance.instanceIndex] = new PointerPart(
+										nextEntryInstance.logSourceId, nextEntryInstance.logPath,
+										nextEntry.getEndOffset());
+								final ComposedLogPointer startPointer = new ComposedLogPointer(lastOffsets,
+										nextEntry.getTimeStamp());
+								lastOffsets[nextEntryInstance.instanceIndex] = new PointerPart(
+										nextEntryInstance.logSourceId, nextEntryInstance.logPath,
+										nextEntry.getEndOffset());
+								final ComposedLogPointer endPointer = new ComposedLogPointer(lastOffsets,
+										nextEntry.getTimeStamp());
+								nextEntry.setStartOffset(startPointer);
+								nextEntry.setEndOffset(endPointer);
+								nextEntry.put(Event.FIELD_SOURCE_ID, nextEntryInstance.logSourceId);
+								nextEntry.put(Event.FIELD_LOG_PATH, nextEntryInstance.logPath);
+								instanceCounters[nextEntryInstance.instanceIndex].decrementAndGet();
+								instanceEntryBuffer[nextEntryInstance.instanceIndex].release();
+								try {
+									running &= consumeComposedReadingResult(nextEntry);
+								} catch (final Exception e) {
+									terminationException = e;
+									running = false;
+								}
 							}
 						}
-						// Gather the next ordered entry, rewrite the pointers
-						// and
-						// delegate to the consumer
-						final LogInstanceEntry nextEntryInstance = instanceEntries.iterator().next();
-						instanceEntries.remove(nextEntryInstance);
-						final LogEntry nextEntry = nextEntryInstance.entry;
-						lastOffsets[nextEntryInstance.instanceIndex] = new PointerPart(nextEntryInstance.logSourceId,
-								nextEntryInstance.logPath, nextEntry.getEndOffset());
-						final ComposedLogPointer startPointer = new ComposedLogPointer(lastOffsets,
-								nextEntryInstance.instanceIndex, nextEntry.getTimeStamp());
-						lastOffsets[nextEntryInstance.instanceIndex] = new PointerPart(nextEntryInstance.logSourceId,
-								nextEntryInstance.logPath, nextEntry.getEndOffset());
-						final ComposedLogPointer endPointer = new ComposedLogPointer(lastOffsets,
-								nextEntryInstance.instanceIndex, nextEntry.getTimeStamp());
-						nextEntry.setStartOffset(startPointer);
-						nextEntry.setEndOffset(endPointer);
-						nextEntry.put(Event.FIELD_SOURCE_ID, nextEntryInstance.logSourceId);
-						nextEntry.put(Event.FIELD_LOG_PATH, nextEntryInstance.logPath);
-						instanceCounters[nextEntryInstance.instanceIndex]--;
-						try {
-							running &= consumeComposedReadingResult(nextEntry);
-						} catch (final Exception e) {
-							terminationException = e;
-							running = false;
-						}
+					} finally {
+						processingSemaphore.release();
 					}
 				}
+			} catch (final Exception e) {
+				terminationException = e;
+				running = false;
 			}
 			return running;
 		}
@@ -141,18 +177,25 @@ public class CompositionReader implements LogEntryReader<ComposedLogInputStream>
 					terminationException = t.exception;
 				}
 				activeThreads.remove(t);
+				if (activeThreads.size() <= 1) {
+					blockedBuffer = false;
+				}
+			}
+			// Call process to free possible blocked threads
+			if (!blockedBuffer) {
+				process(null, null);
 			}
 		}
 
 		public void executeParallel() throws IOException {
 			threadSemaphore = new Semaphore(composedLogs.size());
-			synchronized (this) {
+			synchronized (activeThreads) {
 				running = true;
-				instanceCounters = new int[composedLogs.size()];
+				instanceEntryBuffer = new Semaphore[composedLogs.size()];
+				instanceCounters = new AtomicInteger[composedLogs.size()];
 				for (int i = 0; i < composedLogs.size(); i++) {
-					instanceCounters[i] = 0;
-					// TODO proper value
-					lastOffsets[i] = null;
+					instanceEntryBuffer[i] = new Semaphore(BUFFER_SIZE_PER_THREAD);
+					instanceCounters[i] = new AtomicInteger(0);
 					try {
 						activeThreads.add(new SubReaderThread(this, i, composedLogs.get(i), lastOffsets[i]));
 					} catch (final InterruptedException e) {
@@ -169,6 +212,8 @@ public class CompositionReader implements LogEntryReader<ComposedLogInputStream>
 			} catch (final InterruptedException e) {
 				logger.error("Failed to wait for parallel threads", e);
 			}
+			// Complete buffered if consumer is still listening
+			process(null, null);
 			if (terminationException != null) {
 				if (terminationException instanceof IOException) {
 					throw (IOException) terminationException;
@@ -210,11 +255,12 @@ public class CompositionReader implements LogEntryReader<ComposedLogInputStream>
 					@Override
 					public boolean consume(final Log log, final LogPointerFactory pointerFactory, final LogEntry entry)
 							throws IOException {
-						return executor.process(new LogInstanceEntry(logInstanceIndex, entry, logSourceId, logPath));
+						return executor.process(new LogInstanceEntry(logInstanceIndex, entry, logSourceId, logPath),
+								SubReaderThread.this);
 					}
 				};
 				reader.readEntries(logInstance.getLog(), logInstance.getLogAccess(), startOffset.getOffset(), consumer);
-			} catch (final IOException e) {
+			} catch (final Exception e) {
 				logger.error("Failed to read from log instance " + logInstanceIndex + ": " + logInstance, e);
 				exception = e;
 			} finally {
@@ -240,7 +286,12 @@ public class CompositionReader implements LogEntryReader<ComposedLogInputStream>
 	public void readEntries(final Log log, final LogRawAccess<ComposedLogInputStream> logAccess,
 			final LogPointer startOffset, final com.logsniffer.reader.LogEntryReader.LogEntryConsumer consumer)
 					throws IOException, FormatException {
-		new CompositionReaderExecutor() {
+		// TODO navigate correctly
+		final ComposedLogPointer clp = new ComposedLogPointer(new PointerPart[composedLogs.size()], new Date(0));
+		for (int i = 0; i < composedLogs.size(); i++) {
+			clp.getParts()[i] = new PointerPart(composedLogs.get(i).getLogSourceId(), null, null);
+		}
+		new CompositionReaderExecutor(clp.getParts()) {
 			@Override
 			protected boolean consumeComposedReadingResult(final LogEntry entry) throws IOException {
 				return consumer.consume(log, logAccess, entry);
