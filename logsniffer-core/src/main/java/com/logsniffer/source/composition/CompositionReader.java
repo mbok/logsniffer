@@ -29,6 +29,8 @@ import com.logsniffer.reader.LogEntryReader;
 import com.logsniffer.source.composition.ComposedLogPointer.PointerPart;
 
 public class CompositionReader implements LogEntryReader<ComposedLogInputStream> {
+	protected static final int BUFFER_SIZE_PER_THREAD = 10;
+
 	private static final Logger logger = LoggerFactory.getLogger(CompositionReader.class);
 	private final List<LogInstance> composedLogs;
 
@@ -80,7 +82,6 @@ public class CompositionReader implements LogEntryReader<ComposedLogInputStream>
 	}
 
 	private abstract class CompositionReaderExecutor {
-		private static final int BUFFER_SIZE_PER_THREAD = 10;
 		private final Semaphore processingSemaphore = new Semaphore(1);
 		private Semaphore threadSemaphore;
 		private boolean running;
@@ -105,26 +106,26 @@ public class CompositionReader implements LogEntryReader<ComposedLogInputStream>
 					}
 					synchronized (instanceEntries) {
 						instanceEntries.add(instanceEntry);
+						instanceCounters[instanceEntry.instanceIndex].incrementAndGet();
 					}
-					instanceCounters[instanceEntry.instanceIndex].incrementAndGet();
 				}
 				if (processingSemaphore.tryAcquire()) {
 					try {
 						synchronized (activeThreads) {
 							while (!instanceEntries.isEmpty() && running) {
-								// Check first all thread have filled the
-								// buffers
-								for (final SubReaderThread t : activeThreads) {
-									if (instanceCounters[t.logInstanceIndex].get() == 0) {
-										return running;
-									}
-								}
 								// Gather the next ordered entry, rewrite the
 								// pointers
 								// and
 								// delegate to the consumer
 								LogInstanceEntry nextEntryInstance = null;
 								synchronized (instanceEntries) {
+									// Check first all thread have filled the
+									// buffers
+									for (final SubReaderThread t : activeThreads) {
+										if (instanceCounters[t.logInstanceIndex].get() <= 0) {
+											return running;
+										}
+									}
 									nextEntryInstance = instanceEntries.pollFirst();
 								}
 								final LogEntry nextEntry = nextEntryInstance.entry;
@@ -157,8 +158,14 @@ public class CompositionReader implements LogEntryReader<ComposedLogInputStream>
 					}
 				}
 			} catch (final Exception e) {
-				terminationException = e;
-				running = false;
+				synchronized (activeThreads) {
+					if (terminationException == null) {
+						terminationException = e;
+					} else {
+						logger.warn("Consequential error", e);
+					}
+					running = false;
+				}
 			}
 			return running;
 		}
@@ -180,9 +187,16 @@ public class CompositionReader implements LogEntryReader<ComposedLogInputStream>
 				if (activeThreads.size() <= 1) {
 					blockedBuffer = false;
 				}
+				if (!running) {
+					// Error occurred, stop all threads
+					for (final SubReaderThread tr : activeThreads) {
+						tr.interrupt();
+					}
+					activeThreads.clear();
+				}
 			}
 			// Call process to free possible blocked threads
-			if (!blockedBuffer) {
+			if (!blockedBuffer && running) {
 				process(null, null);
 			}
 		}
