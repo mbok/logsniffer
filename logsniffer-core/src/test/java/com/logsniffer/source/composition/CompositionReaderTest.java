@@ -9,8 +9,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.test.annotation.Repeat;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.logsniffer.app.CoreAppConfig;
 import com.logsniffer.event.Event;
 import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.model.Log;
@@ -33,7 +40,11 @@ import com.logsniffer.reader.support.BufferedConsumer;
  * @author mbok
  *
  */
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes = { CoreAppConfig.class })
 public class CompositionReaderTest {
+	private static Logger logger = LoggerFactory.getLogger(CompositionReaderTest.class);
+
 	private static final class DummySubReader implements LogEntryReader<LogInputStream> {
 		private final int maxCount;
 		private final int factor;
@@ -130,19 +141,21 @@ public class CompositionReaderTest {
 	}
 
 	/**
-	 * Composes 5 million entries.
+	 * Composes 45 million entries.
 	 * 
 	 * @throws FormatException
 	 * @throws IOException
 	 */
-	@Test(timeout = 1000 * 100)
+	@Test(timeout = 1000 * 100 * 100)
+	@Repeat(20)
 	public void testLongComposition() throws FormatException, IOException {
+		final long start = System.currentTimeMillis();
 		final List<LogInstance> subLogs = new ArrayList<>();
 		final CompositionReader r = new CompositionReader(subLogs);
 		final Log log1 = new ByteArrayLog("log1", new byte[0]);
 		final Log log2 = new ByteArrayLog("log2", new byte[0]);
-		subLogs.add(new LogInstance(1, log1, Mockito.mock(LogRawAccess.class), new DummySubReader(2000000, 2, 0)));
-		subLogs.add(new LogInstance(2, log2, Mockito.mock(LogRawAccess.class), new DummySubReader(2500000, 2, 1)));
+		subLogs.add(new LogInstance(1, log1, Mockito.mock(LogRawAccess.class), new DummySubReader(20000000, 2, 0)));
+		subLogs.add(new LogInstance(2, log2, Mockito.mock(LogRawAccess.class), new DummySubReader(25000000, 2, 1)));
 		final AtomicInteger count = new AtomicInteger();
 		r.readEntries(Mockito.mock(Log.class), Mockito.mock(LogRawAccess.class), null, new LogEntryConsumer() {
 			@Override
@@ -152,6 +165,10 @@ public class CompositionReaderTest {
 				return true;
 			}
 		});
-		Assert.assertEquals(4500000, count.get());
+		final long end = System.currentTimeMillis() - start;
+		logger.info("Read composed {} entries in {}ms, throughput: {} entries/s", count.get(), end,
+				Math.round((double) count.get() / (end / 1000)));
+		Assert.assertEquals(45000000, count.get());
+
 	}
 }
