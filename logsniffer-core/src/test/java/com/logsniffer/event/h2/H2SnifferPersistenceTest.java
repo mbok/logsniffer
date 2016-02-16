@@ -249,7 +249,7 @@ public class H2SnifferPersistenceTest {
 		LogRawAccess<LogInputStream> log1Access = Mockito.mock(LogRawAccess.class);
 		Mockito.when(log1.getPath()).thenReturn("abc");
 		Mockito.when(log1Access.getFromJSON(Mockito.anyString())).thenThrow(new IOException("Not expected"));
-		final LogSource<LogInputStream> mockedSource1 = Mockito.mock(LogSource.class);
+		final LogSource<LogRawAccess<LogInputStream>> mockedSource1 = Mockito.mock(LogSource.class);
 		Mockito.when(mockedSource1.getId()).thenReturn(source1.getId());
 		Mockito.when(mockedSource1.getLogs()).thenReturn(Collections.singletonList(log1));
 		Mockito.when(mockedSource1.getLogAccess(log1)).thenReturn(log1Access);

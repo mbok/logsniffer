@@ -60,7 +60,6 @@ import com.logsniffer.event.SnifferScheduler.ScheduleInfo;
 import com.logsniffer.event.filter.FilteredScanner;
 import com.logsniffer.event.filter.FilteredScanner.FilteredScannerWrapper;
 import com.logsniffer.model.Log;
-import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.model.support.JsonLogPointer;
 import com.logsniffer.util.LazyList;
@@ -283,8 +282,7 @@ public class H2SnifferPersistence implements SnifferPersistence {
 	}
 
 	@Override
-	public IncrementData getIncrementData(final Sniffer sniffer, final LogSource<? extends LogInputStream> source,
-			final Log log) {
+	public IncrementData getIncrementData(final Sniffer sniffer, final LogSource<?> source, final Log log) {
 		final List<IncrementData> idatas = jdbcTemplate.query(
 				"SELECT NEXT_POINTER, DATA FROM SNIFFERS_SCANNER_IDATA WHERE SNIFFER=? AND SOURCE=? AND LOG=?",
 				new Object[] { sniffer.getId(), source.getId(), log.getPath() }, new RowMapper<IncrementData>() {
@@ -309,8 +307,8 @@ public class H2SnifferPersistence implements SnifferPersistence {
 	}
 
 	@Override
-	public Map<Log, IncrementData> getIncrementDataByLog(final Sniffer sniffer,
-			final LogSource<? extends LogInputStream> source) throws IOException {
+	public Map<Log, IncrementData> getIncrementDataByLog(final Sniffer sniffer, final LogSource<?> source)
+			throws IOException {
 		final List<Log> logs = source.getLogs();
 		if (logs.size() > 0) {
 			final HashMap<Log, IncrementData> incs = new HashMap<Log, IncrementData>();
@@ -358,8 +356,8 @@ public class H2SnifferPersistence implements SnifferPersistence {
 	}
 
 	@Override
-	public void storeIncrementalData(final Sniffer observer, final LogSource<? extends LogInputStream> source,
-			final Log log, final IncrementData data) {
+	public void storeIncrementalData(final Sniffer observer, final LogSource<?> source, final Log log,
+			final IncrementData data) {
 		final ArrayList<Object> args = new ArrayList<Object>();
 		args.add(data.getNextOffset() != null ? data.getNextOffset().getJson() : "");
 		args.add(data.getData().toString());

@@ -34,10 +34,9 @@ import org.springframework.util.AntPathMatcher;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logsniffer.model.Log;
-import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogRawAccessor;
 import com.logsniffer.model.support.BaseLogsSource;
-import com.logsniffer.model.support.ByteLogInputStream;
+import com.logsniffer.model.support.ByteLogAccess;
 
 /**
  * Combines log files matching an Ant-like path pattern to one source. Source
@@ -48,11 +47,10 @@ import com.logsniffer.model.support.ByteLogInputStream;
  * 
  */
 @Component
-public class WildcardLogsSource extends BaseLogsSource<ByteLogInputStream> {
-	private static Logger logger = LoggerFactory
-			.getLogger(WildcardLogsSource.class);
+public class WildcardLogsSource extends BaseLogsSource<ByteLogAccess> {
+	private static Logger logger = LoggerFactory.getLogger(WildcardLogsSource.class);
 
-	private LogRawAccessor<ByteLogInputStream, FileLog> logAccessAdapter;
+	private LogRawAccessor<ByteLogAccess, FileLog> logAccessAdapter;
 
 	private String pattern;
 
@@ -92,10 +90,10 @@ public class WildcardLogsSource extends BaseLogsSource<ByteLogInputStream> {
 
 	@Override
 	public List<Log> getLogs() throws IOException {
-		PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+		final PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
 		resolver.setPathMatcher(new AntPathMatcher());
-		Resource[] resources = resolver.getResources("file:" + getPattern());
-		ArrayList<Log> logs = new ArrayList<Log>(resources.length);
+		final Resource[] resources = resolver.getResources("file:" + getPattern());
+		final ArrayList<Log> logs = new ArrayList<Log>(resources.length);
 		// TODO Decouple direct file log association
 		for (int i = 0; i < resources.length; i++) {
 			if (resources[i].exists()) {
@@ -103,8 +101,7 @@ public class WildcardLogsSource extends BaseLogsSource<ByteLogInputStream> {
 					logs.add(new FileLog(resources[i].getFile()));
 				}
 			} else {
-				logger.info("Ignore not existent file: {}",
-						resources[i].getFile());
+				logger.info("Ignore not existent file: {}", resources[i].getFile());
 			}
 		}
 		return logs;
@@ -112,7 +109,7 @@ public class WildcardLogsSource extends BaseLogsSource<ByteLogInputStream> {
 
 	@Override
 	public Log getLog(final String path) throws IOException {
-		File f = new File(path);
+		final File f = new File(path);
 		if (f.exists()) {
 			return new FileLog(f);
 		} else {
@@ -121,23 +118,21 @@ public class WildcardLogsSource extends BaseLogsSource<ByteLogInputStream> {
 	}
 
 	@Override
-	public LogRawAccess<ByteLogInputStream> getLogAccess(final Log origLog)
-			throws IOException {
-		FileLog log = (FileLog) getLog(origLog.getPath());
+	public ByteLogAccess getLogAccess(final Log origLog) throws IOException {
+		final FileLog log = (FileLog) getLog(origLog.getPath());
 		if (log != null) {
-			return getLogAccessAdapter() != null ? getLogAccessAdapter()
-					.getLogAccess(log) : new DirectFileLogAccess(log);
+			return getLogAccessAdapter() != null ? getLogAccessAdapter().getLogAccess(log)
+					: new DirectFileLogAccess(log);
 		} else {
 			return null;
 		}
 	}
 
-	public LogRawAccessor<ByteLogInputStream, FileLog> getLogAccessAdapter() {
+	public LogRawAccessor<ByteLogAccess, FileLog> getLogAccessAdapter() {
 		return logAccessAdapter;
 	}
 
-	public void setLogAccessAdapter(
-			final LogRawAccessor<ByteLogInputStream, FileLog> logAccessAdapter) {
+	public void setLogAccessAdapter(final LogRawAccessor<ByteLogAccess, FileLog> logAccessAdapter) {
 		this.logAccessAdapter = logAccessAdapter;
 	}
 }

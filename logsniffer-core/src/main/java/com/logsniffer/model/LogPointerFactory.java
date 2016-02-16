@@ -39,8 +39,7 @@ public interface LogPointerFactory {
 	 * @throws IOException
 	 *             in case of errors
 	 */
-	public abstract long getDifference(LogPointer source, LogPointer compareTo)
-			throws IOException;
+	public abstract long getDifference(LogPointer source, LogPointer compareTo) throws IOException;
 
 	/**
 	 * Creates a position pointer in the log relative to the source pointer. A
@@ -57,8 +56,7 @@ public interface LogPointerFactory {
 	 * @throws IOException
 	 *             in case of errors
 	 */
-	public abstract LogPointer createRelative(LogPointer source,
-			long relativeBytePosition) throws IOException;
+	public abstract LogPointer createRelative2(LogPointer source, long relativeBytePosition) throws IOException;
 
 	/**
 	 * Returns the pointer from given JSON representation.

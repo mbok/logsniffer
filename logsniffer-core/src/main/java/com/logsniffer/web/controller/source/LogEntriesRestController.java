@@ -71,8 +71,10 @@ public class LogEntriesRestController {
 	@Autowired
 	private LogSourceProvider logsSourceProvider;
 
-	private LogSource<LogInputStream> getActiveLogSource(final long logSourceId) throws ResourceNotFoundException {
-		final LogSource<LogInputStream> activeLogSource = logsSourceProvider.getSourceById(logSourceId);
+	private LogSource<LogRawAccess<? extends LogInputStream>> getActiveLogSource(final long logSourceId)
+			throws ResourceNotFoundException {
+		final LogSource<LogRawAccess<? extends LogInputStream>> activeLogSource = logsSourceProvider
+				.getSourceById(logSourceId);
 		if (activeLogSource != null) {
 			return activeLogSource;
 		} else {
@@ -81,7 +83,8 @@ public class LogEntriesRestController {
 		}
 	}
 
-	private int getHighlightEntryIndex(LogPointer desiredPointer, int desiredCount, List<LogEntry> entries) {
+	private int getHighlightEntryIndex(final LogPointer desiredPointer, final int desiredCount,
+			final List<LogEntry> entries) {
 		if (!entries.isEmpty()) {
 			if (desiredCount >= 0) {
 				if (desiredPointer == null) {
@@ -113,7 +116,8 @@ public class LogEntriesRestController {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@RequestMapping(value = "/sources/entries", method = RequestMethod.POST)
 	@ResponseBody
-	LogEntriesResult getEntries(@Valid @RequestBody final LogSource<LogInputStream> activeLogSource,
+	LogEntriesResult getEntries(
+			@Valid @RequestBody final LogSource<LogRawAccess<? extends LogInputStream>> activeLogSource,
 			@RequestParam("log") final String logPath,
 			@RequestParam(value = "mark", required = false) final String mark,
 			@RequestParam(value = "count") final int count)
@@ -123,13 +127,13 @@ public class LogEntriesRestController {
 		try {
 			final Log log = getLog(activeLogSource, logPath);
 			LogPointer pointer = null;
-			final LogRawAccess<LogInputStream> logAccess = activeLogSource.getLogAccess(log);
+			final LogRawAccess<? extends LogInputStream> logAccess = activeLogSource.getLogAccess(log);
 			if (StringUtils.isNotEmpty(mark)) {
 				pointer = logAccess.getFromJSON(mark);
 			} else {
 				if (count < 0) {
 					// Tail
-					pointer = logAccess.createRelative(null, log.getSize());
+					pointer = logAccess.end();
 				}
 			}
 			if (count > 0) {
@@ -138,8 +142,8 @@ public class LogEntriesRestController {
 				return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(), bc.getBuffer(),
 						getHighlightEntryIndex(pointer, count, bc.getBuffer()));
 			} else {
-				List<LogEntry> readEntries = new BackwardReader(activeLogSource.getReader()).readEntries(log, logAccess,
-						pointer, count);
+				final List<LogEntry> readEntries = new BackwardReader(activeLogSource.getReader()).readEntries(log,
+						logAccess, pointer, count);
 				return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(), readEntries,
 						getHighlightEntryIndex(pointer, count, readEntries));
 			}
@@ -158,7 +162,7 @@ public class LogEntriesRestController {
 					throws IOException, FormatException, ResourceNotFoundException {
 		logger.debug("Start load entries log={} from source={}, mark={}, count={}", logPath, logSource, mark, count);
 		try {
-			final LogSource<LogInputStream> activeLogSource = getActiveLogSource(logSource);
+			final LogSource<LogRawAccess<? extends LogInputStream>> activeLogSource = getActiveLogSource(logSource);
 			return getEntries(activeLogSource, logPath, mark, count);
 		} finally {
 			logger.debug("Finished log entries from log={} and source={}", logPath, logSource);
@@ -168,7 +172,8 @@ public class LogEntriesRestController {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@RequestMapping(value = "/sources/randomAccessEntries", method = RequestMethod.POST)
 	@ResponseBody
-	LogEntriesResult getRandomAccessEntries(@Valid @RequestBody final LogSource<LogInputStream> activeLogSource,
+	LogEntriesResult getRandomAccessEntries(
+			@Valid @RequestBody final LogSource<LogRawAccess<? extends LogInputStream>> activeLogSource,
 			@RequestParam("log") final String logPath, @RequestParam(value = "mark") final String mark,
 			@RequestParam(value = "count") final int count)
 					throws IOException, FormatException, ResourceNotFoundException {
@@ -176,31 +181,31 @@ public class LogEntriesRestController {
 				activeLogSource, mark, count);
 		try {
 			final Log log = getLog(activeLogSource, logPath);
-			final LogRawAccess<LogInputStream> logAccess = activeLogSource.getLogAccess(log);
+			final LogRawAccess<? extends LogInputStream> logAccess = activeLogSource.getLogAccess(log);
 			LogPointer pointer = null;
 			if (StringUtils.isNotEmpty(mark)) {
 				pointer = logAccess.getFromJSON(mark);
 			}
 			final BufferedConsumer bc = new BufferedConsumer(count + 1);
 			if (pointer != null) {
-				pointer = logAccess.createRelative(pointer, 0);
+				pointer = logAccess.refresh(pointer).get();
 				if (pointer.isEOF()) {
 					// End pointer, return the last 10 simply
-					List<LogEntry> readEntries = new BackwardReader(activeLogSource.getReader()).readEntries(log,
+					final List<LogEntry> readEntries = new BackwardReader(activeLogSource.getReader()).readEntries(log,
 							logAccess, pointer, -10);
 					return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(), readEntries,
 							getHighlightEntryIndex(pointer, -10, readEntries));
 				}
 			}
 			activeLogSource.getReader().readEntries(log, logAccess,
-					pointer != null ? logAccess.createRelative(pointer, -1) : null, bc);
+					pointer != null ? logAccess.refresh(pointer).get() : null, bc);
 			final List<LogEntry> entries = bc.getBuffer();
 			if (entries.size() > 0) {
 				final LogEntry first = entries.get(0);
 				final LogEntry last = entries.get(entries.size() - 1);
 				if (!first.getStartOffset().isSOF() && last.getEndOffset().isEOF() && entries.size() < 10) {
 					// Hm, EOF reached
-					List<LogEntry> readEntries = new BackwardReader(activeLogSource.getReader()).readEntries(log,
+					final List<LogEntry> readEntries = new BackwardReader(activeLogSource.getReader()).readEntries(log,
 							logAccess, last.getEndOffset(), -10);
 					return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(), readEntries, -1);
 				} else if (logAccess.getDifference(pointer, first.getStartOffset()) == 0) {
@@ -229,7 +234,7 @@ public class LogEntriesRestController {
 		logger.debug("Start loading random access entries log={} from source={}, mark={}, count={}", logPath, logSource,
 				mark, count);
 		try {
-			final LogSource<LogInputStream> activeLogSource = getActiveLogSource(logSource);
+			final LogSource<LogRawAccess<? extends LogInputStream>> activeLogSource = getActiveLogSource(logSource);
 			return getRandomAccessEntries(activeLogSource, logPath, mark, count);
 		} finally {
 			logger.debug("Finished loading random access entries from log={} and source={}", logPath, logSource);
@@ -294,9 +299,9 @@ public class LogEntriesRestController {
 		final long start = System.currentTimeMillis();
 		logger.debug("Start searching entries log={} from source={}, mark={}, count={}", logPath, logSource, mark,
 				count);
-		final LogSource<LogInputStream> source = getActiveLogSource(logSource);
+		final LogSource<LogRawAccess<? extends LogInputStream>> source = getActiveLogSource(logSource);
 		final Log log = getLog(source, logPath);
-		final LogRawAccess<LogInputStream> logAccess = source.getLogAccess(log);
+		final LogRawAccess<LogInputStream> logAccess = (LogRawAccess<LogInputStream>) source.getLogAccess(log);
 		final IncrementData incData = new IncrementData();
 		LogPointer searchPointer = null;
 		if (StringUtils.isNotEmpty(mark)) {
@@ -304,9 +309,9 @@ public class LogEntriesRestController {
 		}
 		incData.setNextOffset(searchPointer);
 		final SearchResult searchResult = new SearchResult();
-		LogEntryReader<LogInputStream> reader = null;
+		LogEntryReader<LogRawAccess<LogInputStream>> reader = null;
 		if (count >= 0) {
-			reader = source.getReader();
+			reader = ((LogSource) source).getReader();
 		} else {
 			reader = new FluentBackwardReader(source.getReader());
 		}
@@ -337,7 +342,7 @@ public class LogEntriesRestController {
 			searchResult.entries = new LogEntriesResult(source.getReader().getFieldTypes(), bc.getBuffer(), 0);
 		} else if (searchResult.sofReached) {
 			// Return start pointer
-			searchResult.lastPointer = logAccess.createRelative(null, 0);
+			searchResult.lastPointer = logAccess.start();
 		} else {
 			// Nothing found in that round
 			searchResult.lastPointer = incData.getNextOffset();
@@ -346,7 +351,7 @@ public class LogEntriesRestController {
 		return searchResult;
 	}
 
-	private Log getLog(final LogSource<LogInputStream> activeLogSource, final String logPath)
+	private Log getLog(final LogSource<LogRawAccess<? extends LogInputStream>> activeLogSource, final String logPath)
 			throws IOException, ResourceNotFoundException {
 		if (logPath == null) {
 			return null;

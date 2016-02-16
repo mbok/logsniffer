@@ -25,7 +25,6 @@ import com.logsniffer.event.EventPersistence;
 import com.logsniffer.event.Sniffer;
 import com.logsniffer.event.SnifferPersistence;
 import com.logsniffer.event.SnifferScheduler;
-import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.model.LogSourceProvider;
 import com.logsniffer.web.controller.exception.ResourceNotFoundException;
@@ -49,26 +48,21 @@ public abstract class SniffersBaseController {
 	@Autowired
 	protected LogSourceProvider sourceProvider;
 
-	protected Sniffer getAndBindActiveSniffer(final Model mv,
-			final long snifferId) throws ResourceNotFoundException,
-			SchedulerException {
-		Sniffer activeSniffer = snifferPersistence.getSniffer(snifferId);
+	protected Sniffer getAndBindActiveSniffer(final Model mv, final long snifferId)
+			throws ResourceNotFoundException, SchedulerException {
+		final Sniffer activeSniffer = snifferPersistence.getSniffer(snifferId);
 		if (activeSniffer == null) {
-			throw new ResourceNotFoundException(Sniffer.class, snifferId,
-					"Sniffer not found for id: " + snifferId);
+			throw new ResourceNotFoundException(Sniffer.class, snifferId, "Sniffer not found for id: " + snifferId);
 		}
 		mv.addAttribute("activeSniffer", activeSniffer);
 		mv.addAttribute("scheduled", snifferScheduler.isScheduled(snifferId));
 		return activeSniffer;
 	}
 
-	protected LogSource<LogInputStream> getLogSource(final long sourceId)
-			throws ResourceNotFoundException {
-		LogSource<LogInputStream> source = sourceProvider
-				.getSourceById(sourceId);
+	protected LogSource<?> getLogSource(final long sourceId) throws ResourceNotFoundException {
+		final LogSource<?> source = sourceProvider.getSourceById(sourceId);
 		if (source == null) {
-			throw new ResourceNotFoundException(LogSource.class, sourceId,
-					"Log source not found for id: " + sourceId);
+			throw new ResourceNotFoundException(LogSource.class, sourceId, "Log source not found for id: " + sourceId);
 		}
 		return source;
 	}

@@ -27,7 +27,6 @@ import com.logsniffer.aspect.AspectProvider;
 import com.logsniffer.aspect.sql.QueryAdaptor;
 import com.logsniffer.event.SnifferScheduler.ScheduleInfo;
 import com.logsniffer.model.Log;
-import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.util.ListQueryBuilder;
 import com.logsniffer.util.PageableResult;
@@ -94,13 +93,10 @@ public interface SnifferPersistence {
 
 	public void deleteSniffer(Sniffer sniffer);
 
-	public IncrementData getIncrementData(Sniffer sniffer, LogSource<? extends LogInputStream> source, Log log)
-			throws IOException;
+	public IncrementData getIncrementData(Sniffer sniffer, LogSource<?> source, Log log) throws IOException;
 
-	public Map<Log, IncrementData> getIncrementDataByLog(Sniffer sniffer, LogSource<? extends LogInputStream> source)
-			throws IOException;
+	public Map<Log, IncrementData> getIncrementDataByLog(Sniffer sniffer, LogSource<?> source) throws IOException;
 
-	public void storeIncrementalData(Sniffer observer, LogSource<? extends LogInputStream> source, Log log,
-			IncrementData data);
+	public void storeIncrementalData(Sniffer observer, LogSource<?> source, Log log, IncrementData data);
 
 }

@@ -24,10 +24,6 @@ import java.io.SequenceInputStream;
 import java.util.Arrays;
 import java.util.Enumeration;
 
-import net.sf.json.JSONException;
-import net.sf.json.JSONObject;
-import net.sf.json.util.JSONUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,29 +32,31 @@ import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogRawAccessor;
 
-public class DailyRollingLogAccess implements LogRawAccess<ByteLogInputStream> {
+import net.sf.json.JSONException;
+import net.sf.json.JSONObject;
+import net.sf.json.util.JSONUtils;
+
+public class DailyRollingLogAccess implements ByteLogAccess {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
-	private final static InputStream EMPTY_STREAM = new ByteArrayInputStream(
-			new byte[0]);
+	private final static InputStream EMPTY_STREAM = new ByteArrayInputStream(new byte[0]);
 
 	private final DailyRollingLog log;
 	private final Log[] parts;
 
 	private final String[] allLogPathes;
 
-	private final LogRawAccessor<ByteLogInputStream, Log> rawAccessor;
+	private final LogRawAccessor<ByteLogAccess, Log> rawAccessor;
 
 	@SuppressWarnings("unchecked")
-	public DailyRollingLogAccess(
-			final LogRawAccessor<? extends ByteLogInputStream, ? extends Log> rawAccessor,
+	public DailyRollingLogAccess(final LogRawAccessor<? extends ByteLogAccess, ? extends Log> rawAccessor,
 			final DailyRollingLog log) {
 		super();
-		this.rawAccessor = (LogRawAccessor<ByteLogInputStream, Log>) rawAccessor;
+		this.rawAccessor = (LogRawAccessor<ByteLogAccess, Log>) rawAccessor;
 		this.log = log;
 		this.parts = log.getParts();
 		this.allLogPathes = new String[this.parts.length];
 		int i = 0;
-		for (Log part : parts) {
+		for (final Log part : parts) {
 			this.allLogPathes[i++] = part.getPath();
 		}
 	}
@@ -79,13 +77,11 @@ public class DailyRollingLogAccess implements LogRawAccess<ByteLogInputStream> {
 		private String json;
 		private int allLogsHash;
 
-		public RollingLogPointer(final String path,
-				final String[] allLogPathes, final LogPointer filePointer,
+		public RollingLogPointer(final String path, final String[] allLogPathes, final LogPointer filePointer,
 				final boolean firstFile, final boolean liveFile) {
 			super();
 			this.path = path;
-			this.liveNext = liveFile && allLogPathes.length > 1 ? allLogPathes[1]
-					: null;
+			this.liveNext = liveFile && allLogPathes.length > 1 ? allLogPathes[1] : null;
 			this.allLogsHash = Arrays.hashCode(allLogPathes);
 			this.filePointer = filePointer;
 			this.live = liveFile;
@@ -104,17 +100,14 @@ public class DailyRollingLogAccess implements LogRawAccess<ByteLogInputStream> {
 
 		@Override
 		public String toString() {
-			return "RollingLogPointer [path=" + path + ", filePointer="
-					+ filePointer + "]";
+			return "RollingLogPointer [path=" + path + ", filePointer=" + filePointer + "]";
 		}
 
 		@Override
 		public String getJson() {
 			if (json == null) {
-				StringBuilder b = new StringBuilder("{\"p\":"
-						+ JSONUtils.quote(path) + ",\"l\":" + live + ",\"f\":"
-						+ first + ",\"h\":" + allLogsHash + ",\"u\":"
-						+ filePointer.getJson());
+				final StringBuilder b = new StringBuilder("{\"p\":" + JSONUtils.quote(path) + ",\"l\":" + live
+						+ ",\"f\":" + first + ",\"h\":" + allLogsHash + ",\"u\":" + filePointer.getJson());
 				if (liveNext != null) {
 					b.append(",\"n\":" + JSONUtils.quote(liveNext));
 				}
@@ -129,12 +122,10 @@ public class DailyRollingLogAccess implements LogRawAccess<ByteLogInputStream> {
 			final int prime = 31;
 			int result = 1;
 			result = prime * result + allLogsHash;
-			result = prime * result
-					+ (filePointer == null ? 0 : filePointer.hashCode());
+			result = prime * result + (filePointer == null ? 0 : filePointer.hashCode());
 			result = prime * result + (first ? 1231 : 1237);
 			result = prime * result + (live ? 1231 : 1237);
-			result = prime * result
-					+ (liveNext == null ? 0 : liveNext.hashCode());
+			result = prime * result + (liveNext == null ? 0 : liveNext.hashCode());
 			result = prime * result + (path == null ? 0 : path.hashCode());
 			return result;
 		}
@@ -150,7 +141,7 @@ public class DailyRollingLogAccess implements LogRawAccess<ByteLogInputStream> {
 			if (!(obj instanceof RollingLogPointer)) {
 				return false;
 			}
-			RollingLogPointer other = (RollingLogPointer) obj;
+			final RollingLogPointer other = (RollingLogPointer) obj;
 			if (allLogsHash != other.allLogsHash) {
 				return false;
 			}
@@ -193,61 +184,48 @@ public class DailyRollingLogAccess implements LogRawAccess<ByteLogInputStream> {
 		private RollingLogPointer from;
 		private boolean sequenceStreamClosed = false;
 
-		private RollingInputStream(final RollingLogPointer _from)
-				throws IOException {
-			PointerData fpd = getLogIndex(_from);
+		private RollingInputStream(final RollingLogPointer _from) throws IOException {
+			final PointerData fpd = getLogIndex(_from);
 			this.currentLogIndex = fpd.index;
 			this.from = fpd.pointer;
-			this.seqStream = new SequenceInputStream(
-					new Enumeration<InputStream>() {
-						private boolean rolled = false;
+			this.seqStream = new SequenceInputStream(new Enumeration<InputStream>() {
+				private boolean rolled = false;
 
-						@Override
-						public boolean hasMoreElements() {
-							return !sequenceStreamClosed
-									&& (!rolled || currentLogIndex > 0);
-						}
+				@Override
+				public boolean hasMoreElements() {
+					return !sequenceStreamClosed && (!rolled || currentLogIndex > 0);
+				}
 
-						@Override
-						public InputStream nextElement() {
-							try {
-								if (rolled) {
-									currentLogIndex--;
-								}
-								if (currentLogIndex < 0) {
-									// Empty
-									return EMPTY_STREAM;
-								}
-								logger.debug(
-										"Openning input stream from log #{}:{} at {}",
-										currentLogIndex,
-										parts[currentLogIndex],
-										from != null ? from.filePointer : null);
-								LogRawAccess<ByteLogInputStream> newLogRawAccess = getPartLogAccess(parts[currentLogIndex]);
-								if (newLogRawAccess == null) {
-									logger.warn(
-											"Failed to open access to log #{}:{} at {}",
-											currentLogIndex,
-											parts[currentLogIndex],
-											from != null ? from.filePointer
-													: null);
-									return nextElement();
-								}
-								currentLogStream = newLogRawAccess
-										.getInputStream(rolled ? null
-												: from != null ? from.filePointer
-														: null);
-								return currentLogStream;
-							} catch (IOException e) {
-								throw new RuntimeException(
-										"Failed to open input stream for log: "
-												+ parts[currentLogIndex]
-														.getPath(), e);
-							} finally {
-								rolled = true;
-							}
+				@Override
+				public InputStream nextElement() {
+					try {
+						if (rolled) {
+							currentLogIndex--;
 						}
-					}) {
+						if (currentLogIndex < 0) {
+							// Empty
+							return EMPTY_STREAM;
+						}
+						logger.debug("Openning input stream from log #{}:{} at {}", currentLogIndex,
+								parts[currentLogIndex], from != null ? from.filePointer : null);
+						final LogRawAccess<ByteLogInputStream> newLogRawAccess = getPartLogAccess(
+								parts[currentLogIndex]);
+						if (newLogRawAccess == null) {
+							logger.warn("Failed to open access to log #{}:{} at {}", currentLogIndex,
+									parts[currentLogIndex], from != null ? from.filePointer : null);
+							return nextElement();
+						}
+						currentLogStream = newLogRawAccess
+								.getInputStream(rolled ? null : from != null ? from.filePointer : null);
+						return currentLogStream;
+					} catch (final IOException e) {
+						throw new RuntimeException(
+								"Failed to open input stream for log: " + parts[currentLogIndex].getPath(), e);
+					} finally {
+						rolled = true;
+					}
+				}
+			}) {
 				@Override
 				public void close() throws IOException {
 					sequenceStreamClosed = true;
@@ -261,10 +239,8 @@ public class DailyRollingLogAccess implements LogRawAccess<ByteLogInputStream> {
 		public LogPointer getPointer() throws IOException {
 			if (currentLogStream != null) {
 				// Already read something
-				return new RollingLogPointer(parts[currentLogIndex].getPath(),
-						allLogPathes, currentLogStream.getPointer(),
-						currentLogIndex == parts.length - 1,
-						currentLogIndex == 0);
+				return new RollingLogPointer(parts[currentLogIndex].getPath(), allLogPathes,
+						currentLogStream.getPointer(), currentLogIndex == parts.length - 1, currentLogIndex == 0);
 			} else if (from != null) {
 				// Nothing read up to now
 				return from;
@@ -280,8 +256,7 @@ public class DailyRollingLogAccess implements LogRawAccess<ByteLogInputStream> {
 		}
 
 		@Override
-		public int read(final byte[] b, final int off, final int len)
-				throws IOException {
+		public int read(final byte[] b, final int off, final int len) throws IOException {
 			return seqStream.read(b, off, len);
 		}
 
@@ -299,7 +274,7 @@ public class DailyRollingLogAccess implements LogRawAccess<ByteLogInputStream> {
 
 	private int getLogIndex(final String path) {
 		int i = 0;
-		for (Log log : parts) {
+		for (final Log log : parts) {
 			if (log.getPath().equals(path)) {
 				return i;
 			}
@@ -327,18 +302,15 @@ public class DailyRollingLogAccess implements LogRawAccess<ByteLogInputStream> {
 
 	}
 
-	private PointerData getLogIndex(final LogPointer _source)
-			throws IOException {
-		RollingLogPointer source = (RollingLogPointer) _source;
+	private PointerData getLogIndex(final LogPointer _source) throws IOException {
+		final RollingLogPointer source = (RollingLogPointer) _source;
 		if (source == null) {
 			return new PointerData(parts.length - 1, null);
 		}
 		// Search for the proper log
-		int index = getLogIndex(source.path);
+		final int index = getLogIndex(source.path);
 		if (index < 0) {
-			logger.debug(
-					"Using start pointer for log '{}' due to '{}' is no more listed",
-					log.getPath(), source.path);
+			logger.debug("Using start pointer for log '{}' due to '{}' is no more listed", log.getPath(), source.path);
 			return new PointerData(parts.length - 1, null);
 		} else {
 			if (Arrays.hashCode(allLogPathes) == source.allLogsHash) {
@@ -349,22 +321,18 @@ public class DailyRollingLogAccess implements LogRawAccess<ByteLogInputStream> {
 					// We were on the live log which is now rolled, lets check
 					// for previous
 					if (source.liveNext != null) {
-						int next = getLogIndex(source.liveNext) - 1;
+						final int next = getLogIndex(source.liveNext) - 1;
 						if (next > 0 && next < parts.length) {
-							logger.debug(
-									"Using for rolled live log '{}' the next listed '{}'",
-									log.getPath(), parts[next].getPath());
+							logger.debug("Using for rolled live log '{}' the next listed '{}'", log.getPath(),
+									parts[next].getPath());
 							return new PointerData(next, source);
 						} else {
-							logger.debug(
-									"Using start pointer for log '{}', because the next rolled wasn't found",
+							logger.debug("Using start pointer for log '{}', because the next rolled wasn't found",
 									log.getPath());
 							return new PointerData(parts.length - 1, null);
 						}
 					}
-					logger.debug(
-							"Using start pointer for log '{}', because the live one was rolled",
-							log.getPath());
+					logger.debug("Using start pointer for log '{}', because the live one was rolled", log.getPath());
 					return new PointerData(parts.length - 1, null);
 
 				} else {
@@ -375,10 +343,9 @@ public class DailyRollingLogAccess implements LogRawAccess<ByteLogInputStream> {
 	}
 
 	@Override
-	public long getDifference(final LogPointer _source, final LogPointer _target)
-			throws IOException {
-		PointerData spd = getLogIndex(_source);
-		PointerData tpd = getLogIndex(_target);
+	public long getDifference(final LogPointer _source, final LogPointer _target) throws IOException {
+		final PointerData spd = getLogIndex(_source);
+		final PointerData tpd = getLogIndex(_target);
 		RollingLogPointer source = spd.pointer;
 		RollingLogPointer target = tpd.pointer;
 		int start = spd.index;
@@ -388,24 +355,21 @@ public class DailyRollingLogAccess implements LogRawAccess<ByteLogInputStream> {
 		if (start < end) {
 			// Change sign and switch bounds
 			dir = -1;
-			int tmp = start;
+			final int tmp = start;
 			start = end;
 			end = tmp;
-			RollingLogPointer tmpp = source;
+			final RollingLogPointer tmpp = source;
 			source = target;
 			target = tmpp;
 		}
 		if (start > end) {
 			// Unread from source
 			diff += parts[start].getSize()
-					- (source != null ? getPartLogAccess(parts[start])
-							.getDifference(null, source.filePointer) : 0);
+					- (source != null ? getPartLogAccess(parts[start]).getDifference(null, source.filePointer) : 0);
 			// Already read from target
-			diff += target != null ? getPartLogAccess(parts[end])
-					.getDifference(null, target.filePointer) : 0;
+			diff += target != null ? getPartLogAccess(parts[end]).getDifference(null, target.filePointer) : 0;
 		} else if (start == end) {
-			diff += getPartLogAccess(parts[start]).getDifference(
-					source != null ? source.filePointer : null,
+			diff += getPartLogAccess(parts[start]).getDifference(source != null ? source.filePointer : null,
 					target.filePointer);
 		}
 		for (int i = start - 1; i > end; i--) {
@@ -415,23 +379,25 @@ public class DailyRollingLogAccess implements LogRawAccess<ByteLogInputStream> {
 	}
 
 	@Override
-	public LogPointer createRelative(final LogPointer _source,
-			long relativeBytePosition) throws IOException {
-		PointerData spd = getLogIndex(_source);
+	public LogPointer createRelative2(final LogPointer _source, final long relativeBytePosition) throws IOException {
+		return null;
+	}
+
+	@Override
+	public LogPointer createRelative(final LogPointer _source, long relativeBytePosition) throws IOException {
+		final PointerData spd = getLogIndex(_source);
 		RollingLogPointer source = spd.pointer;
 		int start = spd.index;
 		if (relativeBytePosition > 0) {
 			long mv = 0;
-			long localPos = source != null ? getPartLogAccess(parts[start])
-					.getDifference(null, source.filePointer) : 0;
+			long localPos = source != null ? getPartLogAccess(parts[start]).getDifference(null, source.filePointer) : 0;
 			int i = 0;
 			while (relativeBytePosition > 0 && start >= 0) {
 				if (i++ == 1) {
 					source = null;
 					localPos = 0;
 				}
-				mv = Math.min(relativeBytePosition, parts[start].getSize()
-						- localPos);
+				mv = Math.min(relativeBytePosition, parts[start].getSize() - localPos);
 				relativeBytePosition -= mv;
 				start--;
 			}
@@ -442,13 +408,11 @@ public class DailyRollingLogAccess implements LogRawAccess<ByteLogInputStream> {
 				mv = 0;
 			}
 			return new RollingLogPointer(parts[start].getPath(), allLogPathes,
-					getPartLogAccess(parts[start]).createRelative(
-							source != null ? source.filePointer : null, mv),
+					getPartLogAccess(parts[start]).createRelative(source != null ? source.filePointer : null, mv),
 					start == parts.length - 1, start == 0);
 		} else if (relativeBytePosition < 0) {
 			long mv = 0;
-			long localPos = source != null ? getPartLogAccess(parts[start])
-					.getDifference(null, source.filePointer) : 0;
+			long localPos = source != null ? getPartLogAccess(parts[start]).getDifference(null, source.filePointer) : 0;
 			while (relativeBytePosition < 0 && start < parts.length) {
 				if (source == null) {
 					localPos = parts[start].getSize();
@@ -460,13 +424,11 @@ public class DailyRollingLogAccess implements LogRawAccess<ByteLogInputStream> {
 			}
 			start--;
 			return new RollingLogPointer(parts[start].getPath(), allLogPathes,
-					getPartLogAccess(parts[start]).createRelative(null,
-							localPos - mv), start == parts.length - 1,
+					getPartLogAccess(parts[start]).createRelative(null, localPos - mv), start == parts.length - 1,
 					start == 0);
 		} else {
 			return new RollingLogPointer(parts[start].getPath(), allLogPathes,
-					getPartLogAccess(parts[start]).createRelative(
-							source != null ? source.filePointer : null, 0),
+					getPartLogAccess(parts[start]).createRelative(source != null ? source.filePointer : null, 0),
 					start == parts.length - 1, start == 0);
 		}
 	}
@@ -474,15 +436,13 @@ public class DailyRollingLogAccess implements LogRawAccess<ByteLogInputStream> {
 	@Override
 	public LogPointer getFromJSON(final String data) throws IOException {
 		try {
-			JSONObject json = JSONObject.fromObject(data);
+			final JSONObject json = JSONObject.fromObject(data);
 			if (json.size() > 0) {
-				RollingLogPointer rlp = new RollingLogPointer(
-						json.getString("p"), new String[] {},
-						new DefaultPointer(0, 0), json.getBoolean("f"),
-						json.getBoolean("l"));
+				final RollingLogPointer rlp = new RollingLogPointer(json.getString("p"), new String[] {},
+						new DefaultPointer(0, 0), json.getBoolean("f"), json.getBoolean("l"));
 				rlp.allLogsHash = json.getInt("h");
 				rlp.liveNext = json.optString("n", null);
-				PointerData spd = getLogIndex(rlp);
+				final PointerData spd = getLogIndex(rlp);
 				if (spd.pointer != null) {
 					rlp.filePointer = getPartLogAccess(parts[spd.index])
 							.getFromJSON(json.getJSONObject("u").toString());
@@ -491,20 +451,48 @@ public class DailyRollingLogAccess implements LogRawAccess<ByteLogInputStream> {
 			} else {
 				return createRelative(null, 0);
 			}
-		} catch (JSONException e) {
+		} catch (final JSONException e) {
 			logger.warn("Invalid JSON pointer: " + data, e);
 			return createRelative(null, 0);
 		}
 	}
 
-	private LogRawAccess<ByteLogInputStream> getPartLogAccess(final Log part)
-			throws IOException {
+	private ByteLogAccess getPartLogAccess(final Log part) throws IOException {
 		return rawAccessor.getLogAccess(part);
 	}
 
 	@Override
-	public ByteLogInputStream getInputStream(final LogPointer from)
-			throws IOException {
+	public ByteLogInputStream getInputStream(final LogPointer from) throws IOException {
 		return new RollingInputStream((RollingLogPointer) from);
+	}
+
+	@Override
+	public LogPointer end() throws IOException {
+		return createRelative(null, this.log.getSize());
+	}
+
+	@Override
+	public LogPointer start() throws IOException {
+		return createRelative(null, 0);
+	}
+
+	@Override
+	public NavigationFuture refresh(final LogPointer toRefresh) throws IOException {
+		return new NavigationFuture() {
+			@Override
+			public LogPointer get() throws IOException {
+				return createRelative(toRefresh, 0);
+			}
+		};
+	}
+
+	@Override
+	public NavigationFuture absolute(final Long offset) {
+		return new NavigationFuture() {
+			@Override
+			public LogPointer get() throws IOException {
+				return createRelative(null, offset);
+			}
+		};
 	}
 }

@@ -36,6 +36,7 @@ import org.springframework.web.servlet.ModelAndView;
 import com.logsniffer.event.Scanner;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogInputStream;
+import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.model.LogSourceProvider;
 import com.logsniffer.user.profile.ProfileSettingsStorage;
@@ -69,9 +70,9 @@ public class SourcesController {
 		return wizardController.getWizardsInfo(Scanner.class, locale);
 	}
 
-	private LogSource<LogInputStream> getAndFillActiveLogSource(final ModelAndView mv, final long logSourceId)
+	private LogSource<?> getAndFillActiveLogSource(final ModelAndView mv, final long logSourceId)
 			throws ResourceNotFoundException {
-		final LogSource<LogInputStream> activeLogSource = logsSourceProvider.getSourceById(logSourceId);
+		final LogSource<?> activeLogSource = logsSourceProvider.getSourceById(logSourceId);
 		if (activeLogSource != null) {
 			mv.addObject("activeSource", activeLogSource);
 			return activeLogSource;
@@ -81,8 +82,8 @@ public class SourcesController {
 		}
 	}
 
-	private Log getAndFillLog(final ModelAndView mv, final LogSource<LogInputStream> activeLogSource,
-			final String logPath) throws IOException, ResourceNotFoundException {
+	private Log getAndFillLog(final ModelAndView mv, final LogSource<?> activeLogSource, final String logPath)
+			throws IOException, ResourceNotFoundException {
 		if (logPath == null) {
 			return null;
 		}
@@ -99,7 +100,7 @@ public class SourcesController {
 	@RequestMapping(value = "/sources", method = RequestMethod.GET)
 	ModelAndView listSources() {
 		final ModelAndView mv = new ModelAndView("sources/list");
-		final List<LogSource<LogInputStream>> logSources = logsSourceProvider.getSources();
+		final List<LogSource<LogRawAccess<? extends LogInputStream>>> logSources = logsSourceProvider.getSources();
 		mv.addObject("logSources", logSources);
 		return mv;
 	}
@@ -108,8 +109,8 @@ public class SourcesController {
 	ModelAndView listSourceLogs(@PathVariable("logSourceId") final long logSourceId)
 			throws IOException, ResourceNotFoundException {
 		final ModelAndView mv = new ModelAndView("sources/logs");
-		final LogSource<LogInputStream> activeSource = getAndFillActiveLogSource(mv, logSourceId);
-		final List<LogSource<LogInputStream>> logSources = logsSourceProvider.getSources();
+		final LogSource<?> activeSource = getAndFillActiveLogSource(mv, logSourceId);
+		final List<LogSource<LogRawAccess<? extends LogInputStream>>> logSources = logsSourceProvider.getSources();
 		mv.addObject("logSources", logSources);
 		mv.addObject("logs", activeSource.getLogs());
 		mv.addObject("defaultCount", DEFAULT_ENTRIES_COUNT);
@@ -129,10 +130,10 @@ public class SourcesController {
 			final HttpServletRequest request, final HttpServletResponse response)
 					throws IOException, ResourceNotFoundException {
 		final ModelAndView mv = new ModelAndView("sources/show");
-		final LogSource<LogInputStream> logSource = getAndFillActiveLogSource(mv, logSourceId);
+		final LogSource<?> logSource = getAndFillActiveLogSource(mv, logSourceId);
 		final Log log = getAndFillLog(mv, logSource, logPath);
 		mv.addObject("defaultCount", DEFAULT_ENTRIES_COUNT);
-		mv.addObject("pointerTpl", logSource.getLogAccess(log).createRelative(null, 1));
+		mv.addObject("pointerTpl", logSource.getLogAccess(log).start());
 		mv.addObject("userProfileViewerFields",
 				profileSettingsStorage.getSettings(tokenProvider.getToken(request, response),
 						MessageFormat.format(PROFILE_SETTINGS_VIEWER_FIELDS, logSourceId), false));

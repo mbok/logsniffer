@@ -8,11 +8,11 @@ import com.logsniffer.reader.LogEntryReader;
 public class LogInstance {
 	private long logSourceId;
 	private LogRawAccess<LogInputStream> logAccess;
-	private LogEntryReader<LogInputStream> reader;
+	private LogEntryReader<LogRawAccess<LogInputStream>> reader;
 	private Log log;
 
 	public LogInstance(final long logSourceId, final Log log, final LogRawAccess<LogInputStream> logAccess,
-			final LogEntryReader<LogInputStream> reader) {
+			final LogEntryReader<LogRawAccess<LogInputStream>> reader) {
 		super();
 		this.logSourceId = logSourceId;
 		this.log = log;
@@ -53,7 +53,7 @@ public class LogInstance {
 	/**
 	 * @return the reader
 	 */
-	public LogEntryReader<LogInputStream> getReader() {
+	public LogEntryReader<LogRawAccess<LogInputStream>> getReader() {
 		return reader;
 	}
 
@@ -61,7 +61,7 @@ public class LogInstance {
 	 * @param reader
 	 *            the reader to set
 	 */
-	public void setReader(final LogEntryReader<LogInputStream> reader) {
+	public void setReader(final LogEntryReader<LogRawAccess<LogInputStream>> reader) {
 		this.reader = reader;
 	}
 

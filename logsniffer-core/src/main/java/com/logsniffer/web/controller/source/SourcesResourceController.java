@@ -44,6 +44,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogInputStream;
+import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.model.LogSourceProvider;
 import com.logsniffer.model.SeverityLevel;
@@ -66,15 +67,14 @@ public class SourcesResourceController {
 
 	@RequestMapping(value = "/sources/{logSource}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
-	LogSource<LogInputStream> getSource(@PathVariable("logSource") final long logSourceId)
-			throws ResourceNotFoundException {
+	LogSource<?> getSource(@PathVariable("logSource") final long logSourceId) throws ResourceNotFoundException {
 		return getActiveSource(logSourceId);
 	}
 
 	@RequestMapping(value = "/sources", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
 	@JsonView(Views.Info.class)
-	List<LogSource<LogInputStream>> getAllSources() throws ResourceNotFoundException {
+	List<LogSource<LogRawAccess<? extends LogInputStream>>> getAllSources() throws ResourceNotFoundException {
 		return logsSourceProvider.getSources();
 	}
 
@@ -88,9 +88,8 @@ public class SourcesResourceController {
 	@RequestMapping(value = "/sources", method = RequestMethod.POST)
 	@Transactional(rollbackFor = Exception.class)
 	@ResponseBody
-	long createSource(@Valid @RequestBody final LogSource<LogInputStream> newSource,
-			final RedirectAttributes redirectAttrs)
-					throws ResourceNotFoundException, SchedulerException, ParseException {
+	long createSource(@Valid @RequestBody final LogSource<?> newSource, final RedirectAttributes redirectAttrs)
+			throws ResourceNotFoundException, SchedulerException, ParseException {
 		final long id = logsSourceProvider.createSource(newSource);
 		logger.info("Created new log source: {}", newSource);
 		return id;
@@ -100,14 +99,14 @@ public class SourcesResourceController {
 	@Transactional(rollbackFor = Exception.class)
 	@ResponseStatus(HttpStatus.OK)
 	void updateSource(@PathVariable("logSource") final long logSourceId,
-			@Valid @RequestBody final LogSource<LogInputStream> newSource)
+			@Valid @RequestBody final LogSource<?> newSource)
 					throws ResourceNotFoundException, SchedulerException, ParseException {
-		((BaseLogsSource<LogInputStream>) newSource).setId(logSourceId);
+		((BaseLogsSource<?>) newSource).setId(logSourceId);
 		logsSourceProvider.updateSource(newSource);
 	}
 
-	protected LogSource<LogInputStream> getActiveSource(final long logSourceId) throws ResourceNotFoundException {
-		final LogSource<LogInputStream> source = logsSourceProvider.getSourceById(logSourceId);
+	protected LogSource<?> getActiveSource(final long logSourceId) throws ResourceNotFoundException {
+		final LogSource<?> source = logsSourceProvider.getSourceById(logSourceId);
 		if (source == null) {
 			throw new ResourceNotFoundException(LogSource.class, logSourceId,
 					"Log source not found for id: " + logSourceId);
@@ -119,19 +118,19 @@ public class SourcesResourceController {
 	@ResponseBody
 	Log[] getSourceLogs(@PathVariable("logSource") final long logSourceId)
 			throws ResourceNotFoundException, IOException {
-		final LogSource<LogInputStream> source = getActiveSource(logSourceId);
+		final LogSource<?> source = getActiveSource(logSourceId);
 		return source.getLogs().toArray(new Log[0]);
 	}
 
 	@RequestMapping(value = "/sources/logs", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
-	Log[] getSourceLogs(@Valid @RequestBody final LogSource<LogInputStream> source) throws IOException {
+	Log[] getSourceLogs(@Valid @RequestBody final LogSource<?> source) throws IOException {
 		return source.getLogs().toArray(new Log[0]);
 	}
 
 	@RequestMapping(value = "/sources/potentialFields", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
-	LinkedHashMap<String, FieldBaseTypes> getPotentialFields(@Valid @RequestBody final LogSource<LogInputStream> source)
+	LinkedHashMap<String, FieldBaseTypes> getPotentialFields(@Valid @RequestBody final LogSource<?> source)
 			throws IOException {
 		return source.getReader().getFieldTypes();
 	}

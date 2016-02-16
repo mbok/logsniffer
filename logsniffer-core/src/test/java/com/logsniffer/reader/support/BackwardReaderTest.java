@@ -28,7 +28,7 @@ import org.junit.Test;
 
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.support.ByteArrayLog;
-import com.logsniffer.model.support.ByteLogInputStream;
+import com.logsniffer.model.support.ByteLogAccess;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.log4j.Log4jTextReader;
 import com.logsniffer.reader.log4j.Log4jTextReaderTest;
@@ -42,7 +42,7 @@ import com.logsniffer.reader.log4j.Log4jTextReaderTest;
 public class BackwardReaderTest {
 	private ByteArrayLog log;
 	private Log4jTextReader fwReader;
-	private BackwardReader<ByteLogInputStream> revReader;
+	private BackwardReader<ByteLogAccess> revReader;
 	private final String[] logLines = new String[] {
 			"00:27:29,456 ERROR [com.logsniffer.parser.log4j.Log4jParser] Prepared parsing pattern",
 			"java.lang.Exception: kll",
@@ -59,7 +59,7 @@ public class BackwardReaderTest {
 	public void setUp() throws FormatException, UnsupportedEncodingException, IOException {
 		fwReader = new Log4jTextReader("%d{ABSOLUTE} %-5p [%c] %m%n", "UTF-8");
 		log = Log4jTextReaderTest.createLog(0, StringUtils.join(logLines, "\n"));
-		revReader = new BackwardReader<ByteLogInputStream>(fwReader);
+		revReader = new BackwardReader<ByteLogAccess>(fwReader);
 	}
 
 	@Test
@@ -104,7 +104,7 @@ public class BackwardReaderTest {
 		log = Log4jTextReaderTest.createLog(0, StringUtils.repeat(StringUtils.repeat("abc", 72) + "\n", 1000));
 		final Log4jTextReader log4jReader = new Log4jTextReader("unknown format", "UTF-8");
 		log4jReader.setMaxUnfomattedLines(1);
-		final BackwardReader<ByteLogInputStream> reader = new BackwardReader<ByteLogInputStream>(log4jReader);
+		final BackwardReader<ByteLogAccess> reader = new BackwardReader<ByteLogAccess>(log4jReader);
 		final List<LogEntry> entries = reader.readEntries(log, log, log.createRelative(null, 52000), -100);
 		Assert.assertEquals(100, entries.size());
 	}

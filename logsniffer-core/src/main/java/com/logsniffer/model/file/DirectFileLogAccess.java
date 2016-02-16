@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 import com.logsniffer.model.LogPointer;
-import com.logsniffer.model.LogRawAccess;
+import com.logsniffer.model.support.ByteLogAccess;
 import com.logsniffer.model.support.ByteLogInputStream;
 import com.logsniffer.model.support.DefaultPointer;
 
@@ -32,7 +32,7 @@ import com.logsniffer.model.support.DefaultPointer;
  * @author mbok
  * 
  */
-public class DirectFileLogAccess implements LogRawAccess<ByteLogInputStream> {
+public class DirectFileLogAccess implements ByteLogAccess {
 
 	private final FileLog file;
 
@@ -47,37 +47,36 @@ public class DirectFileLogAccess implements LogRawAccess<ByteLogInputStream> {
 	}
 
 	@Override
-	public ByteLogInputStream getInputStream(final LogPointer from)
-			throws IOException {
-		RAFInputStream rafi = new RAFInputStream(new RandomAccessFile(new File(
-				file.getPath()), "r"), file.getSize());
+	public ByteLogInputStream getInputStream(final LogPointer from) throws IOException {
+		final RAFInputStream rafi = new RAFInputStream(new RandomAccessFile(new File(file.getPath()), "r"),
+				file.getSize());
 		try {
 			if (from != null) {
-				rafi.seek(Math.min(((DefaultPointer) from).getOffset(),
-						file.getSize()));
+				rafi.seek(Math.min(((DefaultPointer) from).getOffset(), file.getSize()));
 			}
 			return rafi;
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			rafi.close();
 			throw e;
 		}
 	}
 
 	@Override
-	public long getDifference(final LogPointer source,
-			final LogPointer compareTo) throws IOException {
-		long start = source != null ? ((DefaultPointer) source).getOffset() : 0;
+	public long getDifference(final LogPointer source, final LogPointer compareTo) throws IOException {
+		final long start = source != null ? ((DefaultPointer) source).getOffset() : 0;
 		return ((DefaultPointer) compareTo).getOffset() - start;
 	}
 
 	@Override
-	public LogPointer createRelative(final LogPointer _source,
-			final long relativeBytePosition) throws IOException {
-		DefaultPointer source = (DefaultPointer) _source;
-		long newOffset = (source != null ? source.getOffset() : 0)
-				+ relativeBytePosition;
-		return new DefaultPointer(Math.max(0,
-				Math.min(newOffset, file.getSize())), file.getSize());
+	public LogPointer createRelative2(final LogPointer _source, final long relativeBytePosition) throws IOException {
+		return null;
+	}
+
+	@Override
+	public LogPointer createRelative(final LogPointer _source, final long relativeBytePosition) throws IOException {
+		final DefaultPointer source = (DefaultPointer) _source;
+		final long newOffset = (source != null ? source.getOffset() : 0) + relativeBytePosition;
+		return new DefaultPointer(Math.max(0, Math.min(newOffset, file.getSize())), file.getSize());
 	}
 
 	@Override
@@ -96,13 +95,43 @@ public class DirectFileLogAccess implements LogRawAccess<ByteLogInputStream> {
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
-		DirectFileLogAccess other = (DirectFileLogAccess) obj;
+		final DirectFileLogAccess other = (DirectFileLogAccess) obj;
 		return file.equals(other.file);
 	}
 
 	@Override
 	public LogPointer getFromJSON(final String data) throws IOException {
 		return DefaultPointer.fromJSON(data);
+	}
+
+	@Override
+	public LogPointer end() throws IOException {
+		return createRelative2(null, file.getSize());
+	}
+
+	@Override
+	public LogPointer start() throws IOException {
+		return createRelative2(null, 0);
+	}
+
+	@Override
+	public NavigationFuture refresh(final LogPointer toRefresh) {
+		return new NavigationFuture() {
+			@Override
+			public LogPointer get() throws IOException {
+				return createRelative2(toRefresh, 0);
+			}
+		};
+	}
+
+	@Override
+	public NavigationFuture absolute(final Long offset) {
+		return new NavigationFuture() {
+			@Override
+			public LogPointer get() throws IOException {
+				return createRelative2(null, offset);
+			}
+		};
 	}
 
 }

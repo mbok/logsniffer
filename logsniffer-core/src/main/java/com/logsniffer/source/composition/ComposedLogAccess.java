@@ -18,7 +18,7 @@ import com.logsniffer.model.LogSource;
  */
 public class ComposedLogAccess implements LogRawAccess<LogInputStream> {
 
-	public ComposedLogAccess(final Log thisLog, final Pair<Log, LogSource<LogInputStream>> toCompose) {
+	public ComposedLogAccess(final Log thisLog, final Pair<Log, LogSource<LogRawAccess<LogInputStream>>> toCompose) {
 
 	}
 
@@ -29,7 +29,7 @@ public class ComposedLogAccess implements LogRawAccess<LogInputStream> {
 	}
 
 	@Override
-	public LogPointer createRelative(final LogPointer source, final long relativeBytePosition) throws IOException {
+	public LogPointer createRelative2(final LogPointer source, final long relativeBytePosition) throws IOException {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -42,6 +42,30 @@ public class ComposedLogAccess implements LogRawAccess<LogInputStream> {
 
 	@Override
 	public LogInputStream getInputStream(final LogPointer from) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public LogPointer end() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public LogPointer start() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public NavigationFuture refresh(final LogPointer toRefresh) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public NavigationFuture absolute(final Long offset) {
 		// TODO Auto-generated method stub
 		return null;
 	}

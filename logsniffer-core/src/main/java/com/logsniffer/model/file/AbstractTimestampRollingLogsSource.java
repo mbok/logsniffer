@@ -25,9 +25,8 @@ import org.apache.commons.io.FilenameUtils;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logsniffer.model.Log;
-import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogRawAccessor;
-import com.logsniffer.model.support.ByteLogInputStream;
+import com.logsniffer.model.support.ByteLogAccess;
 import com.logsniffer.model.support.DailyRollingLog;
 import com.logsniffer.model.support.DailyRollingLogAccess;
 
@@ -38,8 +37,7 @@ import com.logsniffer.model.support.DailyRollingLogAccess;
  * @author mbok
  * 
  */
-public abstract class AbstractTimestampRollingLogsSource extends
-		WildcardLogsSource {
+public abstract class AbstractTimestampRollingLogsSource extends WildcardLogsSource {
 
 	@JsonProperty
 	private PastLogsType pastLogsType = PastLogsType.NAME;
@@ -67,8 +65,7 @@ public abstract class AbstractTimestampRollingLogsSource extends
 				return new Comparator<File>() {
 					@Override
 					public int compare(final File o1, final File o2) {
-						return -FilenameUtils.getName(o1.getPath()).compareTo(
-								FilenameUtils.getName(o2.getPath()));
+						return -FilenameUtils.getName(o1.getPath()).compareTo(FilenameUtils.getName(o2.getPath()));
 					}
 				};
 			} else {
@@ -86,16 +83,14 @@ public abstract class AbstractTimestampRollingLogsSource extends
 				return new Comparator<Log>() {
 					@Override
 					public int compare(final Log o1, final Log o2) {
-						return -FilenameUtils.getName(o1.getPath()).compareTo(
-								FilenameUtils.getName(o2.getPath()));
+						return -FilenameUtils.getName(o1.getPath()).compareTo(FilenameUtils.getName(o2.getPath()));
 					}
 				};
 			} else {
 				return new Comparator<Log>() {
 					@Override
 					public int compare(final Log o1, final Log o2) {
-						return -(int) (o1.getLastModified() - o2
-								.getLastModified());
+						return -(int) (o1.getLastModified() - o2.getLastModified());
 					}
 				};
 			}
@@ -103,20 +98,16 @@ public abstract class AbstractTimestampRollingLogsSource extends
 	}
 
 	@Override
-	public LogRawAccess<ByteLogInputStream> getLogAccess(final Log origLog)
-			throws IOException {
-		DailyRollingLog log = (DailyRollingLog) getLog(origLog.getPath());
+	public ByteLogAccess getLogAccess(final Log origLog) throws IOException {
+		final DailyRollingLog log = (DailyRollingLog) getLog(origLog.getPath());
 		if (log != null) {
-			return new DailyRollingLogAccess(
-					new LogRawAccessor<ByteLogInputStream, Log>() {
-						@Override
-						public LogRawAccess<ByteLogInputStream> getLogAccess(
-								final Log log) throws IOException {
-							return getLogAccessAdapter() != null ? getLogAccessAdapter()
-									.getLogAccess((FileLog) log)
-									: new DirectFileLogAccess((FileLog) log);
-						}
-					}, log);
+			return new DailyRollingLogAccess(new LogRawAccessor<ByteLogAccess, Log>() {
+				@Override
+				public ByteLogAccess getLogAccess(final Log log) throws IOException {
+					return getLogAccessAdapter() != null ? getLogAccessAdapter().getLogAccess((FileLog) log)
+							: new DirectFileLogAccess((FileLog) log);
+				}
+			}, log);
 		} else {
 			return null;
 		}

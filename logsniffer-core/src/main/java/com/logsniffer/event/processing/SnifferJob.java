@@ -54,6 +54,7 @@ import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.model.LogSourceProvider;
 import com.logsniffer.reader.FormatException;
+import com.logsniffer.reader.LogEntryReader;
 import com.logsniffer.util.StatisticsLogger;
 import com.logsniffer.util.sql.TxExecutor;
 import com.logsniffer.util.sql.TxExecutor.Execution;
@@ -114,7 +115,8 @@ public class SnifferJob implements ContextAwareJob, InterruptableJob {
 			deleteJob(jobCtx.getScheduler(), snifferId);
 			return;
 		}
-		final LogSource<LogInputStream> logSource = logSourceProvider.getSourceById(logSourceId);
+		final LogSource<LogRawAccess<? extends LogInputStream>> logSource = logSourceProvider
+				.getSourceById(logSourceId);
 		if (logSource == null) {
 			logger.error("Log source not found for id {}, stopping cron job for sniffer {}", logSourceId, snifferId);
 			deleteJob(jobCtx.getScheduler(), snifferId);
@@ -139,7 +141,7 @@ public class SnifferJob implements ContextAwareJob, InterruptableJob {
 		}
 	}
 
-	protected void sniff(final Sniffer sniffer, final LogSource<LogInputStream> source,
+	protected void sniff(final Sniffer sniffer, final LogSource<LogRawAccess<? extends LogInputStream>> source,
 			final InterruptionStatus interruption) throws IOException, ParseException, PublishException {
 		for (final Log log : source.getLogs()) {
 			try {
@@ -163,16 +165,18 @@ public class SnifferJob implements ContextAwareJob, InterruptableJob {
 		long eventsCount = 0;
 	}
 
-	protected void sniff(final Sniffer sniffer, final LogSource<LogInputStream> source, final Log log,
-			final InterruptionStatus interruption) throws IOException, FormatException, PublishException {
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	protected void sniff(final Sniffer sniffer, final LogSource<LogRawAccess<? extends LogInputStream>> source,
+			final Log log, final InterruptionStatus interruption)
+					throws IOException, FormatException, PublishException {
 		logger.debug("Sniffing log={} in context of sniffer={} and log source={}", log, sniffer, source);
 		final IncrementData incData = snifferPersistence.getIncrementData(sniffer, source, log);
 		final long startTime = System.currentTimeMillis();
 		final SniffStatistics stats = new SniffStatistics();
-		final LogRawAccess<LogInputStream> logAccess = source.getLogAccess(log);
+		final LogRawAccess<LogInputStream> logAccess = (LogRawAccess<LogInputStream>) source.getLogAccess(log);
 		final LogPointer startPointer = incData.getNextOffset(logAccess);
 		sniffer.getReaderStrategy().reset(log, logAccess, startPointer);
-		sniffer.getScanner().find(source.getReader(), new LogEntryReaderStrategy() {
+		sniffer.getScanner().find((LogEntryReader) source.getReader(), new LogEntryReaderStrategy() {
 
 			@Override
 			public void reset(final Log log, final LogPointerFactory pointerFactory, final LogPointer start)

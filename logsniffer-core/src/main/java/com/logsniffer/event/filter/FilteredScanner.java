@@ -45,9 +45,9 @@ public class FilteredScanner implements Scanner {
 	}
 
 	@Override
-	public void find(final LogEntryReader<LogInputStream> reader, final LogEntryReaderStrategy readerStrategy,
-			final Log log, final LogRawAccess<LogInputStream> logAccess, final IncrementData incrementData,
-			final EventConsumer eventConsumer) throws IOException, FormatException {
+	public void find(final LogEntryReader<LogRawAccess<LogInputStream>> reader,
+			final LogEntryReaderStrategy readerStrategy, final Log log, final LogRawAccess<LogInputStream> logAccess,
+			final IncrementData incrementData, final EventConsumer eventConsumer) throws IOException, FormatException {
 		targetScanner.find(reader, readerStrategy, log, logAccess, incrementData, new EventConsumer() {
 			@Override
 			public void consume(final Event eventData) throws IOException, FormatException {
@@ -123,8 +123,9 @@ public class FilteredScanner implements Scanner {
 		}
 
 		@Override
-		public void find(final LogEntryReader<LogInputStream> reader, final LogEntryReaderStrategy readerStrategy,
-				final Log log, final LogRawAccess<LogInputStream> logAccess, final IncrementData incrementData,
+		public void find(final LogEntryReader<LogRawAccess<LogInputStream>> reader,
+				final LogEntryReaderStrategy readerStrategy, final Log log,
+				final LogRawAccess<LogInputStream> logAccess, final IncrementData incrementData,
 				final EventConsumer eventConsumer) throws IOException, FormatException {
 			try {
 				getWrappedScanner().find(reader, readerStrategy, log, logAccess, incrementData, eventConsumer);

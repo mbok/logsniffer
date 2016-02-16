@@ -45,7 +45,7 @@ import com.logsniffer.reader.support.BufferedConsumer;
 public class CompositionReaderTest {
 	private static Logger logger = LoggerFactory.getLogger(CompositionReaderTest.class);
 
-	private static final class DummySubReader implements LogEntryReader<LogInputStream> {
+	private static final class DummySubReader implements LogEntryReader<LogRawAccess<LogInputStream>> {
 		private final int maxCount;
 		private final int factor;
 		private final int start;

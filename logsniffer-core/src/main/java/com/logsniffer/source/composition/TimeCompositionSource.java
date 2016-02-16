@@ -14,7 +14,7 @@ import com.logsniffer.model.support.BaseLogsSource;
  * @author mbok
  *
  */
-public class TimeCompositionSource extends BaseLogsSource<LogInputStream> {
+public class TimeCompositionSource extends BaseLogsSource<LogRawAccess<LogInputStream>> {
 
 	@Override
 	public List<Log> getLogs() throws IOException {

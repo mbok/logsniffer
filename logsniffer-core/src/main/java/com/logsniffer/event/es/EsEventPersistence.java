@@ -80,7 +80,6 @@ import com.logsniffer.event.es.EsEventPersistence.AspectEventImpl.AspectEventImp
 import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.fields.FieldsMap;
 import com.logsniffer.model.LogEntry;
-import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.model.LogSourceProvider;
 import com.logsniffer.reader.FormatException;
@@ -519,7 +518,7 @@ public class EsEventPersistence implements EventPersistence {
 		}
 		final LinkedHashMap<String, FieldBaseTypes> snifferTypes = new LinkedHashMap<>();
 
-		final LogSource<LogInputStream> source = logSourceProvider.getSourceById(sniffer.getLogSourceId());
+		final LogSource<?> source = logSourceProvider.getSourceById(sniffer.getLogSourceId());
 		final LinkedHashMap<String, FieldBaseTypes> entriesTypes = new LinkedHashMap<>();
 		try {
 			entriesTypes.putAll(source.getReader().getFieldTypes());

@@ -69,8 +69,8 @@ public interface Scanner extends ConfiguredBean, FieldsHost {
 	 * @param eventConsumer
 	 *            event consumer
 	 */
-	public void find(LogEntryReader<LogInputStream> reader, LogEntryReaderStrategy readerStrategy, Log log,
-			LogRawAccess<LogInputStream> logAccess, IncrementData incrementData, EventConsumer eventConsumer)
+	public void find(LogEntryReader<LogRawAccess<LogInputStream>> reader, LogEntryReaderStrategy readerStrategy,
+			Log log, LogRawAccess<LogInputStream> logAccess, IncrementData incrementData, EventConsumer eventConsumer)
 					throws IOException, FormatException;
 
 	/**
@@ -133,8 +133,9 @@ public interface Scanner extends ConfiguredBean, FieldsHost {
 		}
 
 		@Override
-		public void find(final LogEntryReader<LogInputStream> reader, final LogEntryReaderStrategy readerStrategy,
-				final Log log, final LogRawAccess<LogInputStream> logAccess, final IncrementData incrementData,
+		public void find(final LogEntryReader<LogRawAccess<LogInputStream>> reader,
+				final LogEntryReaderStrategy readerStrategy, final Log log,
+				final LogRawAccess<LogInputStream> logAccess, final IncrementData incrementData,
 				final EventConsumer eventConsumer) throws IOException, FormatException {
 			try {
 				getWrappedScanner().find(reader, readerStrategy, log, logAccess, incrementData, eventConsumer);

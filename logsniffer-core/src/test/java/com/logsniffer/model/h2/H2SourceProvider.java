@@ -32,7 +32,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.logsniffer.app.CoreAppConfig;
 import com.logsniffer.app.QaDataSourceAppConfig;
-import com.logsniffer.model.LogInputStream;
+import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.model.file.WildcardLogsSource;
 
@@ -43,8 +43,7 @@ import com.logsniffer.model.file.WildcardLogsSource;
  * 
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { H2SourceProvider.class, CoreAppConfig.class,
-		QaDataSourceAppConfig.class })
+@ContextConfiguration(classes = { H2SourceProvider.class, CoreAppConfig.class, QaDataSourceAppConfig.class })
 @Configuration
 public class H2SourceProvider {
 	@Bean
@@ -62,22 +61,18 @@ public class H2SourceProvider {
 
 	@Test
 	public void testPersistence() throws IOException {
-		WildcardLogsSource source1 = new WildcardLogsSource();
+		final WildcardLogsSource source1 = new WildcardLogsSource();
 		source1.setName("Source 1");
-		source1.setPattern(new File("src/test/resources/logs", "log*.test")
-				.getPath());
+		source1.setPattern(new File("src/test/resources/logs", "log*.test").getPath());
 		Assert.assertEquals(1, source1.getLogs().size());
-		Assert.assertEquals("log1.test",
-				FilenameUtils.getName(source1.getLogs().get(0).getPath()));
-		long id = sourceProvider.createSource(source1);
+		Assert.assertEquals("log1.test", FilenameUtils.getName(source1.getLogs().get(0).getPath()));
+		final long id = sourceProvider.createSource(source1);
 		Assert.assertEquals(true, id > 0);
-		LogSource<LogInputStream> sourceCheck = sourceProvider
-				.getSourceById(id);
+		LogSource<LogRawAccess<?>> sourceCheck = sourceProvider.getSourceById(id);
 		Assert.assertEquals(source1.getName(), sourceCheck.getName());
 		Assert.assertEquals(id, sourceCheck.getId());
 		Assert.assertEquals(1, sourceCheck.getLogs().size());
-		Assert.assertEquals("log1.test",
-				FilenameUtils.getName(sourceCheck.getLogs().get(0).getPath()));
+		Assert.assertEquals("log1.test", FilenameUtils.getName(sourceCheck.getLogs().get(0).getPath()));
 
 		source1.setName("Source 1x");
 		source1.setId(id);

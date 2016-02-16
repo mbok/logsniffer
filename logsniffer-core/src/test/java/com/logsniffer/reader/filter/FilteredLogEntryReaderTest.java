@@ -51,7 +51,7 @@ import com.logsniffer.reader.LogEntryReader.LogEntryConsumer;
  * 
  */
 public class FilteredLogEntryReaderTest {
-	private LogEntryReader<LogInputStream> targetReader;
+	private LogEntryReader<LogRawAccess<LogInputStream>> targetReader;
 	private List<FieldsFilter> filters;
 	private LogEntryFilter f1;
 	private LogEntryFilter f2;
@@ -77,7 +77,8 @@ public class FilteredLogEntryReaderTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testFiltering() throws IOException, FormatException {
-		final LogEntryReader<LogInputStream> r = FilteredLogEntryReader.wrappIfNeeded(targetReader, filters);
+		final LogEntryReader<LogRawAccess<LogInputStream>> r = FilteredLogEntryReader.wrappIfNeeded(targetReader,
+				filters);
 		Assert.assertNotEquals(r, targetReader);
 		final Log log = Mockito.mock(Log.class);
 		final LogRawAccess<LogInputStream> logAccess = Mockito.mock(LogRawAccess.class);
@@ -107,7 +108,8 @@ public class FilteredLogEntryReaderTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testFilteringSupportedSeverities() {
-		final LogEntryReader<LogInputStream> r = FilteredLogEntryReader.wrappIfNeeded(targetReader, filters);
+		final LogEntryReader<LogRawAccess<LogInputStream>> r = FilteredLogEntryReader.wrappIfNeeded(targetReader,
+				filters);
 		Assert.assertNotEquals(r, targetReader);
 		// Use notModifieable list in relation to issue #10
 		final List<SeverityLevel> sevs = Collections.emptyList();
@@ -132,7 +134,8 @@ public class FilteredLogEntryReaderTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testFilteringKnownFields() throws FormatException {
-		final LogEntryReader<LogInputStream> r = FilteredLogEntryReader.wrappIfNeeded(targetReader, filters);
+		final LogEntryReader<LogRawAccess<LogInputStream>> r = FilteredLogEntryReader.wrappIfNeeded(targetReader,
+				filters);
 		Assert.assertNotEquals(r, targetReader);
 		final LinkedHashMap<String, FieldBaseTypes> types = new LinkedHashMap<>();
 		Mockito.when(targetReader.getFieldTypes()).thenReturn(types);
@@ -149,7 +152,8 @@ public class FilteredLogEntryReaderTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testOrderingOfSeverities() {
-		final LogEntryReader<LogInputStream> r = FilteredLogEntryReader.wrappIfNeeded(targetReader, filters);
+		final LogEntryReader<LogRawAccess<LogInputStream>> r = FilteredLogEntryReader.wrappIfNeeded(targetReader,
+				filters);
 		final List<SeverityLevel> sevs = new ArrayList<>();
 		sevs.add(new SeverityLevel("5", 5, SeverityClassification.EMERGENCY));
 		Mockito.when(targetReader.getSupportedSeverities()).thenReturn(sevs);

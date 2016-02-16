@@ -36,7 +36,8 @@ import com.logsniffer.model.SeverityLevel;
  * @author mbok
  * 
  */
-public interface LogEntryReader<STREAMTYPE extends LogInputStream> extends ConfiguredBean, FieldsHost {
+public interface LogEntryReader<ACCESSORTYPE extends LogRawAccess<? extends LogInputStream>>
+		extends ConfiguredBean, FieldsHost {
 
 	/**
 	 * Consumer for log entries, called sequentially when a new entry was read.
@@ -83,8 +84,8 @@ public interface LogEntryReader<STREAMTYPE extends LogInputStream> extends Confi
 	 *            number of entries to read
 	 * @return the read entries
 	 */
-	public void readEntries(Log log, LogRawAccess<STREAMTYPE> logAccess, LogPointer startOffset,
-			LogEntryConsumer consumer) throws IOException, FormatException;
+	public void readEntries(Log log, ACCESSORTYPE logAccess, LogPointer startOffset, LogEntryConsumer consumer)
+			throws IOException, FormatException;
 
 	/**
 	 * 
@@ -101,12 +102,14 @@ public interface LogEntryReader<STREAMTYPE extends LogInputStream> extends Confi
 	 * @param <ContentType>
 	 *            the entry type
 	 */
-	public static abstract class LogEntryReaderWrapper implements LogEntryReader<LogInputStream> {
-		private LogEntryReader<LogInputStream> wrapped;
+	public static abstract class LogEntryReaderWrapper
+			implements LogEntryReader<LogRawAccess<? extends LogInputStream>> {
+		private LogEntryReader<LogRawAccess<? extends LogInputStream>> wrapped;
 
-		protected abstract LogEntryReader<LogInputStream> getWrapped() throws IOException, FormatException;
+		protected abstract LogEntryReader<LogRawAccess<? extends LogInputStream>> getWrapped()
+				throws IOException, FormatException;
 
-		private LogEntryReader<LogInputStream> getReader() throws IOException, FormatException {
+		private LogEntryReader<LogRawAccess<? extends LogInputStream>> getReader() throws IOException, FormatException {
 			if (wrapped == null) {
 				wrapped = getWrapped();
 			}
@@ -114,7 +117,7 @@ public interface LogEntryReader<STREAMTYPE extends LogInputStream> extends Confi
 		}
 
 		@Override
-		public void readEntries(final Log log, final LogRawAccess<LogInputStream> logAccess,
+		public void readEntries(final Log log, final LogRawAccess<? extends LogInputStream> logAccess,
 				final LogPointer startOffset, final LogEntryConsumer consumer) throws IOException, FormatException {
 			getReader().readEntries(log, logAccess, startOffset, consumer);
 		}

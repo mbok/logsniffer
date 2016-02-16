@@ -34,7 +34,7 @@ import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.SeverityLevel.SeverityClassification;
 import com.logsniffer.model.support.ByteArrayLog;
-import com.logsniffer.model.support.ByteLogInputStream;
+import com.logsniffer.model.support.ByteLogAccess;
 import com.logsniffer.model.support.LineInputStream;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.LogEntryReader;
@@ -73,7 +73,7 @@ public class Log4jTextReaderTest {
 		Assert.assertEquals(FieldBaseTypes.SEVERITY, r.getFieldTypes().get(fieldNames[6]));
 	}
 
-	public static LogEntry[] readEntries(final LogEntryReader<ByteLogInputStream> reader, final ByteArrayLog log,
+	public static LogEntry[] readEntries(final LogEntryReader<ByteLogAccess> reader, final ByteArrayLog log,
 			final LogPointer start, final int size) throws IOException, FormatException {
 		final BufferedConsumer c = new BufferedConsumer(size);
 		reader.readEntries(log, log, start, c);

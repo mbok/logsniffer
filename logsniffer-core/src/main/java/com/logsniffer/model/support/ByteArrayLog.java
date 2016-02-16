@@ -24,7 +24,6 @@ import java.util.UUID;
 
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogPointer;
-import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogRawAccessor;
 
 /**
@@ -33,8 +32,7 @@ import com.logsniffer.model.LogRawAccessor;
  * @author mbok
  * 
  */
-public class ByteArrayLog
-		implements Log, LogRawAccessor<ByteLogInputStream, ByteArrayLog>, LogRawAccess<ByteLogInputStream> {
+public class ByteArrayLog implements Log, LogRawAccessor<ByteLogAccess, ByteArrayLog>, ByteLogAccess {
 	/**
 	 * Byte array input stream in memory for tests.
 	 * 
@@ -90,7 +88,7 @@ public class ByteArrayLog
 	}
 
 	@Override
-	public LogPointer createRelative(final LogPointer _source, final long relativeBytePosition) throws IOException {
+	public LogPointer createRelative2(final LogPointer _source, final long relativeBytePosition) throws IOException {
 		final DefaultPointer source = (DefaultPointer) _source;
 		final long newOffset = (source != null ? source.getOffset() : 0) + relativeBytePosition;
 		final long size = data.length;
@@ -111,7 +109,7 @@ public class ByteArrayLog
 	public ByteLogInputStream getInputStream(final LogPointer from) throws IOException {
 		final LogByteArrayInputStream is = new LogByteArrayInputStream(data);
 		if (from != null) {
-			is.pos = ((DefaultPointer) createRelative(null, ((DefaultPointer) from).getOffset())).getOffset();
+			is.pos = ((DefaultPointer) absolute(((DefaultPointer) from).getOffset()).get()).getOffset();
 		}
 		return is;
 	}
@@ -132,13 +130,49 @@ public class ByteArrayLog
 	}
 
 	@Override
-	public LogRawAccess<ByteLogInputStream> getLogAccess(final ByteArrayLog log) throws IOException {
+	public ByteLogAccess getLogAccess(final ByteArrayLog log) throws IOException {
 		return log;
 	}
 
 	@Override
 	public SizeMetric getSizeMetric() {
 		return SizeMetric.BYTE;
+	}
+
+	@Override
+	public LogPointer end() {
+		return new DefaultPointer(getSize(), getSize());
+	}
+
+	@Override
+	public LogPointer start() {
+		return new DefaultPointer(0, getSize());
+	}
+
+	@Override
+	public NavigationFuture refresh(final LogPointer toRefresh) {
+		return new NavigationFuture() {
+			@Override
+			public LogPointer get() throws IOException {
+				return createRelative2(toRefresh, 0);
+			}
+		};
+	}
+
+	@Override
+	public NavigationFuture absolute(final Long offset) {
+		return new NavigationFuture() {
+
+			@Override
+			public LogPointer get() throws IOException {
+				return createRelative2(null, offset);
+			}
+		};
+	}
+
+	@Override
+	public LogPointer createRelative(final LogPointer source, final long relativeBytePosition) throws IOException {
+		return createRelative2(source, relativeBytePosition);
 	}
 
 }

@@ -32,8 +32,7 @@ import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogPointer;
-import com.logsniffer.model.LogRawAccess;
-import com.logsniffer.model.support.ByteLogInputStream;
+import com.logsniffer.model.support.ByteLogAccess;
 import com.logsniffer.model.support.LineInputStream;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.LogEntryReader;
@@ -46,7 +45,7 @@ import com.logsniffer.util.value.Configured;
  * @author mbok
  * 
  */
-public abstract class AbstractPatternLineReader<MatcherContext> implements LogEntryReader<ByteLogInputStream> {
+public abstract class AbstractPatternLineReader<MatcherContext> implements LogEntryReader<ByteLogAccess> {
 	private static final int STRING_BUILDER_CAPACITY = 4096;
 
 	public static final String PROP_LOGSNIFFER_READER_MAX_MULTIPLE_LINES = "logsniffer.reader.pattern.maxUnformattedLines";
@@ -294,8 +293,8 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 	}
 
 	@Override
-	public final void readEntries(final Log log, final LogRawAccess<ByteLogInputStream> logAccess,
-			final LogPointer startOffset, final LogEntryConsumer consumer) throws IOException {
+	public final void readEntries(final Log log, final ByteLogAccess logAccess, final LogPointer startOffset,
+			final LogEntryConsumer consumer) throws IOException {
 		init();
 		LineInputStream lis = null;
 		try {
@@ -304,7 +303,7 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 			lis = new LineInputStream(logAccess, logAccess.getInputStream(startOffset), getCharset());
 			sCtx.lastOffset = lis.getPointer();
 			if (sCtx.lastOffset == null) {
-				sCtx.lastOffset = logAccess.createRelative(null, 0);
+				sCtx.lastOffset = logAccess.start();
 			}
 
 			final int coreSize = Math.max(2, Runtime.getRuntime().availableProcessors() / 2);
@@ -373,8 +372,8 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 		}
 	}
 
-	public final void readEntriesOld(final Log log, final LogRawAccess<ByteLogInputStream> logAccess,
-			final LogPointer startOffset, final LogEntryConsumer consumer) throws IOException, FormatException {
+	public final void readEntriesOld(final Log log, final ByteLogAccess logAccess, final LogPointer startOffset,
+			final LogEntryConsumer consumer) throws IOException, FormatException {
 		init();
 		final ReadingContext<MatcherContext> readingContext = getReadingContext();
 		LineInputStream lis = null;
@@ -386,7 +385,7 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 			String line;
 			LogPointer lastOffset = lis.getPointer();
 			if (lastOffset == null) {
-				lastOffset = logAccess.createRelative(null, 0);
+				lastOffset = logAccess.start();
 			}
 			LogPointer currentOffset = null;
 			while ((line = lis.readNextLine()) != null && (currentOffset = lis.getPointer()) != null) {

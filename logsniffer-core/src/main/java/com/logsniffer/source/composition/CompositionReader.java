@@ -27,7 +27,7 @@ import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.LogEntryReader;
 import com.logsniffer.source.composition.ComposedLogPointer.PointerPart;
 
-public class CompositionReader implements LogEntryReader<ComposedLogInputStream> {
+public class CompositionReader implements LogEntryReader<LogRawAccess<LogInputStream>> {
 	protected static final int BUFFER_SIZE_PER_THREAD = 20;
 
 	private static final Logger logger = LoggerFactory.getLogger(CompositionReader.class);
@@ -293,7 +293,7 @@ public class CompositionReader implements LogEntryReader<ComposedLogInputStream>
 		@Override
 		public void run() {
 			try {
-				final LogEntryReader<LogInputStream> reader = logInstance.getReader();
+				final LogEntryReader<LogRawAccess<LogInputStream>> reader = logInstance.getReader();
 				final LogEntryConsumer consumer = new LogEntryConsumer() {
 					@Override
 					public boolean consume(final Log log, final LogPointerFactory pointerFactory, final LogEntry entry)
@@ -326,9 +326,8 @@ public class CompositionReader implements LogEntryReader<ComposedLogInputStream>
 	}
 
 	@Override
-	public void readEntries(final Log log, final LogRawAccess<ComposedLogInputStream> logAccess,
-			final LogPointer startOffset, final com.logsniffer.reader.LogEntryReader.LogEntryConsumer consumer)
-					throws IOException, FormatException {
+	public void readEntries(final Log log, final LogRawAccess<LogInputStream> logAccess, final LogPointer startOffset,
+			final com.logsniffer.reader.LogEntryReader.LogEntryConsumer consumer) throws IOException, FormatException {
 		// TODO navigate correctly
 		final ComposedLogPointer clp = new ComposedLogPointer(new PointerPart[composedLogs.size()], new Date(0));
 		for (int i = 0; i < composedLogs.size(); i++) {

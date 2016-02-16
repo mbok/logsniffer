@@ -40,28 +40,23 @@ import com.logsniffer.reader.LogEntryReader;
  * @author mbok
  * 
  */
-public class FluentBackwardReader<STREAMTYPE extends LogInputStream> implements
-		LogEntryReader<STREAMTYPE> {
-	private Logger logger = LoggerFactory.getLogger(getClass());
-	private LogEntryReader<STREAMTYPE> forwardReader;
+public class FluentBackwardReader<ACCESSORTYPE extends LogRawAccess<? extends LogInputStream>>
+		implements LogEntryReader<ACCESSORTYPE> {
+	private final Logger logger = LoggerFactory.getLogger(getClass());
+	private final LogEntryReader<ACCESSORTYPE> forwardReader;
 
-	public FluentBackwardReader(LogEntryReader<STREAMTYPE> forwardReader) {
+	public FluentBackwardReader(final LogEntryReader<ACCESSORTYPE> forwardReader) {
 		super();
 		this.forwardReader = forwardReader;
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public void readEntries(Log log, LogRawAccess<STREAMTYPE> logAccess,
-			LogPointer startOffset, LogEntryConsumer consumer)
-			throws IOException, FormatException {
-		logger.debug("Starting fluent backward consumption in {} from: {}",
-				log, startOffset);
-		List<LogEntry> entries = new BackwardReader(forwardReader).readEntries(
-				log, logAccess, startOffset, -25);
-		logger.debug(
-				"Starting fluent backward consumption with first block of {} entries",
-				entries.size());
+	public void readEntries(final Log log, final ACCESSORTYPE logAccess, final LogPointer startOffset,
+			final LogEntryConsumer consumer) throws IOException, FormatException {
+		logger.debug("Starting fluent backward consumption in {} from: {}", log, startOffset);
+		List<LogEntry> entries = new BackwardReader(forwardReader).readEntries(log, logAccess, startOffset, -25);
+		logger.debug("Starting fluent backward consumption with first block of {} entries", entries.size());
 		while (entries.size() > 0) {
 			for (int i = entries.size() - 1; i >= 0; i--) {
 				if (!consumer.consume(log, logAccess, entries.get(i))) {
@@ -69,11 +64,9 @@ public class FluentBackwardReader<STREAMTYPE extends LogInputStream> implements
 					return;
 				}
 			}
-			entries = new BackwardReader(forwardReader).readEntries(log,
-					logAccess, entries.get(0).getStartOffset(), -25);
-			logger.debug(
-					"Continue fluent backward consumption with next block of {} entries",
-					entries.size());
+			entries = new BackwardReader(forwardReader).readEntries(log, logAccess, entries.get(0).getStartOffset(),
+					-25);
+			logger.debug("Continue fluent backward consumption with next block of {} entries", entries.size());
 		}
 		logger.debug("Finished fluent backward consumption because of SOF");
 
@@ -85,8 +78,7 @@ public class FluentBackwardReader<STREAMTYPE extends LogInputStream> implements
 	}
 
 	@Override
-	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes()
-			throws FormatException {
+	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
 		return forwardReader.getFieldTypes();
 	}
 

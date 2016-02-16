@@ -32,7 +32,8 @@ import com.logsniffer.reader.filter.FilteredLogEntryReader;
  * @author mbok
  * 
  */
-public interface LogSource<STREAMTYPE extends LogInputStream> extends ConfiguredBean, LogRawAccessor<STREAMTYPE, Log> {
+public interface LogSource<ACCESSTYPE extends LogRawAccess<? extends LogInputStream>>
+		extends ConfiguredBean, LogRawAccessor<ACCESSTYPE, Log> {
 	/**
 	 * @return the id
 	 */
@@ -46,7 +47,7 @@ public interface LogSource<STREAMTYPE extends LogInputStream> extends Configured
 	/**
 	 * @return the reader
 	 */
-	public FilteredLogEntryReader<STREAMTYPE> getReader();
+	public FilteredLogEntryReader<ACCESSTYPE> getReader();
 
 	public FieldsMap getUiSettings();
 
@@ -74,18 +75,19 @@ public interface LogSource<STREAMTYPE extends LogInputStream> extends Configured
 	 * @author mbok
 	 * 
 	 */
-	public static abstract class LogSourceWrapper
-			implements LogSource<LogInputStream>, WrappedBean<LogSource<LogInputStream>> {
-		private LogSource<LogInputStream> wrapped;
+	public static abstract class LogSourceWrapper implements LogSource<LogRawAccess<? extends LogInputStream>>,
+			WrappedBean<LogSource<LogRawAccess<? extends LogInputStream>>> {
+		private LogSource<LogRawAccess<? extends LogInputStream>> wrapped;
 
-		public static final LogSource<LogInputStream> unwrap(final LogSource<LogInputStream> possiblyWrapped) {
+		public static final LogSource<LogRawAccess<? extends LogInputStream>> unwrap(
+				final LogSource<LogRawAccess<? extends LogInputStream>> possiblyWrapped) {
 			if (possiblyWrapped instanceof LogSourceWrapper) {
 				return ((LogSourceWrapper) possiblyWrapped).getSource();
 			}
 			return possiblyWrapped;
 		}
 
-		private LogSource<LogInputStream> getSource() {
+		private LogSource<LogRawAccess<? extends LogInputStream>> getSource() {
 			if (wrapped == null) {
 				wrapped = getWrapped();
 			}
@@ -103,7 +105,7 @@ public interface LogSource<STREAMTYPE extends LogInputStream> extends Configured
 		}
 
 		@Override
-		public FilteredLogEntryReader<LogInputStream> getReader() {
+		public FilteredLogEntryReader<LogRawAccess<? extends LogInputStream>> getReader() {
 			return getSource().getReader();
 		}
 
@@ -118,7 +120,7 @@ public interface LogSource<STREAMTYPE extends LogInputStream> extends Configured
 		}
 
 		@Override
-		public LogRawAccess<LogInputStream> getLogAccess(final Log log) throws IOException {
+		public LogRawAccess<? extends LogInputStream> getLogAccess(final Log log) throws IOException {
 			return getSource().getLogAccess(log);
 		}
 
@@ -129,7 +131,7 @@ public interface LogSource<STREAMTYPE extends LogInputStream> extends Configured
 
 	}
 
-	public static final LogSource<LogInputStream> NULL_SOURCE = new LogSource<LogInputStream>() {
+	public static final LogSource<LogRawAccess<? extends LogInputStream>> NULL_SOURCE = new LogSource<LogRawAccess<? extends LogInputStream>>() {
 
 		@Override
 		public LogRawAccess<LogInputStream> getLogAccess(final Log log) throws IOException {
@@ -147,7 +149,7 @@ public interface LogSource<STREAMTYPE extends LogInputStream> extends Configured
 		}
 
 		@Override
-		public FilteredLogEntryReader<LogInputStream> getReader() {
+		public FilteredLogEntryReader<LogRawAccess<? extends LogInputStream>> getReader() {
 			return null;
 		}
 

@@ -36,6 +36,7 @@ import org.springframework.stereotype.Component;
 import com.logsniffer.config.BeanConfigFactoryManager;
 import com.logsniffer.config.ConfigException;
 import com.logsniffer.model.LogInputStream;
+import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.model.LogSource.LogSourceWrapper;
 import com.logsniffer.model.LogSourceProvider;
@@ -58,22 +59,19 @@ public class H2LogSourceProvider implements LogSourceProvider {
 	private class LogSourceCreator implements PreparedStatementCreator {
 		private static final String SQL_INSERT = "INSERT INTO LOG_SOURCES (NAME, CONFIG) VALUES(?,?)";
 		private static final String SQL_UPDATE = "UPDATE LOG_SOURCES SET NAME=?, CONFIG=? WHERE ID=?";
-		private final LogSource<? extends LogInputStream> source;
+		private final LogSource<? extends LogRawAccess<? extends LogInputStream>> source;
 		private final boolean insert;
 
-		private LogSourceCreator(
-				final LogSource<? extends LogInputStream> source,
+		private LogSourceCreator(final LogSource<? extends LogRawAccess<? extends LogInputStream>> source,
 				final boolean insert) {
 			this.source = source;
 			this.insert = insert;
 		}
 
 		@Override
-		public PreparedStatement createPreparedStatement(final Connection con)
-				throws SQLException {
+		public PreparedStatement createPreparedStatement(final Connection con) throws SQLException {
 			try {
-				PreparedStatement ps = con.prepareStatement(insert ? SQL_INSERT
-						: SQL_UPDATE);
+				final PreparedStatement ps = con.prepareStatement(insert ? SQL_INSERT : SQL_UPDATE);
 				int c = 1;
 				ps.setString(c++, source.getName());
 				ps.setString(c++, configManager.saveBeanToJSON(source));
@@ -81,7 +79,7 @@ public class H2LogSourceProvider implements LogSourceProvider {
 					ps.setLong(c++, source.getId());
 				}
 				return ps;
-			} catch (ConfigException e) {
+			} catch (final ConfigException e) {
 				throw new SQLException("Not able to serialize config data", e);
 			}
 		}
@@ -93,28 +91,26 @@ public class H2LogSourceProvider implements LogSourceProvider {
 	 * @author mbok
 	 * 
 	 */
-	private class SourceRowMapper implements
-			RowMapper<LogSource<LogInputStream>> {
+	private class SourceRowMapper implements RowMapper<LogSource<LogRawAccess<? extends LogInputStream>>> {
 		private static final String SQL_PROJECTION = "SELECT ID, NAME, CONFIG FROM LOG_SOURCES";
 
 		@Override
-		public LogSource<LogInputStream> mapRow(final ResultSet rs,
-				final int rowNum) throws SQLException {
+		public LogSource<LogRawAccess<? extends LogInputStream>> mapRow(final ResultSet rs, final int rowNum)
+				throws SQLException {
 			final long id = rs.getLong("ID");
 			final String name = rs.getString("NAME");
 			final String config = rs.getString("CONFIG");
-			LogSource<LogInputStream> source = new LogSourceWrapper() {
+			final LogSource<LogRawAccess<? extends LogInputStream>> source = new LogSourceWrapper() {
 				@SuppressWarnings("unchecked")
 				@Override
-				public LogSource<LogInputStream> getWrapped() {
+				public LogSource<LogRawAccess<? extends LogInputStream>> getWrapped() {
 					try {
-						BaseLogsSource<LogInputStream> wrapped = (BaseLogsSource<LogInputStream>) configManager
+						final BaseLogsSource<LogRawAccess<? extends LogInputStream>> wrapped = (BaseLogsSource<LogRawAccess<? extends LogInputStream>>) configManager
 								.createBeanFromJSON(LogSource.class, config);
 						wrapped.setId(id);
 						return wrapped;
-					} catch (ConfigException e) {
-						logger.error("Failed to deserialize log source: " + id,
-								e);
+					} catch (final ConfigException e) {
+						logger.error("Failed to deserialize log source: " + id, e);
 						return LogSource.NULL_SOURCE;
 					}
 				}
@@ -137,42 +133,38 @@ public class H2LogSourceProvider implements LogSourceProvider {
 	private JdbcTemplate jdbcTemplate;
 
 	@Override
-	public long createSource(final LogSource<? extends LogInputStream> source) {
-		GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+	public long createSource(final LogSource<? extends LogRawAccess<? extends LogInputStream>> source) {
+		final GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
 		jdbcTemplate.update(new LogSourceCreator(source, true), keyHolder);
-		long id = keyHolder.getKey().longValue();
+		final long id = keyHolder.getKey().longValue();
 		return id;
 	}
 
 	@Override
-	public List<LogSource<LogInputStream>> getSources() {
-		return jdbcTemplate.query(SourceRowMapper.SQL_PROJECTION
-				+ " ORDER BY NAME", new SourceRowMapper());
+	public List<LogSource<LogRawAccess<? extends LogInputStream>>> getSources() {
+		return jdbcTemplate.query(SourceRowMapper.SQL_PROJECTION + " ORDER BY NAME", new SourceRowMapper());
 	}
 
 	@Override
-	public LogSource<LogInputStream> getSourceById(final long id) {
-		List<LogSource<LogInputStream>> sources = jdbcTemplate.query(
-				SourceRowMapper.SQL_PROJECTION + " WHERE ID=?",
-				new Object[] { id }, new SourceRowMapper());
+	public LogSource<LogRawAccess<? extends LogInputStream>> getSourceById(final long id) {
+		final List<LogSource<LogRawAccess<? extends LogInputStream>>> sources = jdbcTemplate
+				.query(SourceRowMapper.SQL_PROJECTION + " WHERE ID=?", new Object[] { id }, new SourceRowMapper());
 		return sources.size() > 0 ? sources.get(0) : null;
 	}
 
 	@Override
-	public void updateSource(final LogSource<? extends LogInputStream> source) {
+	public void updateSource(final LogSource<? extends LogRawAccess<? extends LogInputStream>> source) {
 		jdbcTemplate.update(new LogSourceCreator(source, false));
 	}
 
 	@Override
-	public void deleteSource(final LogSource<? extends LogInputStream> source)
+	public void deleteSource(final LogSource<? extends LogRawAccess<? extends LogInputStream>> source)
 			throws ReferenceIntegrityException {
 		try {
-			jdbcTemplate.update("DELETE FROM LOG_SOURCES WHERE ID=?",
-					source.getId());
+			jdbcTemplate.update("DELETE FROM LOG_SOURCES WHERE ID=?", source.getId());
 			logger.info("Deleted source with id: {}", source.getId());
-		} catch (DataIntegrityViolationException e) {
-			logger.info("Deleting source with id {} failed due to references",
-					source.getId());
+		} catch (final DataIntegrityViolationException e) {
+			logger.info("Deleting source with id {} failed due to references", source.getId());
 			throw new ReferenceIntegrityException(LogSource.class, e);
 		}
 	}

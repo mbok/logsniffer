@@ -34,7 +34,7 @@ import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogPointerFactory;
 import com.logsniffer.model.support.ByteArrayLog;
-import com.logsniffer.model.support.ByteLogInputStream;
+import com.logsniffer.model.support.ByteLogAccess;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.LogEntryReader;
 import com.logsniffer.reader.LogEntryReader.LogEntryConsumer;
@@ -56,14 +56,14 @@ public class ReaderWizardTester {
 	 */
 	public static class TestContext {
 		@Valid
-		private LogEntryReader<ByteLogInputStream> reader;
+		private LogEntryReader<ByteLogAccess> reader;
 		@NotEmpty
 		private String testLogData;
 
 		/**
 		 * @return the reader
 		 */
-		public LogEntryReader<ByteLogInputStream> getReader() {
+		public LogEntryReader<ByteLogAccess> getReader() {
 			return reader;
 		}
 
@@ -71,7 +71,7 @@ public class ReaderWizardTester {
 		 * @param reader
 		 *            the reader to set
 		 */
-		public void setReader(final LogEntryReader<ByteLogInputStream> reader) {
+		public void setReader(final LogEntryReader<ByteLogAccess> reader) {
 			this.reader = reader;
 		}
 
@@ -97,7 +97,7 @@ public class ReaderWizardTester {
 	LogEntriesResult testReading(@RequestBody @Valid final TestContext testCtx)
 			throws UnsupportedEncodingException, IOException, FormatException {
 		final ArrayList<LogEntry> entries = new ArrayList<LogEntry>();
-		ByteArrayLog tempLog = new ByteArrayLog(testCtx.getTestLogData().getBytes("UTF-8"));
+		final ByteArrayLog tempLog = new ByteArrayLog(testCtx.getTestLogData().getBytes("UTF-8"));
 		testCtx.getReader().readEntries(tempLog, tempLog, null, new LogEntryConsumer() {
 			@Override
 			public boolean consume(final Log log, final LogPointerFactory pointerFactory, final LogEntry entry)

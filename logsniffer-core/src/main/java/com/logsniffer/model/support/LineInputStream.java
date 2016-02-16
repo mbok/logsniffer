@@ -21,7 +21,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import com.logsniffer.model.LogPointer;
-import com.logsniffer.model.LogPointerFactory;
 
 /**
  * Buffered line log input stream. Inspired from
@@ -31,18 +30,17 @@ import com.logsniffer.model.LogPointerFactory;
  * 
  */
 public class LineInputStream extends ByteLogInputStream {
-	private ByteLogInputStream stream;
-	private LogPointerFactory pointerFactory;
-	private byte buffer[];
+	private final ByteLogInputStream stream;
+	private final ByteLogAccess pointerFactory;
+	private final byte buffer[];
 	private int buf_end = 0;
 	private int buf_pos = 0;
 	private LogPointer real_pos;
-	private String charset;
+	private final String charset;
 
-	public LineInputStream(final LogPointerFactory pointerFactory,
-			final ByteLogInputStream stream, final String charset)
+	public LineInputStream(final ByteLogAccess logAccess, final ByteLogInputStream stream, final String charset)
 			throws IOException {
-		this.pointerFactory = pointerFactory;
+		this.pointerFactory = logAccess;
 		this.stream = stream;
 		invalidate();
 		this.buffer = new byte[4096 * 4];
@@ -64,7 +62,7 @@ public class LineInputStream extends ByteLogInputStream {
 	}
 
 	private int fillBuffer() throws IOException {
-		int n = stream.read(buffer, 0, buffer.length);
+		final int n = stream.read(buffer, 0, buffer.length);
 		if (n >= 0) {
 			real_pos = pointerFactory.createRelative(real_pos, n);
 			buf_end = n;
@@ -80,16 +78,15 @@ public class LineInputStream extends ByteLogInputStream {
 	}
 
 	@Override
-	public int read(final byte b[], final int off, final int len)
-			throws IOException {
-		int leftover = buf_end - buf_pos;
+	public int read(final byte b[], final int off, final int len) throws IOException {
+		final int leftover = buf_end - buf_pos;
 		if (len <= leftover) {
 			System.arraycopy(buffer, buf_pos, b, off, len);
 			buf_pos += len;
 			return len;
 		}
 		for (int i = 0; i < len; i++) {
-			int c = this.read();
+			final int c = this.read();
 			if (c != -1) {
 				b[off + i] = (byte) c;
 			} else {
@@ -122,7 +119,7 @@ public class LineInputStream extends ByteLogInputStream {
 			}
 		}
 		if (lineend < 0) {
-			ByteArrayOutputStream input = new ByteArrayOutputStream(512);
+			final ByteArrayOutputStream input = new ByteArrayOutputStream(512);
 			input.write(buffer, buf_pos, buf_end - buf_pos);
 			buf_pos = buf_end;
 			int c;
@@ -132,9 +129,8 @@ public class LineInputStream extends ByteLogInputStream {
 			if (c == -1 && input.size() == 0) {
 				return null;
 			}
-			byte[] bytesInput = input.toByteArray();
-			if (c == '\n' && bytesInput.length > 0
-					&& bytesInput[bytesInput.length - 1] == '\r') {
+			final byte[] bytesInput = input.toByteArray();
+			if (c == '\n' && bytesInput.length > 0 && bytesInput[bytesInput.length - 1] == '\r') {
 				return new String(bytesInput, 0, bytesInput.length - 1, charset);
 			} else {
 				return new String(bytesInput, charset);

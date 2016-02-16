@@ -38,61 +38,47 @@ import com.logsniffer.reader.LogEntryReader;
  * @author mbok
  * 
  */
-public class BackwardReader<STREAMTYPE extends LogInputStream> {
-	private static final Logger logger = LoggerFactory
-			.getLogger(BackwardReader.class);
+public class BackwardReader<ACCESSORTYPE extends LogRawAccess<? extends LogInputStream>> {
+	private static final Logger logger = LoggerFactory.getLogger(BackwardReader.class);
 
-	private final LogEntryReader<STREAMTYPE> forwardReader;
+	private final LogEntryReader<ACCESSORTYPE> forwardReader;
 
-	public BackwardReader(final LogEntryReader<STREAMTYPE> forwardReader) {
+	public BackwardReader(final LogEntryReader<ACCESSORTYPE> forwardReader) {
 		super();
 		this.forwardReader = forwardReader;
 	}
 
-	public List<LogEntry> readEntries(final Log log,
-			final LogRawAccess<STREAMTYPE> logAccess, LogPointer startOffset,
+	public List<LogEntry> readEntries(final Log log, final ACCESSORTYPE logAccess, LogPointer startOffset,
 			int entriesNumber) throws IOException, FormatException {
 		int avgSizePerEntry = 255;
 		entriesNumber = -entriesNumber;
 		final int origNumber = entriesNumber;
-		ArrayList<LogEntry> revEntries = new ArrayList<LogEntry>();
+		final ArrayList<LogEntry> revEntries = new ArrayList<LogEntry>();
 		LogPointer revPointer = null;
-		while (revEntries.size() < origNumber && !startOffset.isSOF()
-				&& (revPointer == null || !revPointer.isSOF())) {
-			revPointer = logAccess.createRelative(startOffset,
-					-(entriesNumber + 1) * avgSizePerEntry);
-			BufferedConsumer bufferedConsumer = new BufferedConsumer(
-					Integer.MAX_VALUE);
-			BoundedConsumerProxy boundedConsumer = new BoundedConsumerProxy(
-					bufferedConsumer, startOffset);
-			forwardReader.readEntries(log, logAccess, revPointer,
-					boundedConsumer);
-			List<LogEntry> entries = bufferedConsumer.getBuffer();
+		while (revEntries.size() < origNumber && !startOffset.isSOF() && (revPointer == null || !revPointer.isSOF())) {
+			revPointer = logAccess
+					.absolute(logAccess.getDifference(null, startOffset) - (entriesNumber + 1) * avgSizePerEntry).get();
+			final BufferedConsumer bufferedConsumer = new BufferedConsumer(Integer.MAX_VALUE);
+			final BoundedConsumerProxy boundedConsumer = new BoundedConsumerProxy(bufferedConsumer, startOffset);
+			forwardReader.readEntries(log, logAccess, revPointer, boundedConsumer);
+			final List<LogEntry> entries = bufferedConsumer.getBuffer();
 			if (logger.isDebugEnabled()) {
 				logger.debug(
 						"Found {} entries by reverse read iteration from={} and to={} to fill remaining {} entries with avg-size/entry {}",
-						entries.size(), revPointer, startOffset, entriesNumber,
-						avgSizePerEntry);
+						entries.size(), revPointer, startOffset, entriesNumber, avgSizePerEntry);
 			}
 			if (entries.size() > 0) {
 				if (entries.get(0).getStartOffset().isSOF()) {
 					// Start reached
-					logger.debug(
-							"Start reached, cancel reverse reading with {} found entries and {} wanted",
+					logger.debug("Start reached, cancel reverse reading with {} found entries and {} wanted",
 							revEntries.size(), origNumber);
-					int found = Math.min(entries.size(), entriesNumber);
-					revEntries.addAll(
-							0,
-							entries.subList(entries.size() - found,
-									entries.size()));
+					final int found = Math.min(entries.size(), entriesNumber);
+					revEntries.addAll(0, entries.subList(entries.size() - found, entries.size()));
 					break;
 				} else {
 					// Cut off first
-					int found = Math.min(entries.size() - 1, entriesNumber);
-					revEntries.addAll(
-							0,
-							entries.subList(entries.size() - found,
-									entries.size()));
+					final int found = Math.min(entries.size() - 1, entriesNumber);
+					revEntries.addAll(0, entries.subList(entries.size() - found, entries.size()));
 					entriesNumber -= found;
 				}
 			}
@@ -100,14 +86,11 @@ public class BackwardReader<STREAMTYPE extends LogInputStream> {
 				// If at least two entries were found in current cycle, then we
 				// recalculate the avg size per entry
 				startOffset = revEntries.get(0).getStartOffset();
-				avgSizePerEntry = (int) (logAccess.getDifference(revEntries
-						.get(0).getStartOffset(),
-						revEntries.get(revEntries.size() - 1).getEndOffset()) / revEntries
-						.size()) + 1;
+				avgSizePerEntry = (int) (logAccess.getDifference(revEntries.get(0).getStartOffset(),
+						revEntries.get(revEntries.size() - 1).getEndOffset()) / revEntries.size()) + 1;
 			} else {
 				// Empty search, double avg size
-				avgSizePerEntry = Math.min(avgSizePerEntry * 2,
-						Integer.MAX_VALUE);
+				avgSizePerEntry = Math.min(avgSizePerEntry * 2, Integer.MAX_VALUE);
 			}
 		}
 		return revEntries;

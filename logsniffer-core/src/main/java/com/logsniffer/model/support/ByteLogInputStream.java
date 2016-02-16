@@ -21,7 +21,6 @@ import java.io.InputStream;
 
 import com.logsniffer.model.LogInputStream;
 
-public abstract class ByteLogInputStream extends InputStream implements
-		LogInputStream {
+public abstract class ByteLogInputStream extends InputStream implements LogInputStream {
 
 }

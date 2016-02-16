@@ -70,7 +70,7 @@ public class LevelScannerTest {
 		Mockito.when(lis.getPointer()).thenReturn(p);
 		Mockito.when(logAccess.getInputStream(null)).thenReturn(lis);
 		Mockito.when(log.getSize()).thenReturn(3l);
-		final LogEntryReader<LogInputStream> reader = Mockito.mock(LogEntryReader.class);
+		final LogEntryReader<LogRawAccess<LogInputStream>> reader = Mockito.mock(LogEntryReader.class);
 		final LogEntry entry1 = new LogEntry();
 		entry1.setSeverity(new SeverityLevel("INFO", 3, SeverityClassification.INFORMATIONAL));
 		entry1.setEndOffset(new DefaultPointer(2, 4));

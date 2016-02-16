@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 import com.logsniffer.model.LogPointer;
-import com.logsniffer.model.support.DefaultPointer;
 import com.logsniffer.model.support.ByteLogInputStream;
+import com.logsniffer.model.support.DefaultPointer;
 
 /**
  * Log input stream based on {@link RandomAccessFile}.
@@ -44,7 +44,7 @@ public class RAFInputStream extends ByteLogInputStream {
 		return new DefaultPointer(file.getFilePointer(), size);
 	}
 
-	public void seek(long pos) throws IOException {
+	public void seek(final long pos) throws IOException {
 		file.seek(pos);
 	}
 
@@ -58,9 +58,8 @@ public class RAFInputStream extends ByteLogInputStream {
 	}
 
 	@Override
-	public int read(final byte[] b, final int off, final int len)
-			throws IOException {
-		long p = file.getFilePointer();
+	public int read(final byte[] b, final int off, final int len) throws IOException {
+		final long p = file.getFilePointer();
 		if (p >= size) {
 			return -1;
 		} else if (p + len > size) {

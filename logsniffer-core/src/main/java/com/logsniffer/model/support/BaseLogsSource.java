@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.logsniffer.fields.FieldsMap;
 import com.logsniffer.model.LogInputStream;
+import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.reader.filter.FilteredLogEntryReader;
 import com.logsniffer.util.json.Views;
@@ -36,7 +37,8 @@ import com.logsniffer.util.json.Views;
  * @author mbok
  * 
  */
-public abstract class BaseLogsSource<STREAMTYPE extends LogInputStream> implements LogSource<STREAMTYPE> {
+public abstract class BaseLogsSource<ACCESSTYPE extends LogRawAccess<? extends LogInputStream>>
+		implements LogSource<ACCESSTYPE> {
 	@JsonProperty
 	@JsonView(Views.Info.class)
 	private long id;
@@ -50,7 +52,7 @@ public abstract class BaseLogsSource<STREAMTYPE extends LogInputStream> implemen
 	@JsonView(Views.Info.class)
 	@Valid
 	@JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
-	private FilteredLogEntryReader<STREAMTYPE> reader = new FilteredLogEntryReader<>();
+	private FilteredLogEntryReader<ACCESSTYPE> reader = new FilteredLogEntryReader<>();
 
 	@JsonProperty
 	@JsonView(Views.Info.class)
@@ -92,7 +94,7 @@ public abstract class BaseLogsSource<STREAMTYPE extends LogInputStream> implemen
 	 * @return the reader
 	 */
 	@Override
-	public FilteredLogEntryReader<STREAMTYPE> getReader() {
+	public FilteredLogEntryReader<ACCESSTYPE> getReader() {
 		return reader;
 	}
 
@@ -100,7 +102,7 @@ public abstract class BaseLogsSource<STREAMTYPE extends LogInputStream> implemen
 	 * @param reader
 	 *            the reader to set
 	 */
-	public void setReader(final FilteredLogEntryReader<STREAMTYPE> reader) {
+	public void setReader(final FilteredLogEntryReader<ACCESSTYPE> reader) {
 		this.reader = reader;
 	}
 

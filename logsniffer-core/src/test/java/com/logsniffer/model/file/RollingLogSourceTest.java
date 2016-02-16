@@ -40,10 +40,9 @@ import com.logsniffer.app.CoreAppConfig;
 import com.logsniffer.config.BeanConfigFactoryManager;
 import com.logsniffer.config.ConfigException;
 import com.logsniffer.model.Log;
-import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogRawAccessor;
 import com.logsniffer.model.file.AbstractTimestampRollingLogsSource.PastLogsType;
-import com.logsniffer.model.support.ByteLogInputStream;
+import com.logsniffer.model.support.ByteLogAccess;
 import com.logsniffer.model.support.DailyRollingLog;
 import com.logsniffer.model.support.DailyRollingLogAccess;
 import com.logsniffer.reader.filter.FilteredLogEntryReader;
@@ -56,8 +55,7 @@ import com.logsniffer.reader.log4j.Log4jTextReader;
  * 
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { CoreAppConfig.class,
-		RollingLogSourceTest.class })
+@ContextConfiguration(classes = { CoreAppConfig.class, RollingLogSourceTest.class })
 @Configuration
 public class RollingLogSourceTest {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -72,19 +70,15 @@ public class RollingLogSourceTest {
 		logDir = new File(File.createTempFile("log", "log").getPath() + "dir");
 		logDir.mkdirs();
 		FileUtils.writeStringToFile(new File(logDir, "server.log"), "live\n");
-		FileUtils.writeStringToFile(new File(logDir, "server.log.2013-03-27"),
-				"log from 2013-03-27\n");
+		FileUtils.writeStringToFile(new File(logDir, "server.log.2013-03-27"), "log from 2013-03-27\n");
 		Thread.sleep(1200);
-		FileUtils.writeStringToFile(new File(logDir, "server.log.2013-03-26"),
-				"log from 2013-03-26\n");
+		FileUtils.writeStringToFile(new File(logDir, "server.log.2013-03-26"), "log from 2013-03-26\n");
 	}
 
-	private static class DirectFileLogAccessor implements
-			LogRawAccessor<ByteLogInputStream, Log> {
+	private static class DirectFileLogAccessor implements LogRawAccessor<ByteLogAccess, Log> {
 
 		@Override
-		public LogRawAccess<ByteLogInputStream> getLogAccess(final Log log)
-				throws IOException {
+		public ByteLogAccess getLogAccess(final Log log) throws IOException {
 			return new DirectFileLogAccess((FileLog) log);
 		}
 
@@ -92,7 +86,7 @@ public class RollingLogSourceTest {
 
 	@Test
 	public void testRollingLogAccess() throws Exception {
-		RollingLogsSource source = new RollingLogsSource();
+		final RollingLogsSource source = new RollingLogsSource();
 		source.setPattern(logDir.getPath() + "/server.log");
 		source.setPastLogsSuffixPattern(".UNKNOWN");
 		source.setPastLogsType(PastLogsType.NAME);
@@ -101,20 +95,19 @@ public class RollingLogSourceTest {
 		Log[] rolledLogs = source.getLogs().toArray(new Log[0]);
 		Assert.assertEquals(1, rolledLogs.length);
 		Assert.assertEquals(5, rolledLogs[0].getSize());
-		Assert.assertEquals(
-				"live",
+		Assert.assertEquals("live",
 				IOUtils.readLines(
-						new DailyRollingLogAccess(new DirectFileLogAccessor(),
-								(DailyRollingLog) rolledLogs[0])
-								.getInputStream(null)).get(0));
+						new DailyRollingLogAccess(new DirectFileLogAccessor(), (DailyRollingLog) rolledLogs[0])
+								.getInputStream(null))
+						.get(0));
 
 		// Test past ordered desc by name
 		source.setPastLogsSuffixPattern(".*");
 		rolledLogs = source.getLogs().toArray(new Log[0]);
 		Assert.assertEquals(1, rolledLogs.length);
 		BufferedReader lr = new BufferedReader(new InputStreamReader(
-				new DailyRollingLogAccess(new DirectFileLogAccessor(),
-						(DailyRollingLog) rolledLogs[0]).getInputStream(null)));
+				new DailyRollingLogAccess(new DirectFileLogAccessor(), (DailyRollingLog) rolledLogs[0])
+						.getInputStream(null)));
 		Assert.assertEquals("log from 2013-03-26", lr.readLine());
 		Assert.assertEquals("log from 2013-03-27", lr.readLine());
 		Assert.assertEquals("live", lr.readLine());
@@ -123,8 +116,8 @@ public class RollingLogSourceTest {
 		source.setPastLogsType(PastLogsType.LAST_MODIFIED);
 		rolledLogs = source.getLogs().toArray(new Log[0]);
 		lr = new BufferedReader(new InputStreamReader(
-				new DailyRollingLogAccess(new DirectFileLogAccessor(),
-						(DailyRollingLog) rolledLogs[0]).getInputStream(null)));
+				new DailyRollingLogAccess(new DirectFileLogAccessor(), (DailyRollingLog) rolledLogs[0])
+						.getInputStream(null)));
 		Assert.assertEquals("log from 2013-03-27", lr.readLine());
 		Assert.assertEquals("log from 2013-03-26", lr.readLine());
 		Assert.assertEquals("live", lr.readLine());
@@ -132,19 +125,17 @@ public class RollingLogSourceTest {
 
 	@Test
 	public void testMultipleLiveLogs() throws IOException {
-		RollingLogsSource source = new RollingLogsSource();
+		final RollingLogsSource source = new RollingLogsSource();
 		source.setPattern(logDir.getPath() + "/server*.log");
 		source.setPastLogsSuffixPattern(".*");
 
 		FileUtils.writeStringToFile(new File(logDir, "server2.log"), "live2\n");
-		FileUtils.writeStringToFile(new File(logDir, "server2.log.old"),
-				"oldlive2\n");
-		Log[] rolledLogs = source.getLogs().toArray(new Log[0]);
+		FileUtils.writeStringToFile(new File(logDir, "server2.log.old"), "oldlive2\n");
+		final Log[] rolledLogs = source.getLogs().toArray(new Log[0]);
 		Assert.assertEquals(2, rolledLogs.length);
 		Log server = null;
 		Log server2 = null;
-		if (rolledLogs[0].getPath().equals(
-				new File(logDir, "server2.log").getPath())) {
+		if (rolledLogs[0].getPath().equals(new File(logDir, "server2.log").getPath())) {
 			server2 = rolledLogs[0];
 			server = rolledLogs[1];
 		} else {
@@ -154,17 +145,16 @@ public class RollingLogSourceTest {
 
 		// Read from server.log~
 		BufferedReader lr = new BufferedReader(new InputStreamReader(
-				new DailyRollingLogAccess(new DirectFileLogAccessor(),
-						(DailyRollingLog) server).getInputStream(null)));
+				new DailyRollingLogAccess(new DirectFileLogAccessor(), (DailyRollingLog) server).getInputStream(null)));
 		Assert.assertEquals("log from 2013-03-26", lr.readLine());
 		Assert.assertEquals("log from 2013-03-27", lr.readLine());
 		Assert.assertEquals("live", lr.readLine());
 		Assert.assertNull(lr.readLine());
 
 		// Read from server2.log~
-		lr = new BufferedReader(new InputStreamReader(
-				new DailyRollingLogAccess(new DirectFileLogAccessor(),
-						(DailyRollingLog) server2).getInputStream(null)));
+		lr = new BufferedReader(
+				new InputStreamReader(new DailyRollingLogAccess(new DirectFileLogAccessor(), (DailyRollingLog) server2)
+						.getInputStream(null)));
 		Assert.assertEquals("oldlive2", lr.readLine());
 		Assert.assertEquals("live2", lr.readLine());
 		Assert.assertNull(lr.readLine());
@@ -172,30 +162,23 @@ public class RollingLogSourceTest {
 
 	@Test
 	public void testConfigViaJSON() throws ConfigException, ParseException {
-		RollingLogsSource source = new RollingLogsSource();
+		final RollingLogsSource source = new RollingLogsSource();
 		source.setPattern("server*.log");
 		source.setPastLogsSuffixPattern(".*");
 		source.setPastLogsType(PastLogsType.LAST_MODIFIED);
-		Log4jTextReader reader = new Log4jTextReader();
+		final Log4jTextReader reader = new Log4jTextReader();
 		reader.setFormatPattern("%d{ABSOLUTE} %-5p [%c] %m%n");
-		source.setReader(new FilteredLogEntryReader<ByteLogInputStream>(reader,
-				null));
+		source.setReader(new FilteredLogEntryReader<ByteLogAccess>(reader, null));
 
-		String json = configManager.saveBeanToJSON(source);
+		final String json = configManager.saveBeanToJSON(source);
 		logger.info("Saved log source config to JSON: {}", json);
 
-		RollingLogsSource checkSource = configManager.createBeanFromJSON(
-				RollingLogsSource.class, json);
+		final RollingLogsSource checkSource = configManager.createBeanFromJSON(RollingLogsSource.class, json);
 		Assert.assertEquals(source.getPattern(), checkSource.getPattern());
-		Assert.assertEquals(source.getPastLogsSuffixPattern(),
-				checkSource.getPastLogsSuffixPattern());
-		Assert.assertEquals(source.getPastLogsType(),
-				checkSource.getPastLogsType());
-		Assert.assertEquals(
-				true,
-				checkSource.getReader().getTargetReader() instanceof Log4jTextReader);
+		Assert.assertEquals(source.getPastLogsSuffixPattern(), checkSource.getPastLogsSuffixPattern());
+		Assert.assertEquals(source.getPastLogsType(), checkSource.getPastLogsType());
+		Assert.assertEquals(true, checkSource.getReader().getTargetReader() instanceof Log4jTextReader);
 		Assert.assertEquals(reader.getFormatPattern(),
-				((Log4jTextReader) checkSource.getReader().getTargetReader())
-						.getFormatPattern());
+				((Log4jTextReader) checkSource.getReader().getTargetReader()).getFormatPattern());
 	}
 }

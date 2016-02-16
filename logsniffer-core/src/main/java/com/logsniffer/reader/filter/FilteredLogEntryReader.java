@@ -47,14 +47,15 @@ import com.logsniffer.util.json.Views;
  * @author mbok
  * 
  */
-public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream> implements LogEntryReader<STREAMTYPE> {
+public final class FilteredLogEntryReader<ACCESSTYPE extends LogRawAccess<? extends LogInputStream>>
+		implements LogEntryReader<ACCESSTYPE> {
 	@JsonProperty
 	@Valid
 	private List<FieldsFilter> filters = new ArrayList<>();
 
 	@JsonProperty
 	@Valid
-	private LogEntryReader<STREAMTYPE> targetReader;
+	private LogEntryReader<ACCESSTYPE> targetReader;
 
 	/**
 	 * 
@@ -76,8 +77,8 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream> imp
 	 *         case filters are defined. In case filters are null or empty the
 	 *         current reader is returned back without wrapping.
 	 */
-	public static <STREAMTYPE extends LogInputStream> LogEntryReader<STREAMTYPE> wrappIfNeeded(
-			final LogEntryReader<STREAMTYPE> targetReader, final List<FieldsFilter> filters) {
+	public static <ACCESSTYPE extends LogRawAccess<? extends LogInputStream>> LogEntryReader<ACCESSTYPE> wrappIfNeeded(
+			final LogEntryReader<ACCESSTYPE> targetReader, final List<FieldsFilter> filters) {
 		if (filters != null && !filters.isEmpty()) {
 			return new FilteredLogEntryReader<>(targetReader, filters);
 		}
@@ -89,7 +90,7 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream> imp
 	 * @param filters
 	 */
 	@SuppressWarnings("unchecked")
-	public FilteredLogEntryReader(final LogEntryReader<STREAMTYPE> targetReader, final List<FieldsFilter> filters) {
+	public FilteredLogEntryReader(final LogEntryReader<ACCESSTYPE> targetReader, final List<FieldsFilter> filters) {
 		super();
 		this.targetReader = targetReader;
 		this.filters = (List<FieldsFilter>) (filters != null ? new ArrayList<>(filters) : new ArrayList<>());
@@ -98,7 +99,7 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream> imp
 	/**
 	 * @return the targetReader
 	 */
-	public LogEntryReader<STREAMTYPE> getTargetReader() {
+	public LogEntryReader<ACCESSTYPE> getTargetReader() {
 		return targetReader;
 	}
 
@@ -110,7 +111,7 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream> imp
 	}
 
 	@Override
-	public void readEntries(final Log log, final LogRawAccess<STREAMTYPE> logAccess, final LogPointer startOffset,
+	public void readEntries(final Log log, final ACCESSTYPE logAccess, final LogPointer startOffset,
 			final LogEntryConsumer consumer) throws IOException, FormatException {
 		targetReader.readEntries(log, logAccess, startOffset, new LogEntryConsumer() {
 			@Override
@@ -167,7 +168,7 @@ public final class FilteredLogEntryReader<STREAMTYPE extends LogInputStream> imp
 	 * @param targetReader
 	 *            the targetReader to set
 	 */
-	public void setTargetReader(final LogEntryReader<STREAMTYPE> targetReader) {
+	public void setTargetReader(final LogEntryReader<ACCESSTYPE> targetReader) {
 		this.targetReader = targetReader;
 	}
 

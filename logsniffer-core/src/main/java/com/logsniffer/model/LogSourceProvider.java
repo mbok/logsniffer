@@ -33,7 +33,7 @@ public interface LogSourceProvider {
 	 * 
 	 * @return list of registered log sources
 	 */
-	public List<LogSource<LogInputStream>> getSources();
+	public List<LogSource<LogRawAccess<? extends LogInputStream>>> getSources();
 
 	/**
 	 * Returns a log source for given id.
@@ -42,7 +42,7 @@ public interface LogSourceProvider {
 	 *            id log source to return
 	 * @return the destined log source or null if not found
 	 */
-	public LogSource<LogInputStream> getSourceById(long id);
+	public LogSource<LogRawAccess<? extends LogInputStream>> getSourceById(long id);
 
 	/**
 	 * Persists a new log source.
@@ -51,7 +51,7 @@ public interface LogSourceProvider {
 	 *            the source to persist.
 	 * @return id of the persisted source.
 	 */
-	public long createSource(LogSource<? extends LogInputStream> source);
+	public long createSource(LogSource<? extends LogRawAccess<? extends LogInputStream>> source);
 
 	/**
 	 * Updates the given source.
@@ -59,13 +59,13 @@ public interface LogSourceProvider {
 	 * @param source
 	 *            source to update.
 	 */
-	public void updateSource(LogSource<? extends LogInputStream> source);
+	public void updateSource(LogSource<? extends LogRawAccess<? extends LogInputStream>> source);
 
 	/**
 	 * Deletes the given source.
 	 * 
 	 * @param source
 	 */
-	public void deleteSource(LogSource<? extends LogInputStream> source)
+	public void deleteSource(LogSource<? extends LogRawAccess<? extends LogInputStream>> source)
 			throws ReferenceIntegrityException;
 }

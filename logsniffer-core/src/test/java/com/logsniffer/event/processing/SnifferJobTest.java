@@ -181,7 +181,7 @@ public class SnifferJobTest {
 		verify(sourceProvider, times(1)).getSourceById(77);
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	@DirtiesContext
 	public void testProcessing() throws Exception {
@@ -204,13 +204,13 @@ public class SnifferJobTest {
 		final Log log2 = mock(Log.class);
 		final LogRawAccess<LogInputStream> logAccess2 = mock(LogRawAccess.class);
 		when(log2.getPath()).thenReturn("log2.log");
-		final LogSource<LogInputStream> source = mock(LogSource.class);
+		final LogSource<LogRawAccess<LogInputStream>> source = mock(LogSource.class);
 		when(source.getId()).thenReturn(77L);
-		when(sourceProvider.getSourceById(77)).thenReturn(source);
+		when(sourceProvider.getSourceById(77)).thenReturn((LogSource) source);
 		when(source.getLogAccess(log1)).thenReturn(logAccess1);
 		when(source.getLogAccess(log2)).thenReturn(logAccess2);
-		final LogEntryReader<LogInputStream> reader = mock(LogEntryReader.class);
-		when(source.getReader()).thenReturn(new FilteredLogEntryReader<LogInputStream>(reader, null));
+		final LogEntryReader<LogRawAccess<LogInputStream>> reader = mock(LogEntryReader.class);
+		when(source.getReader()).thenReturn(new FilteredLogEntryReader<LogRawAccess<LogInputStream>>(reader, null));
 		when(source.getLogs()).thenReturn(Arrays.asList(new Log[] { log1, log2 }));
 
 		final IncrementData log1idata = new IncrementData();
