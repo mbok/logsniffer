@@ -19,5 +19,5 @@ public interface Navigation<M> {
 
 	NavigationFuture refresh(LogPointer toRefresh) throws IOException;
 
-	NavigationFuture absolute(M offset);
+	NavigationFuture absolute(M offset) throws IOException;
 }
