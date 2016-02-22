@@ -87,8 +87,7 @@ public class ByteArrayLog implements Log, LogRawAccessor<ByteLogAccess, ByteArra
 		return ((DefaultPointer) compareTo).getOffset() - start;
 	}
 
-	@Override
-	public LogPointer createRelative2(final LogPointer _source, final long relativeBytePosition) throws IOException {
+	private LogPointer createRelative2(final LogPointer _source, final long relativeBytePosition) throws IOException {
 		final DefaultPointer source = (DefaultPointer) _source;
 		final long newOffset = (source != null ? source.getOffset() : 0) + relativeBytePosition;
 		final long size = data.length;

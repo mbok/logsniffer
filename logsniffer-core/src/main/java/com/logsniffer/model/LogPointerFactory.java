@@ -42,23 +42,6 @@ public interface LogPointerFactory {
 	public abstract long getDifference(LogPointer source, LogPointer compareTo) throws IOException;
 
 	/**
-	 * Creates a position pointer in the log relative to the source pointer. A
-	 * null source means the log start position. The calculated pointer will
-	 * never leave the start or end bound of the log.
-	 * 
-	 * @param source
-	 *            source position or null for log start position
-	 * @param relativeBytePosition
-	 *            bytes to move the pointer relative to the source position. A
-	 *            negative number moves the pointer to the log start, a positive
-	 *            number to the end.
-	 * @return new pointer
-	 * @throws IOException
-	 *             in case of errors
-	 */
-	public abstract LogPointer createRelative2(LogPointer source, long relativeBytePosition) throws IOException;
-
-	/**
 	 * Returns the pointer from given JSON representation.
 	 * 
 	 * @param data

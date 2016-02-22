@@ -6,6 +6,12 @@ import java.util.Date;
 import com.logsniffer.model.LogPointer;
 
 public class ComposedLogPointer implements LogPointer {
+	/**
+	 * Pointer related to a single log.
+	 * 
+	 * @author mbok
+	 *
+	 */
 	public static class PointerPart {
 		private final long logSourceId;
 		private final String logPath;
@@ -116,6 +122,11 @@ public class ComposedLogPointer implements LogPointer {
 			}
 		}
 		return true;
+	}
+
+	public static ComposedLogPointer fromJson(final String json) {
+		// TODO
+		return null;
 	}
 
 	@Override

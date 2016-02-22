@@ -379,11 +379,6 @@ public class DailyRollingLogAccess implements ByteLogAccess {
 	}
 
 	@Override
-	public LogPointer createRelative2(final LogPointer _source, final long relativeBytePosition) throws IOException {
-		return null;
-	}
-
-	@Override
 	public LogPointer createRelative(final LogPointer _source, long relativeBytePosition) throws IOException {
 		final PointerData spd = getLogIndex(_source);
 		RollingLogPointer source = spd.pointer;

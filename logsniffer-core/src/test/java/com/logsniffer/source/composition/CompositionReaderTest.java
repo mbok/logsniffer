@@ -94,7 +94,7 @@ public class CompositionReaderTest {
 	@Test
 	public void testCorrectComposition() throws FormatException, IOException {
 		final List<LogInstance> subLogs = new ArrayList<>();
-		final CompositionReader r = new CompositionReader(subLogs);
+		final ComposedLogAccess r = new ComposedLogAccess(null, subLogs);
 		final Log log1 = new ByteArrayLog("log1", new byte[0]);
 		final Log log2 = new ByteArrayLog("log2", new byte[0]);
 		subLogs.add(new LogInstance(1, log1, Mockito.mock(LogRawAccess.class), new DummySubReader(200, 2, 0)));
@@ -125,7 +125,7 @@ public class CompositionReaderTest {
 	@Test
 	public void testErrorInOneSource() throws FormatException, IOException {
 		final List<LogInstance> subLogs = new ArrayList<>();
-		final CompositionReader r = new CompositionReader(subLogs);
+		final ComposedLogAccess r = new ComposedLogAccess(null, subLogs);
 		final Log log1 = new ByteArrayLog("log1", new byte[0]);
 		final Log log2 = new ByteArrayLog("log2", new byte[0]);
 		subLogs.add(new LogInstance(1, log1, Mockito.mock(LogRawAccess.class), new DummySubReader(200, 2, 0, 100)));
@@ -134,7 +134,7 @@ public class CompositionReaderTest {
 		try {
 			r.readEntries(Mockito.mock(Log.class), Mockito.mock(LogRawAccess.class), null, c);
 		} catch (final IOException e) {
-			Assert.assertTrue(200 - CompositionReader.BUFFER_SIZE_PER_THREAD <= c.getBuffer().size());
+			Assert.assertTrue(200 - ComposedLogAccess.BUFFER_SIZE_PER_THREAD <= c.getBuffer().size());
 			return;
 		}
 		Assert.fail("Exception expected");
@@ -151,7 +151,7 @@ public class CompositionReaderTest {
 	public void testLongComposition() throws FormatException, IOException {
 		final long start = System.currentTimeMillis();
 		final List<LogInstance> subLogs = new ArrayList<>();
-		final CompositionReader r = new CompositionReader(subLogs);
+		final ComposedLogAccess r = new ComposedLogAccess(null, subLogs);
 		final Log log1 = new ByteArrayLog("log1", new byte[0]);
 		final Log log2 = new ByteArrayLog("log2", new byte[0]);
 		subLogs.add(new LogInstance(1, log1, Mockito.mock(LogRawAccess.class), new DummySubReader(20000000, 2, 0)));

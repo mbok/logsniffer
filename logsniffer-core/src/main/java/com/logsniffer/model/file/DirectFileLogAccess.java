@@ -68,11 +68,6 @@ public class DirectFileLogAccess implements ByteLogAccess {
 	}
 
 	@Override
-	public LogPointer createRelative2(final LogPointer _source, final long relativeBytePosition) throws IOException {
-		return null;
-	}
-
-	@Override
 	public LogPointer createRelative(final LogPointer _source, final long relativeBytePosition) throws IOException {
 		final DefaultPointer source = (DefaultPointer) _source;
 		final long newOffset = (source != null ? source.getOffset() : 0) + relativeBytePosition;
@@ -106,12 +101,12 @@ public class DirectFileLogAccess implements ByteLogAccess {
 
 	@Override
 	public LogPointer end() throws IOException {
-		return createRelative2(null, file.getSize());
+		return createRelative(null, file.getSize());
 	}
 
 	@Override
 	public LogPointer start() throws IOException {
-		return createRelative2(null, 0);
+		return createRelative(null, 0);
 	}
 
 	@Override
@@ -119,7 +114,7 @@ public class DirectFileLogAccess implements ByteLogAccess {
 		return new NavigationFuture() {
 			@Override
 			public LogPointer get() throws IOException {
-				return createRelative2(toRefresh, 0);
+				return createRelative(toRefresh, 0);
 			}
 		};
 	}
@@ -129,7 +124,7 @@ public class DirectFileLogAccess implements ByteLogAccess {
 		return new NavigationFuture() {
 			@Override
 			public LogPointer get() throws IOException {
-				return createRelative2(null, offset);
+				return createRelative(null, offset);
 			}
 		};
 	}
