@@ -18,6 +18,7 @@
 package com.logsniffer.web.controller.source;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -53,9 +54,8 @@ import com.logsniffer.model.LogSource;
 import com.logsniffer.model.LogSourceProvider;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.LogEntryReader;
-import com.logsniffer.reader.support.BackwardReader;
 import com.logsniffer.reader.support.BufferedConsumer;
-import com.logsniffer.reader.support.FluentBackwardReader;
+import com.logsniffer.reader.support.FluentReverseReader;
 import com.logsniffer.web.controller.LogEntriesResult;
 import com.logsniffer.web.controller.exception.ResourceNotFoundException;
 
@@ -142,8 +142,10 @@ public class LogEntriesRestController {
 				return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(), bc.getBuffer(),
 						getHighlightEntryIndex(pointer, count, bc.getBuffer()));
 			} else {
-				final List<LogEntry> readEntries = new BackwardReader(activeLogSource.getReader()).readEntries(log,
-						logAccess, pointer, count);
+				final BufferedConsumer bc = new BufferedConsumer(-count);
+				activeLogSource.getReader().readEntriesReverse(log, logAccess, pointer, bc);
+				final List<LogEntry> readEntries = bc.getBuffer();
+				Collections.reverse(readEntries);
 				return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(), readEntries,
 						getHighlightEntryIndex(pointer, count, readEntries));
 			}
@@ -191,8 +193,10 @@ public class LogEntriesRestController {
 				pointer = logAccess.refresh(pointer).get();
 				if (pointer.isEOF()) {
 					// End pointer, return the last 10 simply
-					final List<LogEntry> readEntries = new BackwardReader(activeLogSource.getReader()).readEntries(log,
-							logAccess, pointer, -10);
+					final BufferedConsumer bcLast = new BufferedConsumer(10);
+					activeLogSource.getReader().readEntriesReverse(log, logAccess, pointer, bcLast);
+					final List<LogEntry> readEntries = bcLast.getBuffer();
+					Collections.reverse(readEntries);
 					return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(), readEntries,
 							getHighlightEntryIndex(pointer, -10, readEntries));
 				}
@@ -205,10 +209,12 @@ public class LogEntriesRestController {
 				final LogEntry last = entries.get(entries.size() - 1);
 				if (!first.getStartOffset().isSOF() && last.getEndOffset().isEOF() && entries.size() < 10) {
 					// Hm, EOF reached
-					final List<LogEntry> readEntries = new BackwardReader(activeLogSource.getReader()).readEntries(log,
-							logAccess, last.getEndOffset(), -10);
+					final BufferedConsumer bcLast = new BufferedConsumer(10);
+					activeLogSource.getReader().readEntriesReverse(log, logAccess, last.getEndOffset(), bcLast);
+					final List<LogEntry> readEntries = bcLast.getBuffer();
+					Collections.reverse(readEntries);
 					return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(), readEntries, -1);
-				} else if (logAccess.getDifference(pointer, first.getStartOffset()) == 0) {
+				} else if (!first.isUnformatted()) {
 					// -1 without effect, return from beginning
 					return new LogEntriesResult(activeLogSource.getReader().getFieldTypes(), entries,
 							getHighlightEntryIndex(pointer, 0, entries));
@@ -313,7 +319,7 @@ public class LogEntriesRestController {
 		if (count >= 0) {
 			reader = ((LogSource) source).getReader();
 		} else {
-			reader = new FluentBackwardReader(source.getReader());
+			reader = new FluentReverseReader(source.getReader());
 		}
 		scanner.find(reader, new TimeoutReaderStrategy(3 * 1000) {
 			@Override

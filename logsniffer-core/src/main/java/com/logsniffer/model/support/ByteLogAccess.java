@@ -4,8 +4,9 @@ import java.io.IOException;
 
 import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.LogRawAccess;
+import com.logsniffer.model.Navigation.ByteOffsetNavigation;
 
-public interface ByteLogAccess extends LogRawAccess<ByteLogInputStream> {
+public interface ByteLogAccess extends LogRawAccess<ByteLogInputStream>, ByteOffsetNavigation {
 	/**
 	 * Creates a position pointer in the log relative to the source pointer. A
 	 * null source means the log start position. The calculated pointer will

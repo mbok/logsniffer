@@ -372,6 +372,12 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 		}
 	}
 
+	@Override
+	public void readEntriesReverse(final Log log, final ByteLogAccess logAccess, final LogPointer startOffset,
+			final LogEntryConsumer consumer) throws IOException {
+		new FluentReverseReader<>(this).readEntries(log, logAccess, startOffset, consumer);
+	}
+
 	public final void readEntriesOld(final Log log, final ByteLogAccess logAccess, final LogPointer startOffset,
 			final LogEntryConsumer consumer) throws IOException, FormatException {
 		init();

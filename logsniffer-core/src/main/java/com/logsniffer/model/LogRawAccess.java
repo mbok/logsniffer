@@ -30,7 +30,7 @@ import java.io.IOException;
  * @author mbok
  * 
  */
-public interface LogRawAccess<STREAMTYPE extends LogInputStream> extends LogPointerFactory, Navigation<Long> {
+public interface LogRawAccess<STREAMTYPE extends LogInputStream> extends LogPointerFactory {
 
 	/**
 	 * Returns an input stream to read from the log beginning from the pointer.
@@ -43,5 +43,7 @@ public interface LogRawAccess<STREAMTYPE extends LogInputStream> extends LogPoin
 	 *             in case of errors
 	 */
 	STREAMTYPE getInputStream(LogPointer from) throws IOException;
+
+	Navigation<?> getNavigation();
 
 }

@@ -26,9 +26,8 @@ import org.slf4j.LoggerFactory;
 
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
-import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogPointer;
-import com.logsniffer.model.LogRawAccess;
+import com.logsniffer.model.support.ByteLogAccess;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.LogEntryReader;
 
@@ -38,7 +37,7 @@ import com.logsniffer.reader.LogEntryReader;
  * @author mbok
  * 
  */
-public class BackwardReader<ACCESSORTYPE extends LogRawAccess<? extends LogInputStream>> {
+class BackwardReader<ACCESSORTYPE extends ByteLogAccess> {
 	private static final Logger logger = LoggerFactory.getLogger(BackwardReader.class);
 
 	private final LogEntryReader<ACCESSORTYPE> forwardReader;

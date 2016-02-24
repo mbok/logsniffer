@@ -12,6 +12,8 @@ import com.logsniffer.model.Log;
 import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.LogRawAccess;
+import com.logsniffer.model.Navigation;
+import com.logsniffer.model.Navigation.DateOffsetNavigation;
 import com.logsniffer.source.composition.ComposedLogPointer.PointerPart;
 
 /**
@@ -20,7 +22,7 @@ import com.logsniffer.source.composition.ComposedLogPointer.PointerPart;
  * @author mbok
  *
  */
-public class ComposedLogAccess implements LogRawAccess<LogInputStream>, LogInputStream {
+public class ComposedLogAccess implements LogRawAccess<LogInputStream>, LogInputStream, DateOffsetNavigation {
 	private static final Logger logger = LoggerFactory.getLogger(ComposedLogAccess.class);
 	private final PointerPartBuilder POINTER_BUILDER_START = new PointerPartBuilder() {
 		@Override
@@ -121,19 +123,52 @@ public class ComposedLogAccess implements LogRawAccess<LogInputStream>, LogInput
 	}
 
 	@Override
-	public NavigationFuture refresh(final LogPointer toRefresh) {
-		// TODO Auto-generated method stub
-		return null;
+	public NavigationFuture refresh(final LogPointer toRefresh) throws IOException {
+		if (toRefresh == null) {
+			return null;
+		} else if (!(toRefresh instanceof ComposedLogPointer)) {
+			throw new IOException("Pointer has a wrong type: " + toRefresh);
+		}
+		return new NavigationFuture() {
+			@Override
+			public LogPointer get() throws IOException {
+				final ComposedLogPointer cp = (ComposedLogPointer) toRefresh;
+				final PointerPart[] refreshedParts = new PointerPart[composedLogs.size()];
+				final int i = 0;
+				for (final Pair<LogInstance, LogPointer> p : mapPointer(cp)) {
+					LogPointer refreshedPointer = null;
+					final LogInstance logInstance = p.getLeft();
+					if (p.getRight() != null) {
+						refreshedPointer = logInstance.getLogAccess().refresh(p.getRight()).get();
+					} else {
+						refreshedPointer = navigateTo(logInstance, cp.getCurrentTimestamp());
+					}
+					refreshedParts[i] = new PointerPart(logInstance.getLogSourceId(), logInstance.getLog().getPath(),
+							refreshedPointer);
+				}
+				return new ComposedLogPointer(refreshedParts, cp.getCurrentTimestamp());
+			}
+		};
 	}
 
-	@Override
-	public NavigationFuture absolute(final Long offset) {
+	protected LogPointer navigateTo(final LogInstance logInstance, final Date currentTimestamp) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public LogPointer getPointer() throws IOException {
+		return null;
+	}
+
+	@Override
+	public Navigation<?> getNavigation() {
+		return this;
+	}
+
+	@Override
+	public NavigationFuture absolute(final Date offset) throws IOException {
+		// TODO Auto-generated method stub
 		return null;
 	}
 

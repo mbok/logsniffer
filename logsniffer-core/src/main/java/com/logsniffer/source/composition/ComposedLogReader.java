@@ -28,7 +28,7 @@ import com.logsniffer.reader.LogEntryReader;
 import com.logsniffer.source.composition.ComposedLogPointer.PointerPart;
 
 /**
- * Composed reader accessing multiple logs in parallel and delegate to a
+ * Composed reader accessing multiple logs in parallel and delegating to a
  * consumer ordered by the timestamp.
  * 
  * @author mbok
@@ -346,6 +346,13 @@ public class ComposedLogReader implements LogEntryReader<ComposedLogAccess> {
 				return consumer.consume(log, logAccess, entry);
 			}
 		}.executeParallel();
+
+	}
+
+	@Override
+	public void readEntriesReverse(final Log log, final ComposedLogAccess logAccess, final LogPointer startOffset,
+			final com.logsniffer.reader.LogEntryReader.LogEntryConsumer consumer) throws IOException {
+		// TODO Auto-generated method stub
 
 	}
 

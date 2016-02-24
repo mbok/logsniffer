@@ -25,6 +25,7 @@ import java.util.UUID;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.LogRawAccessor;
+import com.logsniffer.model.Navigation;
 
 /**
  * Byte array log for tests.
@@ -172,6 +173,11 @@ public class ByteArrayLog implements Log, LogRawAccessor<ByteLogAccess, ByteArra
 	@Override
 	public LogPointer createRelative(final LogPointer source, final long relativeBytePosition) throws IOException {
 		return createRelative2(source, relativeBytePosition);
+	}
+
+	@Override
+	public Navigation<?> getNavigation() {
+		return this;
 	}
 
 }

@@ -27,25 +27,23 @@ import org.slf4j.LoggerFactory;
 import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
-import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogPointer;
-import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.SeverityLevel;
+import com.logsniffer.model.support.ByteLogAccess;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.LogEntryReader;
 
 /**
- * Consumes log entries in backward direction fluently.
+ * Consumes log entries in a reverse order direction fluently.
  * 
  * @author mbok
  * 
  */
-public class FluentBackwardReader<ACCESSORTYPE extends LogRawAccess<? extends LogInputStream>>
-		implements LogEntryReader<ACCESSORTYPE> {
+public class FluentReverseReader<ACCESSORTYPE extends ByteLogAccess> implements LogEntryReader<ACCESSORTYPE> {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	private final LogEntryReader<ACCESSORTYPE> forwardReader;
 
-	public FluentBackwardReader(final LogEntryReader<ACCESSORTYPE> forwardReader) {
+	public FluentReverseReader(final LogEntryReader<ACCESSORTYPE> forwardReader) {
 		super();
 		this.forwardReader = forwardReader;
 	}
@@ -55,7 +53,7 @@ public class FluentBackwardReader<ACCESSORTYPE extends LogRawAccess<? extends Lo
 	public void readEntries(final Log log, final ACCESSORTYPE logAccess, final LogPointer startOffset,
 			final LogEntryConsumer consumer) throws IOException, FormatException {
 		logger.debug("Starting fluent backward consumption in {} from: {}", log, startOffset);
-		List<LogEntry> entries = new BackwardReader(forwardReader).readEntries(log, logAccess, startOffset, -25);
+		List<LogEntry> entries = new BackwardReader(forwardReader).readEntries(log, logAccess, startOffset, -101);
 		logger.debug("Starting fluent backward consumption with first block of {} entries", entries.size());
 		while (entries.size() > 0) {
 			for (int i = entries.size() - 1; i >= 0; i--) {
@@ -65,7 +63,7 @@ public class FluentBackwardReader<ACCESSORTYPE extends LogRawAccess<? extends Lo
 				}
 			}
 			entries = new BackwardReader(forwardReader).readEntries(log, logAccess, entries.get(0).getStartOffset(),
-					-25);
+					-101);
 			logger.debug("Continue fluent backward consumption with next block of {} entries", entries.size());
 		}
 		logger.debug("Finished fluent backward consumption because of SOF");
@@ -80,6 +78,13 @@ public class FluentBackwardReader<ACCESSORTYPE extends LogRawAccess<? extends Lo
 	@Override
 	public LinkedHashMap<String, FieldBaseTypes> getFieldTypes() throws FormatException {
 		return forwardReader.getFieldTypes();
+	}
+
+	@Override
+	public void readEntriesReverse(final Log log, final ACCESSORTYPE logAccess, final LogPointer startOffset,
+			final com.logsniffer.reader.LogEntryReader.LogEntryConsumer consumer) throws IOException {
+		// Reverse
+		forwardReader.readEntries(log, logAccess, startOffset, consumer);
 	}
 
 }

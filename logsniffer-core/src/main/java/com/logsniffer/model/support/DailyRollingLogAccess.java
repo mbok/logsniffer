@@ -31,6 +31,7 @@ import com.logsniffer.model.Log;
 import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogRawAccessor;
+import com.logsniffer.model.Navigation;
 
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
@@ -489,5 +490,10 @@ public class DailyRollingLogAccess implements ByteLogAccess {
 				return createRelative(null, offset);
 			}
 		};
+	}
+
+	@Override
+	public Navigation<?> getNavigation() {
+		return this;
 	}
 }

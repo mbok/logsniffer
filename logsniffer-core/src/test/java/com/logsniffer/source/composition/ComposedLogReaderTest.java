@@ -89,6 +89,14 @@ public class ComposedLogReaderTest {
 			return null;
 		}
 
+		@Override
+		public void readEntriesReverse(final Log log, final LogRawAccess<LogInputStream> logAccess,
+				final LogPointer startOffset, final com.logsniffer.reader.LogEntryReader.LogEntryConsumer consumer)
+						throws IOException {
+			// TODO Auto-generated method stub
+
+		}
+
 	};
 
 	@Test

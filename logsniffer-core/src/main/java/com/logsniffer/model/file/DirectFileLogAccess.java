@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 import com.logsniffer.model.LogPointer;
+import com.logsniffer.model.Navigation;
 import com.logsniffer.model.support.ByteLogAccess;
 import com.logsniffer.model.support.ByteLogInputStream;
 import com.logsniffer.model.support.DefaultPointer;
@@ -129,4 +130,8 @@ public class DirectFileLogAccess implements ByteLogAccess {
 		};
 	}
 
+	@Override
+	public Navigation<?> getNavigation() {
+		return this;
+	}
 }

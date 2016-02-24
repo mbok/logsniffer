@@ -1,23 +1,47 @@
 package com.logsniffer.model;
 
 import java.io.IOException;
+import java.util.Date;
 
+import com.logsniffer.model.LogPointerFactory.NavigationFuture;
+
+/**
+ * Represents a strategy for navigating in a log.
+ * 
+ * @author mbok
+ *
+ * @param <M>
+ *            metric type for absolute navigation
+ */
 public interface Navigation<M> {
 
-	public static interface OffsetMetric<M> {
-		public static final OffsetMetric<Long> BYTE = new OffsetMetric<Long>() {
-		};
+	/**
+	 * Marker interface to navigate in byte offset oriented log.
+	 * 
+	 * @author mbok
+	 *
+	 */
+	public static interface ByteOffsetNavigation extends Navigation<Long> {
+
 	}
 
-	public interface NavigationFuture {
-		LogPointer get() throws IOException;
+	/**
+	 * Marker interface to navigate in the log using timestamps.
+	 * 
+	 * @author mbok
+	 *
+	 */
+	public static interface DateOffsetNavigation extends Navigation<Date> {
+
 	}
 
-	LogPointer end() throws IOException;
-
-	LogPointer start() throws IOException;
-
-	NavigationFuture refresh(LogPointer toRefresh) throws IOException;
-
+	/**
+	 * Navigates absolutely to the desired position in the log.
+	 * 
+	 * @param offset
+	 *            the offset to navigate to
+	 * @return the target pointer
+	 * @throws IOException
+	 */
 	NavigationFuture absolute(M offset) throws IOException;
 }

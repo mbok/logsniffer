@@ -172,4 +172,17 @@ public final class FilteredLogEntryReader<ACCESSTYPE extends LogRawAccess<? exte
 		this.targetReader = targetReader;
 	}
 
+	@Override
+	public void readEntriesReverse(final Log log, final ACCESSTYPE logAccess, final LogPointer startOffset,
+			final com.logsniffer.reader.LogEntryReader.LogEntryConsumer consumer) throws IOException {
+		targetReader.readEntriesReverse(log, logAccess, startOffset, new LogEntryConsumer() {
+			@Override
+			public boolean consume(final Log log, final LogPointerFactory pointerFactory, final LogEntry entry)
+					throws IOException {
+				filterLogEntry(entry);
+				return consumer.consume(log, pointerFactory, entry);
+			}
+		});
+	}
+
 }

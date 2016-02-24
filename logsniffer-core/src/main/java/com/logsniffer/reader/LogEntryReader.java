@@ -77,15 +77,31 @@ public interface LogEntryReader<ACCESSORTYPE extends LogRawAccess<? extends LogI
 	 *            the offset pointer in the log to start reading on. A null
 	 *            value means start from beginning.
 	 * 
-	 * @param boundary
-	 *            if not null then reading will never consume an entry beginning
-	 *            after the boundary
-	 * @param entriesNumber
-	 *            number of entries to read
-	 * @return the read entries
+	 * @param consumer
+	 *            consumer to propagate read entries to
 	 */
 	public void readEntries(Log log, ACCESSORTYPE logAccess, LogPointer startOffset, LogEntryConsumer consumer)
-			throws IOException, FormatException;
+			throws IOException;
+
+	/**
+	 * Reads log entries in a reverse order beginning from the given offset. The
+	 * read entries will be propagated sequentially to the given consumer. The
+	 * method returns back when {@link LogEntryConsumer#consume(LogEntry)}
+	 * returns false or the boundary is reached.
+	 * 
+	 * @param log
+	 *            the log to read
+	 * @param logAccess
+	 *            the access to the log to read from
+	 * @param startOffset
+	 *            the offset pointer in the log to start reading on. A null
+	 *            value means start from beginning.
+	 * 
+	 * @param consumer
+	 *            consumer to propagate read entries to
+	 */
+	public void readEntriesReverse(Log log, ACCESSORTYPE logAccess, LogPointer startOffset, LogEntryConsumer consumer)
+			throws IOException;
 
 	/**
 	 * 

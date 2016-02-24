@@ -51,4 +51,48 @@ public interface LogPointerFactory {
 	 *             in case of errors
 	 */
 	public abstract LogPointer getFromJSON(String data) throws IOException;
+
+	/**
+	 * Returns the pointer referencing the tail / end of the log
+	 * 
+	 * @return pointer referencing the tail / end of the log
+	 * @throws IOException
+	 */
+	LogPointer end() throws IOException;
+
+	/**
+	 * Returns the pointer referencing the head / start of the log
+	 * 
+	 * @return pointer referencing the head / start of the log
+	 * @throws IOException
+	 */
+	LogPointer start() throws IOException;
+
+	/**
+	 * Simplified future clone to enable asynchronous navigation.
+	 * 
+	 * @author mbok
+	 *
+	 */
+	public interface NavigationFuture {
+		/**
+		 * Blocks the navigation process and returns the pointer when finished.
+		 * 
+		 * @return the target pointer after navigation is complete.
+		 * @throws IOException
+		 */
+		LogPointer get() throws IOException;
+	}
+
+	/**
+	 * Refreshes a pointer to fix no longer valid pointers before accessing
+	 * content.
+	 * 
+	 * @param toRefresh
+	 *            the pointer to refresh
+	 * @return the refreshed pointer
+	 * @throws IOException
+	 */
+	NavigationFuture refresh(LogPointer toRefresh) throws IOException;
+
 }
