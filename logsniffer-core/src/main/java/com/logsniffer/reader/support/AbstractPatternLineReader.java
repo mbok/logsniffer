@@ -133,9 +133,10 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 		private final LineInputStream inputStream;
 		private final Semaphore threadSemaphore;
 		private boolean finished;
-		private final LinkedBlockingQueue<ParallelReadingContext> lineBuffer = new LinkedBlockingQueue<>();
+		private final LinkedBlockingQueue<ParallelReadingContext> lineBuffer;
 		private final Object processingSemaphore = new Object();
 		private final Object readingSemaphore = new Object();
+		private final Object threadDestinctorSemaphore = new Object();
 		private Exception terminationException;
 		private final int parallelCount;
 		private PatternMatcherThread processingThread;
@@ -144,17 +145,27 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 			inputStream = lis;
 			this.parallelCount = parallelCount;
 			threadSemaphore = new Semaphore(parallelCount);
+			this.lineBuffer = new LinkedBlockingQueue<>(parallelCount * 10);
 		}
 
 		protected void processParsingResults(final PatternMatcherThread thread) {
-			if (this.processingThread != null) {
-				return;
+			synchronized (threadDestinctorSemaphore) {
+				if (this.processingThread != null) {
+					return;
+				}
+				this.processingThread = thread;
 			}
 			synchronized (processingSemaphore) {
-				this.processingThread = thread;
+				final PatternMatcherThread processingThreadTemp = processingThread;
 				ParallelReadingContext peek = null;
 				try {
-					while ((peek = lineBuffer.peek()) != null && peek.finished && !finished) {
+					while (!finished) {
+						synchronized (threadDestinctorSemaphore) {
+							if ((peek = lineBuffer.peek()) == null || !peek.finished) {
+								this.processingThread = null;
+								return;
+							}
+						}
 						lineBuffer.poll();
 						if (peek.exception != null) {
 							terminationException = peek.exception;
@@ -173,7 +184,14 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 						}
 					}
 				} finally {
-					this.processingThread = null;
+					synchronized (threadDestinctorSemaphore) {
+						if (finished) {
+							lineBuffer.clear();
+						}
+						if (processingThreadTemp == processingThread) {
+							this.processingThread = null;
+						}
+					}
 				}
 			}
 
@@ -189,10 +207,10 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 					final LogPointer pointer = inputStream.getPointer();
 					if (line != null && pointer != null) {
 						final ParallelReadingContext pline = new ParallelReadingContext(line, pointer);
-						lineBuffer.add(pline);
+						lineBuffer.put(pline);
 						return pline;
 					}
-				} catch (final IOException e) {
+				} catch (final IOException | InterruptedException e) {
 					return new ParallelReadingContext(e);
 				}
 				return null;
@@ -255,7 +273,7 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 
 		public PatternMatcherThread(final AbstractPatternLineReader<MatcherContext>.ParallelReadingExecutor executor,
 				final ReadingContext<MatcherContext> readingContext) throws InterruptedException {
-			super();
+			super(PatternMatcherThread.class.getSimpleName() + "_" + executor.threadSemaphore.availablePermits());
 			this.executor = executor;
 			this.readingContext = readingContext;
 			executor.threadSemaphore.acquire(1);
@@ -278,6 +296,8 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 				}
 			} finally {
 				logger.debug("Thread {} processed {} lines", this, count);
+				// Free another threads if they are blocked
+				executor.processParsingResults(null);
 				executor.threadSemaphore.release(1);
 			}
 		}

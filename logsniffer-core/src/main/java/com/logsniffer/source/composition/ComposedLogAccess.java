@@ -14,6 +14,9 @@ import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.Navigation;
 import com.logsniffer.model.Navigation.DateOffsetNavigation;
+import com.logsniffer.model.support.ByteLogAccess;
+import com.logsniffer.model.support.TimestampNavigation;
+import com.logsniffer.reader.LogEntryReader;
 import com.logsniffer.source.composition.ComposedLogPointer.PointerPart;
 
 /**
@@ -141,7 +144,7 @@ public class ComposedLogAccess implements LogRawAccess<LogInputStream>, LogInput
 					if (p.getRight() != null) {
 						refreshedPointer = logInstance.getLogAccess().refresh(p.getRight()).get();
 					} else {
-						refreshedPointer = navigateTo(logInstance, cp.getCurrentTimestamp());
+						refreshedPointer = navigateTo(logInstance, cp.getCurrentTimestamp()).get();
 					}
 					refreshedParts[i] = new PointerPart(logInstance.getLogSourceId(), logInstance.getLog().getPath(),
 							refreshedPointer);
@@ -151,9 +154,20 @@ public class ComposedLogAccess implements LogRawAccess<LogInputStream>, LogInput
 		};
 	}
 
-	protected LogPointer navigateTo(final LogInstance logInstance, final Date currentTimestamp) {
-		// TODO Auto-generated method stub
-		return null;
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	protected NavigationFuture navigateTo(final LogInstance logInstance, final Date currentTimestamp)
+			throws IOException {
+		final LogRawAccess<?> logInstanceRawAccess = logInstance.getLogAccess();
+		if (logInstanceRawAccess instanceof ByteLogAccess) {
+			return new TimestampNavigation((ByteLogAccess) logInstanceRawAccess,
+					(LogEntryReader) logInstance.getReader()).absolute(currentTimestamp);
+		} else {
+			final Navigation<?> navigation = logInstanceRawAccess.getNavigation();
+			if (navigation instanceof DateOffsetNavigation) {
+				return ((DateOffsetNavigation) navigation).absolute(currentTimestamp);
+			}
+		}
+		throw new IOException("Can't navigate by date in log instance: " + logInstance);
 	}
 
 	@Override

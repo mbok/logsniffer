@@ -23,21 +23,32 @@ import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.logsniffer.fields.FieldBaseTypes;
+import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogPointer;
+import com.logsniffer.model.LogPointerFactory;
 import com.logsniffer.model.SeverityLevel.SeverityClassification;
 import com.logsniffer.model.support.ByteArrayLog;
 import com.logsniffer.model.support.ByteLogAccess;
+import com.logsniffer.model.support.ByteLogInputStream;
+import com.logsniffer.model.support.DefaultPointer;
 import com.logsniffer.model.support.LineInputStream;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.LogEntryReader;
+import com.logsniffer.reader.LogEntryReader.LogEntryConsumer;
 import com.logsniffer.reader.support.BufferedConsumer;
 
 /**
@@ -47,6 +58,8 @@ import com.logsniffer.reader.support.BufferedConsumer;
  * 
  */
 public class Log4jTextReaderTest {
+	private final Logger logger = LoggerFactory.getLogger(getClass());
+
 	@Test
 	public void testParsingConversionPattern() throws FormatException {
 		final Log4jTextReader r = new Log4jTextReader();
@@ -196,6 +209,56 @@ public class Log4jTextReaderTest {
 		final LogEntry[] entries = readEntries(reader, new ByteArrayLog(FileUtils.readFileToByteArray(f)), null, 2000);
 
 		Assert.assertEquals(46, entries.length);
+	}
+
+	@Test(timeout = 200 * 1000)
+	public void testPerformanceAndMultiThreading() throws IOException, ParseException {
+		final Log4jTextReader reader = new Log4jTextReader("%d{ABSOLUTE} %-5p [%c] %m%n", "UTF-8");
+		final byte[] logLine = "00:27:29,456 DEBUG [com.logsniffer.parser.log4j.Log4jParser] Prepared parsing pattern\n"
+				.getBytes();
+		final ByteLogAccess mockAccess = Mockito.mock(ByteLogAccess.class);
+		Mockito.when(mockAccess.createRelative(Mockito.any(LogPointer.class), Mockito.anyLong()))
+				.thenAnswer(new Answer<LogPointer>() {
+					@Override
+					public LogPointer answer(final InvocationOnMock invocation) throws Throwable {
+						final DefaultPointer from = (DefaultPointer) invocation.getArguments()[0];
+						final long offset = (long) invocation.getArguments()[1];
+						return new DefaultPointer(from == null ? offset : from.getOffset() + offset, Long.MAX_VALUE);
+					}
+				});
+		Mockito.when(mockAccess.getInputStream(null)).thenReturn(new ByteLogInputStream() {
+			int i = 0;
+
+			@Override
+			public LogPointer getPointer() throws IOException {
+				return new DefaultPointer(i, Long.MAX_VALUE);
+			}
+
+			@Override
+			public int read() throws IOException {
+				return logLine[i++ % logLine.length];
+			}
+		});
+		final int linesToRead = 100000;
+		final long start = System.currentTimeMillis();
+		final AtomicInteger count = new AtomicInteger(0);
+		reader.readEntries(Mockito.mock(Log.class), mockAccess, null, new LogEntryConsumer() {
+			@Override
+			public boolean consume(final Log log, final LogPointerFactory pointerFactory, final LogEntry entry)
+					throws IOException {
+				try {
+					Thread.sleep(1);
+				} catch (final InterruptedException e) {
+					e.printStackTrace();
+				}
+				return count.incrementAndGet() < linesToRead;
+			}
+		});
+		final long size = logLine.length * (count.get() - 1);
+		final long time = System.currentTimeMillis() - start;
+		logger.info("Read {} lines {} total bytes in {}ms: {} bytes/s", count.get() - 1, size, time,
+				size / time * 1000);
+		Assert.assertEquals(linesToRead + 1, count.get());
 	}
 
 	public static ByteArrayLog createLog(final long offest, final String lines)
