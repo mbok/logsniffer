@@ -159,7 +159,7 @@ public class ComposedLogAccess implements LogRawAccess<LogInputStream>, LogInput
 			throws IOException {
 		final LogRawAccess<?> logInstanceRawAccess = logInstance.getLogAccess();
 		if (logInstanceRawAccess instanceof ByteLogAccess) {
-			return new TimestampNavigation((ByteLogAccess) logInstanceRawAccess,
+			return new TimestampNavigation(logInstance.getLog(), (ByteLogAccess) logInstanceRawAccess,
 					(LogEntryReader) logInstance.getReader()).absolute(currentTimestamp);
 		} else {
 			final Navigation<?> navigation = logInstanceRawAccess.getNavigation();
