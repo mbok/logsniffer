@@ -93,8 +93,16 @@ public class ComposedLogReaderTest {
 		public void readEntriesReverse(final Log log, final LogRawAccess<LogInputStream> logAccess,
 				final LogPointer startOffset, final com.logsniffer.reader.LogEntryReader.LogEntryConsumer consumer)
 						throws IOException {
-			// TODO Auto-generated method stub
-
+			for (int i = maxCount - 1; i >= 0; i--) {
+				if (exceptionAt == i) {
+					throw new IOException("Throw error at " + i);
+				}
+				final LogEntry entry = new LogEntry();
+				entry.setStartOffset(new DefaultPointer(i, maxCount));
+				entry.setEndOffset(new DefaultPointer(i + 1, maxCount));
+				entry.setTimeStamp(new Date(i * factor + start));
+				consumer.consume(log, logAccess, entry);
+			}
 		}
 
 	};
@@ -127,6 +135,37 @@ public class ComposedLogReaderTest {
 			Assert.assertEquals((i - 400) * 2 + 401, e.getTimeStamp().getTime());
 			Assert.assertEquals("Error at entry " + i, 2l, e.get(Event.FIELD_SOURCE_ID));
 			Assert.assertEquals("Error at entry " + i, "log2", e.get(Event.FIELD_LOG_PATH));
+		}
+	}
+
+	@Test
+	public void testCorrectCompositionReverse() throws FormatException, IOException {
+		final List<LogInstance> subLogs = new ArrayList<>();
+		final ComposedLogReader r = new ComposedLogReader(subLogs);
+		final Log log1 = new ByteArrayLog("log1", new byte[0]);
+		final Log log2 = new ByteArrayLog("log2", new byte[0]);
+		subLogs.add(new LogInstance(1, log1, Mockito.mock(LogRawAccess.class), new DummySubReader(200, 2, 0)));
+		subLogs.add(new LogInstance(2, log2, Mockito.mock(LogRawAccess.class), new DummySubReader(250, 2, 1)));
+		final BufferedConsumer c = new BufferedConsumer(15000);
+		r.readEntriesReverse(Mockito.mock(Log.class), Mockito.mock(ComposedLogAccess.class), null, c);
+
+		Assert.assertEquals(450, c.getBuffer().size());
+		for (int i = 0; i < 50; i++) {
+			final LogEntry e = c.getBuffer().get(i);
+			Assert.assertEquals(499 - (i * 2), e.getTimeStamp().getTime());
+			Assert.assertEquals("Error at entry " + i, 2l, e.get(Event.FIELD_SOURCE_ID));
+			Assert.assertEquals("Error at entry " + i, "log2", e.get(Event.FIELD_LOG_PATH));
+		}
+		for (int i = 50; i < 450; i++) {
+			final LogEntry e = c.getBuffer().get(i);
+			Assert.assertEquals(449 - i, e.getTimeStamp().getTime());
+			if (i % 2 == 1) {
+				Assert.assertEquals("Error at entry " + i, 1l, e.get(Event.FIELD_SOURCE_ID));
+				Assert.assertEquals("Error at entry " + i, "log1", e.get(Event.FIELD_LOG_PATH));
+			} else if (i % 2 == 0) {
+				Assert.assertEquals("Error at entry " + i, 2l, e.get(Event.FIELD_SOURCE_ID));
+				Assert.assertEquals("Error at entry " + i, "log2", e.get(Event.FIELD_LOG_PATH));
+			}
 		}
 	}
 
