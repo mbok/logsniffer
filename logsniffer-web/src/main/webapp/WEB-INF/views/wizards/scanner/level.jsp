@@ -41,8 +41,12 @@
 		<div class="row" ng-init="bean.comparator=bean.comparator?bean.comparator:'EQ_OR_GREATER'">
 			<t:ngFormFieldWrapper cssClass="col-md-3" fieldName="comparator">
 				<select ng-model="bean.comparator" name="comparator" class="form-control" required>
-					<option value="EQ_OR_GREATER">&gt;=</option>
+					<option value="LESS">&lt;</option>
+					<option value="EQ_OR_LESS">&lt;=</option>
 					<option value="EQ">=</option>
+					<option value="NEQ">!=</option>
+					<option value="EQ_OR_GREATER">&gt;=</option>
+					<option value="GREATER">&gt;</option>
 				</select>
 			</t:ngFormFieldWrapper>
 			<t:ngFormFieldWrapper cssClass="col-md-9" fieldName="severityNumber">
