@@ -46,14 +46,24 @@ public class LevelScanner extends SingleEntryIncrementalMatcher {
 	 * 
 	 */
 	public enum LevelComparatorType {
-		EQ, EQ_OR_GREATER;
+		EQ, EQ_OR_GREATER, GREATER, EQ_OR_LESS, LESS, NEQ;
 
 		public boolean matches(final int severityOrdinalNumber, final SeverityLevel check) {
-			if (this == EQ) {
+			switch (this) {
+			case EQ:
 				return severityOrdinalNumber == check.getOrdinalNumber();
-			} else {
+			case GREATER:
+				return check.getOrdinalNumber() > severityOrdinalNumber;
+			case EQ_OR_GREATER:
 				return check.getOrdinalNumber() >= severityOrdinalNumber;
+			case EQ_OR_LESS:
+				return check.getOrdinalNumber() <= severityOrdinalNumber;
+			case LESS:
+				return check.getOrdinalNumber() < severityOrdinalNumber;
+			case NEQ:
+				return check.getOrdinalNumber() != severityOrdinalNumber;
 			}
+			return false;
 		}
 	}
 
@@ -64,7 +74,7 @@ public class LevelScanner extends SingleEntryIncrementalMatcher {
 
 	@NotNull
 	@JsonProperty
-	private LevelComparatorType comparator = LevelComparatorType.EQ_OR_GREATER;
+	private LevelComparatorType comparator = LevelComparatorType.EQ_OR_LESS;
 
 	@Override
 	public Event matches(final LogEntry entry) {

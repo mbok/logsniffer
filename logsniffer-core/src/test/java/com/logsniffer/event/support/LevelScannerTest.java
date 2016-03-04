@@ -31,6 +31,7 @@ import com.logsniffer.event.Event;
 import com.logsniffer.event.IncrementData;
 import com.logsniffer.event.LogEntryReaderStrategy;
 import com.logsniffer.event.Scanner.EventConsumer;
+import static com.logsniffer.event.support.LevelScanner.LevelComparatorType.*;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogInputStream;
@@ -54,6 +55,7 @@ public class LevelScannerTest {
 	@Test
 	public void testMatching() throws IOException, FormatException {
 		final LevelScanner m = new LevelScanner();
+		m.setComparator(EQ_OR_GREATER);
 		m.setSeverityNumber(5); // e.g. WARN
 
 		final DefaultPointer p = new DefaultPointer(0, 4);
@@ -128,5 +130,38 @@ public class LevelScannerTest {
 			}
 		}));
 		Assert.assertEquals(false, idata.getNextOffset(logAccess).isEOF());
+	}
+
+	@Test
+	public void testComparators() {
+		// EQ
+		Assert.assertEquals(true, EQ.matches(1, new SeverityLevel(null, 1, null)));
+		Assert.assertEquals(false, EQ.matches(2, new SeverityLevel(null, 1, null)));
+		Assert.assertEquals(false, EQ.matches(0, new SeverityLevel(null, 1, null)));
+
+		// NEQ
+		Assert.assertEquals(false, NEQ.matches(1, new SeverityLevel(null, 1, null)));
+		Assert.assertEquals(true, NEQ.matches(2, new SeverityLevel(null, 1, null)));
+		Assert.assertEquals(true, NEQ.matches(0, new SeverityLevel(null, 1, null)));
+
+		// EQ_LESS
+		Assert.assertEquals(true, EQ_OR_LESS.matches(1, new SeverityLevel(null, 1, null)));
+		Assert.assertEquals(true, EQ_OR_LESS.matches(2, new SeverityLevel(null, 1, null)));
+		Assert.assertEquals(false, EQ_OR_LESS.matches(0, new SeverityLevel(null, 1, null)));
+
+		// LESS
+		Assert.assertEquals(false, LESS.matches(1, new SeverityLevel(null, 1, null)));
+		Assert.assertEquals(true, LESS.matches(2, new SeverityLevel(null, 1, null)));
+		Assert.assertEquals(false, LESS.matches(0, new SeverityLevel(null, 1, null)));
+
+		// GREATER
+		Assert.assertEquals(false, GREATER.matches(1, new SeverityLevel(null, 1, null)));
+		Assert.assertEquals(false, GREATER.matches(2, new SeverityLevel(null, 1, null)));
+		Assert.assertEquals(true, GREATER.matches(0, new SeverityLevel(null, 1, null)));
+
+		// EQ_GREATER
+		Assert.assertEquals(true, EQ_OR_GREATER.matches(1, new SeverityLevel(null, 1, null)));
+		Assert.assertEquals(false, EQ_OR_GREATER.matches(2, new SeverityLevel(null, 1, null)));
+		Assert.assertEquals(true, EQ_OR_GREATER.matches(0, new SeverityLevel(null, 1, null)));
 	}
 }
