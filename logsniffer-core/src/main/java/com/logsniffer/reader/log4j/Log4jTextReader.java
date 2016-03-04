@@ -68,17 +68,17 @@ public class Log4jTextReader extends FormattedTextReader {
 
 	static {
 		LEVEL_MAP.put(Level.TRACE.toString(),
-				new SeverityLevel(Level.TRACE.toString(), 1, SeverityClassification.TRACE));
+				new SeverityLevel(Level.TRACE.toString(), 6, SeverityClassification.TRACE));
 		LEVEL_MAP.put(Level.DEBUG.toString(),
-				new SeverityLevel(Level.DEBUG.toString(), 2, SeverityClassification.DEBUG));
+				new SeverityLevel(Level.DEBUG.toString(), 5, SeverityClassification.DEBUG));
 		LEVEL_MAP.put(Level.INFO.toString(),
-				new SeverityLevel(Level.INFO.toString(), 3, SeverityClassification.INFORMATIONAL));
+				new SeverityLevel(Level.INFO.toString(), 4, SeverityClassification.INFORMATIONAL));
 		LEVEL_MAP.put(Level.WARN.toString(),
-				new SeverityLevel(Level.WARN.toString(), 4, SeverityClassification.WARNING));
+				new SeverityLevel(Level.WARN.toString(), 3, SeverityClassification.WARNING));
 		LEVEL_MAP.put(Level.ERROR.toString(),
-				new SeverityLevel(Level.ERROR.toString(), 5, SeverityClassification.ERROR));
+				new SeverityLevel(Level.ERROR.toString(), 2, SeverityClassification.ERROR));
 		LEVEL_MAP.put(Level.FATAL.toString(),
-				new SeverityLevel(Level.FATAL.toString(), 6, SeverityClassification.EMERGENCY));
+				new SeverityLevel(Level.FATAL.toString(), 1, SeverityClassification.EMERGENCY));
 		levelList = new ArrayList<SeverityLevel>(LEVEL_MAP.values());
 		Collections.sort(levelList);
 		LEVEL_MAP.put("WARNING", LEVEL_MAP.get(Level.WARN.toString()));
