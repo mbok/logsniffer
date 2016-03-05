@@ -38,7 +38,7 @@ import net.sf.json.JSONObject;
 import net.sf.json.util.JSONUtils;
 
 public class DailyRollingLogAccess implements ByteLogAccess {
-	private final Logger logger = LoggerFactory.getLogger(getClass());
+	private static final Logger LOGGER = LoggerFactory.getLogger(DailyRollingLogAccess.class);
 	private final static InputStream EMPTY_STREAM = new ByteArrayInputStream(new byte[0]);
 
 	private final DailyRollingLog log;
@@ -207,12 +207,12 @@ public class DailyRollingLogAccess implements ByteLogAccess {
 							// Empty
 							return EMPTY_STREAM;
 						}
-						logger.debug("Openning input stream from log #{}:{} at {}", currentLogIndex,
+						LOGGER.debug("Openning input stream from log #{}:{} at {}", currentLogIndex,
 								parts[currentLogIndex], from != null ? from.filePointer : null);
 						final LogRawAccess<ByteLogInputStream> newLogRawAccess = getPartLogAccess(
 								parts[currentLogIndex]);
 						if (newLogRawAccess == null) {
-							logger.warn("Failed to open access to log #{}:{} at {}", currentLogIndex,
+							LOGGER.warn("Failed to open access to log #{}:{} at {}", currentLogIndex,
 									parts[currentLogIndex], from != null ? from.filePointer : null);
 							return nextElement();
 						}
@@ -311,7 +311,7 @@ public class DailyRollingLogAccess implements ByteLogAccess {
 		// Search for the proper log
 		final int index = getLogIndex(source.path);
 		if (index < 0) {
-			logger.debug("Using start pointer for log '{}' due to '{}' is no more listed", log.getPath(), source.path);
+			LOGGER.debug("Using start pointer for log '{}' due to '{}' is no more listed", log.getPath(), source.path);
 			return new PointerData(parts.length - 1, null);
 		} else {
 			if (Arrays.hashCode(allLogPathes) == source.allLogsHash) {
@@ -324,16 +324,16 @@ public class DailyRollingLogAccess implements ByteLogAccess {
 					if (source.liveNext != null) {
 						final int next = getLogIndex(source.liveNext) - 1;
 						if (next > 0 && next < parts.length) {
-							logger.debug("Using for rolled live log '{}' the next listed '{}'", log.getPath(),
+							LOGGER.debug("Using for rolled live log '{}' the next listed '{}'", log.getPath(),
 									parts[next].getPath());
 							return new PointerData(next, source);
 						} else {
-							logger.debug("Using start pointer for log '{}', because the next rolled wasn't found",
+							LOGGER.debug("Using start pointer for log '{}', because the next rolled wasn't found",
 									log.getPath());
 							return new PointerData(parts.length - 1, null);
 						}
 					}
-					logger.debug("Using start pointer for log '{}', because the live one was rolled", log.getPath());
+					LOGGER.debug("Using start pointer for log '{}', because the live one was rolled", log.getPath());
 					return new PointerData(parts.length - 1, null);
 
 				} else {
@@ -448,7 +448,7 @@ public class DailyRollingLogAccess implements ByteLogAccess {
 				return createRelative(null, 0);
 			}
 		} catch (final JSONException e) {
-			logger.warn("Invalid JSON pointer: " + data, e);
+			LOGGER.warn("Invalid JSON pointer: " + data, e);
 			return createRelative(null, 0);
 		}
 	}

@@ -17,6 +17,7 @@ import com.logsniffer.model.Navigation.DateOffsetNavigation;
 import com.logsniffer.model.support.ByteLogAccess;
 import com.logsniffer.model.support.TimestampNavigation;
 import com.logsniffer.reader.LogEntryReader;
+import com.logsniffer.source.composition.ComposedLogPointer.LogInstanceResolver;
 import com.logsniffer.source.composition.ComposedLogPointer.PointerPart;
 
 /**
@@ -25,7 +26,8 @@ import com.logsniffer.source.composition.ComposedLogPointer.PointerPart;
  * @author mbok
  *
  */
-public class ComposedLogAccess implements LogRawAccess<LogInputStream>, LogInputStream, DateOffsetNavigation {
+public class ComposedLogAccess
+		implements LogRawAccess<LogInputStream>, LogInputStream, DateOffsetNavigation, LogInstanceResolver {
 	private static final Logger logger = LoggerFactory.getLogger(ComposedLogAccess.class);
 	private final PointerPartBuilder POINTER_BUILDER_START = new PointerPartBuilder() {
 		@Override
@@ -81,7 +83,8 @@ public class ComposedLogAccess implements LogRawAccess<LogInputStream>, LogInput
 		for (final LogInstance sl : composedLogs) {
 			LogPointer partPointer = null;
 			for (final PointerPart pp : cp.getParts()) {
-				if (pp.getLogSourceId() == sl.getLogSourceId() && pp.getLogPath().equals(sl.getLog().getPath())) {
+				if (pp.getLogSourceId() == sl.getLogSourceId()
+						&& pp.getLogPathHash() == sl.getLog().getPath().hashCode()) {
 					partPointer = pp.getOffset();
 					break;
 				}
@@ -97,7 +100,7 @@ public class ComposedLogAccess implements LogRawAccess<LogInputStream>, LogInput
 
 	@Override
 	public LogPointer getFromJSON(final String data) throws IOException {
-		return ComposedLogPointer.fromJson(data);
+		return ComposedLogPointer.fromJson(data, this);
 	}
 
 	@Override
@@ -135,6 +138,7 @@ public class ComposedLogAccess implements LogRawAccess<LogInputStream>, LogInput
 		return new NavigationFuture() {
 			@Override
 			public LogPointer get() throws IOException {
+				final long start = System.currentTimeMillis();
 				final ComposedLogPointer cp = (ComposedLogPointer) toRefresh;
 				final PointerPart[] refreshedParts = new PointerPart[composedLogs.size()];
 				final int i = 0;
@@ -149,7 +153,9 @@ public class ComposedLogAccess implements LogRawAccess<LogInputStream>, LogInput
 					refreshedParts[i] = new PointerPart(logInstance.getLogSourceId(), logInstance.getLog().getPath(),
 							refreshedPointer);
 				}
-				return new ComposedLogPointer(refreshedParts, cp.getCurrentTimestamp());
+				final ComposedLogPointer cpr = new ComposedLogPointer(refreshedParts, cp.getCurrentTimestamp());
+				logger.debug("Refreshed pointer {} in {}ms: {}", System.currentTimeMillis() - start, cp, cpr);
+				return cpr;
 			}
 		};
 	}
@@ -182,7 +188,17 @@ public class ComposedLogAccess implements LogRawAccess<LogInputStream>, LogInput
 
 	@Override
 	public NavigationFuture absolute(final Date offset) throws IOException {
-		// TODO Auto-generated method stub
+		logger.debug("Navigating to date offset: {}", offset);
+		return refresh(new ComposedLogPointer(new PointerPart[0], offset));
+	}
+
+	@Override
+	public LogInstance resolveForPathHash(final long sourceId, final int pathHash) {
+		for (final LogInstance sl : composedLogs) {
+			if (sl.getLogSourceId() == sourceId && sl.getLog().getPath().hashCode() == pathHash) {
+				return sl;
+			}
+		}
 		return null;
 	}
 
