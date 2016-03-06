@@ -131,7 +131,12 @@ public class ComposedLogAccess
 	@Override
 	public NavigationFuture refresh(final LogPointer toRefresh) throws IOException {
 		if (toRefresh == null) {
-			return null;
+			return new NavigationFuture() {
+				@Override
+				public LogPointer get() throws IOException {
+					return null;
+				}
+			};
 		} else if (!(toRefresh instanceof ComposedLogPointer)) {
 			throw new IOException("Pointer has a wrong type: " + toRefresh);
 		}

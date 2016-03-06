@@ -139,6 +139,24 @@ public class ComposedLogPointer implements LogPointer {
 	}
 
 	/**
+	 * Returns the correlating pointer part for given log path or null if no
+	 * part matches the path.
+	 * 
+	 * @param path
+	 * @return the correlating pointer part for given log path or null if no
+	 *         part matches the path.
+	 */
+	protected PointerPart getPart(final String path) {
+		final int hash = path.hashCode();
+		for (final PointerPart part : parts) {
+			if (part.logPathHash == hash) {
+				return part;
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * @return the parts
 	 */
 	public PointerPart[] getParts() {

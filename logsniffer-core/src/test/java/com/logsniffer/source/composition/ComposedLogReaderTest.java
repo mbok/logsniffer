@@ -116,7 +116,7 @@ public class ComposedLogReaderTest {
 		subLogs.add(new LogInstance(1, log1, Mockito.mock(LogRawAccess.class), new DummySubReader(200, 2, 0)));
 		subLogs.add(new LogInstance(2, log2, Mockito.mock(LogRawAccess.class), new DummySubReader(250, 2, 1)));
 		final BufferedConsumer c = new BufferedConsumer(15000);
-		r.readEntries(Mockito.mock(Log.class), Mockito.mock(ComposedLogAccess.class), null, c);
+		r.readEntries(Mockito.mock(Log.class), new ComposedLogAccess(Mockito.mock(Log.class), subLogs), null, c);
 
 		Assert.assertEquals(450, c.getBuffer().size());
 		for (int i = 0; i < 400; i++) {
@@ -147,7 +147,7 @@ public class ComposedLogReaderTest {
 		subLogs.add(new LogInstance(1, log1, Mockito.mock(LogRawAccess.class), new DummySubReader(200, 2, 0)));
 		subLogs.add(new LogInstance(2, log2, Mockito.mock(LogRawAccess.class), new DummySubReader(250, 2, 1)));
 		final BufferedConsumer c = new BufferedConsumer(15000);
-		r.readEntriesReverse(Mockito.mock(Log.class), Mockito.mock(ComposedLogAccess.class), null, c);
+		r.readEntriesReverse(Mockito.mock(Log.class), new ComposedLogAccess(Mockito.mock(Log.class), subLogs), null, c);
 
 		Assert.assertEquals(450, c.getBuffer().size());
 		for (int i = 0; i < 50; i++) {
@@ -179,7 +179,7 @@ public class ComposedLogReaderTest {
 		subLogs.add(new LogInstance(2, log2, Mockito.mock(LogRawAccess.class), new DummySubReader(250, 2, 1)));
 		final BufferedConsumer c = new BufferedConsumer(15000);
 		try {
-			r.readEntries(Mockito.mock(Log.class), Mockito.mock(ComposedLogAccess.class), null, c);
+			r.readEntries(Mockito.mock(Log.class), new ComposedLogAccess(Mockito.mock(Log.class), subLogs), null, c);
 		} catch (final IOException e) {
 			Assert.assertTrue(200 - ComposedLogReader.BUFFER_SIZE_PER_THREAD <= c.getBuffer().size());
 			return;
@@ -204,14 +204,15 @@ public class ComposedLogReaderTest {
 		subLogs.add(new LogInstance(1, log1, Mockito.mock(LogRawAccess.class), new DummySubReader(20000000, 2, 0)));
 		subLogs.add(new LogInstance(2, log2, Mockito.mock(LogRawAccess.class), new DummySubReader(25000000, 2, 1)));
 		final AtomicInteger count = new AtomicInteger();
-		r.readEntries(Mockito.mock(Log.class), Mockito.mock(ComposedLogAccess.class), null, new LogEntryConsumer() {
-			@Override
-			public boolean consume(final Log log, final LogPointerFactory pointerFactory, final LogEntry entry)
-					throws IOException {
-				count.incrementAndGet();
-				return true;
-			}
-		});
+		r.readEntries(Mockito.mock(Log.class), new ComposedLogAccess(Mockito.mock(Log.class), subLogs), null,
+				new LogEntryConsumer() {
+					@Override
+					public boolean consume(final Log log, final LogPointerFactory pointerFactory, final LogEntry entry)
+							throws IOException {
+						count.incrementAndGet();
+						return true;
+					}
+				});
 		final long end = System.currentTimeMillis() - start;
 		logger.info("Read composed {} entries in {}ms, throughput: {} entries/s", count.get(), end,
 				Math.round((double) count.get() / (end / 1000)));

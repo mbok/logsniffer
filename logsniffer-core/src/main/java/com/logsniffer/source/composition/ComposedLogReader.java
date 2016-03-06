@@ -286,19 +286,19 @@ public class ComposedLogReader implements LogEntryReader<ComposedLogAccess> {
 		private final LogInstance logInstance;
 		private final CompositionReaderExecutor executor;
 		private final int logInstanceIndex;
-		private final PointerPart startOffset;
+		private final LogPointer startOffset;
 		private Exception exception;
 		private final boolean reverse;
 
 		public SubReaderThread(final CompositionReaderExecutor compositionReaderExecutor, final int logInstanceIndex,
-				final LogInstance logInstance, final PointerPart startOffset) throws InterruptedException {
+				final LogInstance logInstance, final PointerPart start) throws InterruptedException {
 			super();
 			this.logInstance = logInstance;
 			this.logSourceId = logInstance.getLogSourceId();
 			this.logPath = logInstance.getLog().getPath();
 			this.executor = compositionReaderExecutor;
 			this.logInstanceIndex = logInstanceIndex;
-			this.startOffset = startOffset;
+			this.startOffset = start != null ? start.getOffset() : null;
 			this.reverse = executor.reverse;
 			executor.threadSemaphore.acquire(1);
 		}
@@ -317,11 +317,9 @@ public class ComposedLogReader implements LogEntryReader<ComposedLogAccess> {
 					}
 				};
 				if (reverse) {
-					reader.readEntriesReverse(logInstance.getLog(), logInstance.getLogAccess(), startOffset.getOffset(),
-							consumer);
+					reader.readEntriesReverse(logInstance.getLog(), logInstance.getLogAccess(), startOffset, consumer);
 				} else {
-					reader.readEntries(logInstance.getLog(), logInstance.getLogAccess(), startOffset.getOffset(),
-							consumer);
+					reader.readEntries(logInstance.getLog(), logInstance.getLogAccess(), startOffset, consumer);
 				}
 			} catch (final Exception e) {
 				logger.error("Failed to read from log instance " + logInstanceIndex + ": " + logInstance, e);
@@ -353,12 +351,12 @@ public class ComposedLogReader implements LogEntryReader<ComposedLogAccess> {
 
 	private void readEntries(final Log log, final ComposedLogAccess logAccess, final LogPointer startOffset,
 			final LogEntryConsumer consumer, final boolean reverse) throws IOException, FormatException {
-		// TODO navigate correctly
-		final ComposedLogPointer clp = new ComposedLogPointer(new PointerPart[composedLogs.size()], new Date(0));
+		final ComposedLogPointer clp = (ComposedLogPointer) logAccess.refresh(startOffset).get();
+		final PointerPart[] parts = new PointerPart[composedLogs.size()];
 		for (int i = 0; i < composedLogs.size(); i++) {
-			clp.getParts()[i] = new PointerPart(composedLogs.get(i).getLogSourceId(), null, null);
+			parts[i] = clp != null ? clp.getPart(composedLogs.get(i).getLog().getPath()) : null;
 		}
-		new CompositionReaderExecutor(clp.getParts(), reverse) {
+		new CompositionReaderExecutor(parts, reverse) {
 			@Override
 			protected boolean consumeComposedReadingResult(final LogEntry entry) throws IOException {
 				return consumer.consume(log, logAccess, entry);
