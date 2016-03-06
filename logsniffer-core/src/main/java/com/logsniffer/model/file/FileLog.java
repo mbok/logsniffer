@@ -31,17 +31,24 @@ public class FileLog implements Log {
 	private final long lastModified;
 	private final long size;
 	private final String path;
+	private final String name;
 
 	public FileLog(final File file) {
 		super();
 		this.lastModified = file.lastModified();
 		this.path = file.getPath();
 		this.size = file.length();
+		this.name = file.getName();
 	}
 
 	@Override
 	public String getPath() {
 		return path;
+	}
+
+	@Override
+	public String getName() {
+		return name;
 	}
 
 	@Override
@@ -75,7 +82,7 @@ public class FileLog implements Log {
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
-		FileLog other = (FileLog) obj;
+		final FileLog other = (FileLog) obj;
 		return path.equals(other.path);
 	}
 

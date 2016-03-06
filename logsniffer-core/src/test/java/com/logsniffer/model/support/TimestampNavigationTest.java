@@ -138,6 +138,11 @@ public class TimestampNavigationTest {
 			return 0;
 		}
 
+		@Override
+		public String getName() {
+			return "abc";
+		}
+
 	}
 
 	private LogEntryReader<ByteLogAccess> buildReader() {

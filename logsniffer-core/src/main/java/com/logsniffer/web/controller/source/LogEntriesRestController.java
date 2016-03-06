@@ -19,11 +19,13 @@ package com.logsniffer.web.controller.source;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import javax.validation.Valid;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,9 +51,14 @@ import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.LogPointerFactory;
+import com.logsniffer.model.LogPointerFactory.NavigationFuture;
 import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.model.LogSourceProvider;
+import com.logsniffer.model.Navigation;
+import com.logsniffer.model.Navigation.DateOffsetNavigation;
+import com.logsniffer.model.support.ByteLogAccess;
+import com.logsniffer.model.support.TimestampNavigation;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.LogEntryReader;
 import com.logsniffer.reader.support.BufferedConsumer;
@@ -176,17 +183,18 @@ public class LogEntriesRestController {
 	@ResponseBody
 	LogEntriesResult getRandomAccessEntries(
 			@Valid @RequestBody final LogSource<LogRawAccess<? extends LogInputStream>> activeLogSource,
-			@RequestParam("log") final String logPath, @RequestParam(value = "mark") final String mark,
-			@RequestParam(value = "count") final int count)
+			@RequestParam("log") final String logPath,
+			@RequestParam(value = "navType", defaultValue = "BYTE") final NavigationType navType,
+			@RequestParam(value = "mark") final String position, @RequestParam(value = "count") final int count)
 					throws IOException, FormatException, ResourceNotFoundException {
-		logger.debug("Start loading random access entries log={} from source={}, mark={}, count={}", logPath,
-				activeLogSource, mark, count);
+		logger.debug("Start loading random access entries log={} from source={}, navType={}, position={}, count={}",
+				logPath, activeLogSource, navType, position, count);
 		try {
 			final Log log = getLog(activeLogSource, logPath);
 			final LogRawAccess<? extends LogInputStream> logAccess = activeLogSource.getLogAccess(log);
 			LogPointer pointer = null;
-			if (StringUtils.isNotEmpty(mark)) {
-				pointer = logAccess.getFromJSON(mark);
+			if (StringUtils.isNotEmpty(position)) {
+				pointer = navType.resolve().navigate(activeLogSource, logAccess, log, position).get();
 			}
 			final BufferedConsumer bc = new BufferedConsumer(count + 1);
 			if (pointer != null) {
@@ -234,14 +242,15 @@ public class LogEntriesRestController {
 	@RequestMapping(value = "/sources/{logSource}/randomAccessEntries", method = RequestMethod.GET)
 	@ResponseBody
 	LogEntriesResult getRandomAccessEntries(@PathVariable("logSource") final long logSource,
-			@RequestParam("log") final String logPath, @RequestParam(value = "mark") final String mark,
-			@RequestParam(value = "count") final int count)
+			@RequestParam("log") final String logPath,
+			@RequestParam(value = "navType", defaultValue = "BYTE") final NavigationType navType,
+			@RequestParam(value = "mark") final String position, @RequestParam(value = "count") final int count)
 					throws IOException, FormatException, ResourceNotFoundException {
-		logger.debug("Start loading random access entries log={} from source={}, mark={}, count={}", logPath, logSource,
-				mark, count);
+		logger.debug("Start loading random access entries log={} from source={}, navType={}, position={}, count={}",
+				logPath, logSource, navType, position, count);
 		try {
 			final LogSource<LogRawAccess<? extends LogInputStream>> activeLogSource = getActiveLogSource(logSource);
-			return getRandomAccessEntries(activeLogSource, logPath, mark, count);
+			return getRandomAccessEntries(activeLogSource, logPath, navType, position, count);
 		} finally {
 			logger.debug("Finished loading random access entries from log={} and source={}", logPath, logSource);
 		}
@@ -369,5 +378,77 @@ public class LogEntriesRestController {
 			throw new ResourceNotFoundException(Log.class, logPath,
 					"Log not found in source " + activeLogSource + ": " + logPath);
 		}
+	}
+
+	public static enum NavigationType {
+		BYTE, DATE;
+
+		NavigationResolver resolve() {
+			if (this == BYTE) {
+				return new ByteNavigationResolver();
+			} else {
+				return new DateNavigationResolver();
+			}
+		}
+
+	}
+
+	private static interface NavigationResolver {
+		NavigationFuture navigate(LogSource<LogRawAccess<? extends LogInputStream>> logSource,
+				LogRawAccess<? extends LogInputStream> logAccess, Log log, String strPosition) throws IOException;
+	}
+
+	/**
+	 * Byte navigation. FIXME: Historically the byte position was transfered via
+	 * a JSON pointer with manipulated byte offset. This implementation sticks
+	 * still to this concept.
+	 * 
+	 * @author mbok
+	 *
+	 */
+	private static class ByteNavigationResolver implements NavigationResolver {
+
+		@Override
+		public NavigationFuture navigate(final LogSource<LogRawAccess<? extends LogInputStream>> logSource,
+				final LogRawAccess<? extends LogInputStream> logAccess, final Log log, final String strPosition) {
+			return new NavigationFuture() {
+				@Override
+				public LogPointer get() throws IOException {
+					return logAccess.getFromJSON(strPosition);
+				}
+			};
+		}
+	}
+
+	private static class DateNavigationResolver implements NavigationResolver {
+
+		@SuppressWarnings({ "rawtypes", "unchecked" })
+		@Override
+		public NavigationFuture navigate(final LogSource<LogRawAccess<? extends LogInputStream>> logSource,
+				final LogRawAccess<? extends LogInputStream> logAccess, final Log log, final String strPosition)
+						throws IOException {
+			if (NumberUtils.isNumber(strPosition)) {
+				final Date from = new Date(Long.parseLong(strPosition));
+				if (logAccess instanceof ByteLogAccess) {
+					final LogEntryReader reader = logSource.getReader();
+					if (reader.getFieldTypes().containsKey(LogEntry.FIELD_TIMESTAMP)) {
+						return new TimestampNavigation(log, (ByteLogAccess) logAccess, reader).absolute(from);
+					} else {
+						throw new IOException(
+								"Navigation by date isn't supported, because the reader doesn't list the mandatory field: "
+										+ LogEntry.FIELD_TIMESTAMP);
+					}
+				} else {
+					final Navigation<?> nav = logAccess.getNavigation();
+					if (nav instanceof DateOffsetNavigation) {
+						return ((DateOffsetNavigation) nav).absolute(from);
+					}
+					throw new IOException("Navigation by date isn't supported by this log source: " + logSource);
+				}
+			} else {
+				throw new IOException("Position isn't of type numer/date: " + strPosition);
+			}
+		}
+
 	}
 }

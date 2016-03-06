@@ -44,8 +44,7 @@ import com.logsniffer.model.support.DailyRollingLog;
  * 
  */
 @Component
-public class RollingLogsSource extends
-		AbstractTimestampRollingLogsSource {
+public class RollingLogsSource extends AbstractTimestampRollingLogsSource {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	@JsonProperty
@@ -68,41 +67,39 @@ public class RollingLogsSource extends
 
 	@Override
 	public List<Log> getLogs() throws IOException {
-		List<Log> logs = super.getLogs();
-		List<Log> rollingLogs = new ArrayList<Log>(logs.size());
+		final List<Log> logs = super.getLogs();
+		final List<Log> rollingLogs = new ArrayList<Log>(logs.size());
 		for (int i = 0; i < logs.size(); i++) {
-			Log liveLog = logs.get(i);
+			final Log liveLog = logs.get(i);
 			logger.debug("Adapting live log to rolling log: {}", liveLog);
-			rollingLogs.add(new DailyRollingLog(liveLog, getPastLogs(liveLog
-					.getPath())));
+			rollingLogs.add(
+					new DailyRollingLog(liveLog.getName(), liveLog.getPath(), liveLog, getPastLogs(liveLog.getPath())));
 		}
 		return rollingLogs;
 	}
 
 	protected Log[] getPastLogs(final String liveLog) throws IOException {
-		File dir = new File(FilenameUtils.getFullPathNoEndSeparator(liveLog));
-		String pastPattern = FilenameUtils.getName(liveLog)
-				+ getPastLogsSuffixPattern();
-		FileFilter fileFilter = new WildcardFileFilter(pastPattern);
-		File[] files = dir.listFiles(fileFilter);
-		FileLog[] logs = new FileLog[files.length];
+		final File dir = new File(FilenameUtils.getFullPathNoEndSeparator(liveLog));
+		final String pastPattern = FilenameUtils.getName(liveLog) + getPastLogsSuffixPattern();
+		final FileFilter fileFilter = new WildcardFileFilter(pastPattern);
+		final File[] files = dir.listFiles(fileFilter);
+		final FileLog[] logs = new FileLog[files.length];
 		Arrays.sort(files, getPastLogsType().getPastComparator());
 		int i = 0;
-		for (File file : files) {
+		for (final File file : files) {
 			// TODO Decouple direct file log association
 			logs[i++] = new FileLog(file);
 		}
-		logger.debug("Found {} past logs for {} with pattern {}", logs.length,
-				liveLog, pastPattern);
+		logger.debug("Found {} past logs for {} with pattern {}", logs.length, liveLog, pastPattern);
 		return logs;
 	}
 
 	@Override
 	public Log getLog(final String path) throws IOException {
-		Log liveLog = super.getLog(path);
+		final Log liveLog = super.getLog(path);
 		if (liveLog != null) {
 			logger.debug("Adapting live log to rolling log: {}", liveLog);
-			return new DailyRollingLog(liveLog, getPastLogs(liveLog.getPath()));
+			return new DailyRollingLog(liveLog.getName(), liveLog.getPath(), liveLog, getPastLogs(liveLog.getPath()));
 		} else {
 			return null;
 		}

@@ -39,6 +39,13 @@ public interface Log {
 	}
 
 	/**
+	 * Public name of the log, could be the same as the path.
+	 * 
+	 * @return public name of the log
+	 */
+	public String getName();
+
+	/**
 	 * Path to the log file used as identifier.
 	 * 
 	 * @return path to the log file

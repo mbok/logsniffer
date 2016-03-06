@@ -38,23 +38,19 @@ import com.logsniffer.model.support.DailyRollingLog;
  * 
  */
 @Component
-public class RollingLogsSourceDynamicLiveName extends
-		AbstractTimestampRollingLogsSource {
+public class RollingLogsSourceDynamicLiveName extends AbstractTimestampRollingLogsSource {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	@Override
 	public List<Log> getLogs() throws IOException {
-		List<Log> logs = super.getLogs();
+		final List<Log> logs = super.getLogs();
 		if (!logs.isEmpty()) {
-			Collections
-					.sort(logs, getPastLogsType().getPastComparatorForLogs());
-			Log liveLog = logs.get(0);
-			List<Log> pastLogs = logs.subList(1, logs.size());
-			logger.debug(
-					"Exposing rolling log with dynamic live file {} and rolled over files: {}",
-					liveLog, pastLogs);
-			List<Log> rolledLog = new ArrayList<>();
-			rolledLog.add(new DailyRollingLog(liveLog, pastLogs));
+			Collections.sort(logs, getPastLogsType().getPastComparatorForLogs());
+			final Log liveLog = logs.get(0);
+			final List<Log> pastLogs = logs.subList(1, logs.size());
+			logger.debug("Exposing rolling log with dynamic live file {} and rolled over files: {}", liveLog, pastLogs);
+			final List<Log> rolledLog = new ArrayList<>();
+			rolledLog.add(new DailyRollingLog(liveLog.getName(), "default", liveLog, pastLogs));
 			return rolledLog;
 		} else {
 			return new ArrayList<>();
@@ -63,7 +59,7 @@ public class RollingLogsSourceDynamicLiveName extends
 
 	@Override
 	public Log getLog(final String path) throws IOException {
-		List<Log> logs = getLogs();
+		final List<Log> logs = getLogs();
 		if (logs.isEmpty()) {
 			return null;
 		} else {

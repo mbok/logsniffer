@@ -180,4 +180,9 @@ public class ByteArrayLog implements Log, LogRawAccessor<ByteLogAccess, ByteArra
 		return this;
 	}
 
+	@Override
+	public String getName() {
+		return getPath();
+	}
+
 }

@@ -35,7 +35,7 @@ public class DailyRollingLogTest {
 	public void testReadingOnlyLive() throws IOException {
 		final String log1Text = "live";
 		final ByteArrayLog blog = new ByteArrayLog(log1Text.getBytes());
-		final DailyRollingLog log = new DailyRollingLog(blog);
+		final DailyRollingLog log = new DailyRollingLog("abc", "abc.txt", blog);
 		Assert.assertEquals(log1Text.length(), log.getSize());
 		final DailyRollingLogAccess logAccess = new DailyRollingLogAccess(blog, log);
 		final LineInputStream lis = new LineInputStream(logAccess, logAccess.getInputStream(null), "UTF-8");
@@ -53,7 +53,7 @@ public class DailyRollingLogTest {
 		final String liveText = "live";
 		final String pastText = "old-start\nold-next\n";
 
-		final DailyRollingLog log = new DailyRollingLog(new ByteArrayLog(liveText.getBytes()),
+		final DailyRollingLog log = new DailyRollingLog("abc", "abc.txt", new ByteArrayLog(liveText.getBytes()),
 				new ByteArrayLog(pastText.getBytes()));
 		Assert.assertEquals(liveText.length() + pastText.length(), log.getSize());
 
@@ -96,7 +96,7 @@ public class DailyRollingLogTest {
 		final String liveNewText = "liveNew1\nliveNew2\r\n";
 		final String liveOldText = "liveOld1\nliveOld2\n";
 		final String pastText = "old-start\nold-next\n";
-		DailyRollingLog log = new DailyRollingLog(new ByteArrayLog(liveOldText.getBytes()),
+		DailyRollingLog log = new DailyRollingLog("abc", "abc.txt", new ByteArrayLog(liveOldText.getBytes()),
 				new ByteArrayLog(pastText.getBytes()));
 
 		DailyRollingLogAccess logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]), log);
@@ -108,7 +108,8 @@ public class DailyRollingLogTest {
 		lis.close();
 
 		// Try the mark with the same log
-		log = new DailyRollingLog(new ByteArrayLog(liveOldText.getBytes()), new ByteArrayLog(pastText.getBytes()));
+		log = new DailyRollingLog("abc", "abc.txt", new ByteArrayLog(liveOldText.getBytes()),
+				new ByteArrayLog(pastText.getBytes()));
 		logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]), log);
 		lis = new LineInputStream(logAccess, logAccess.getInputStream(oldLiveMark), "UTF-8");
 		Assert.assertEquals(false, lis.getPointer().isSOF());
@@ -118,8 +119,8 @@ public class DailyRollingLogTest {
 		lis.close();
 
 		// Now roll the liveOld
-		log = new DailyRollingLog(new ByteArrayLog(liveNewText.getBytes()), new ByteArrayLog(liveOldText.getBytes()),
-				new ByteArrayLog(pastText.getBytes()));
+		log = new DailyRollingLog("abc", "abc.txt", new ByteArrayLog(liveNewText.getBytes()),
+				new ByteArrayLog(liveOldText.getBytes()), new ByteArrayLog(pastText.getBytes()));
 		logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]), log);
 		lis = new LineInputStream(logAccess, logAccess.getInputStream(oldLiveMark), "UTF-8");
 		Assert.assertEquals(false, lis.getPointer().isSOF());
@@ -142,7 +143,7 @@ public class DailyRollingLogTest {
 		final String liveNewText = "liveNew1\nliveNew2\r\n";
 		final String liveOldText = "liveOld1\nliveOld2\n";
 		final String pastText = "old-start\nold-next\n";
-		DailyRollingLog log = new DailyRollingLog(new ByteArrayLog("past", pastText.getBytes()));
+		DailyRollingLog log = new DailyRollingLog("abc", "abc.txt", new ByteArrayLog("past", pastText.getBytes()));
 		DailyRollingLogAccess logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]), log);
 		LineInputStream lis = new LineInputStream(logAccess, logAccess.getInputStream(null), "UTF-8");
 		Assert.assertEquals("old-start", lis.readNextLine());
@@ -150,7 +151,7 @@ public class DailyRollingLogTest {
 		lis.close();
 
 		// Detecting next archive failed
-		log = new DailyRollingLog(new ByteArrayLog("past", liveOldText.getBytes()),
+		log = new DailyRollingLog("abc", "abc.txt", new ByteArrayLog("past", liveOldText.getBytes()),
 				new ByteArrayLog("other", pastText.getBytes()));
 		logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]), log);
 		lis = new LineInputStream(logAccess, logAccess.getInputStream(mark), "UTF-8");
@@ -160,7 +161,7 @@ public class DailyRollingLogTest {
 		lis.close();
 
 		// Unknown mark
-		log = new DailyRollingLog(new ByteArrayLog("pastUNKNOWN", liveOldText.getBytes()),
+		log = new DailyRollingLog("abc", "abc.txt", new ByteArrayLog("pastUNKNOWN", liveOldText.getBytes()),
 				new ByteArrayLog("other", pastText.getBytes()));
 		logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]), log);
 		lis = new LineInputStream(logAccess, logAccess.getInputStream(mark), "UTF-8");
@@ -170,7 +171,7 @@ public class DailyRollingLogTest {
 		lis.close();
 
 		// Continue reading after two rolls
-		log = new DailyRollingLog(new ByteArrayLog("liveNew", liveNewText.getBytes()),
+		log = new DailyRollingLog("abc", "abc.txt", new ByteArrayLog("liveNew", liveNewText.getBytes()),
 				new ByteArrayLog("liveOld", liveOldText.getBytes()), new ByteArrayLog("past", pastText.getBytes()));
 		logAccess = new DailyRollingLogAccess(new ByteArrayLog(new byte[0]), log);
 		lis = new LineInputStream(logAccess, logAccess.getInputStream(null), "UTF-8");
@@ -182,7 +183,7 @@ public class DailyRollingLogTest {
 		mark = lis.getPointer();
 		lis.close();
 
-		log = new DailyRollingLog(new ByteArrayLog("liveNew", "zz\n".getBytes()),
+		log = new DailyRollingLog("abc", "abc.txt", new ByteArrayLog("liveNew", "zz\n".getBytes()),
 				new ByteArrayLog("unknown", "unknown\n".getBytes()),
 				new ByteArrayLog("continueHere", liveNewText.getBytes()),
 				new ByteArrayLog("liveOld", liveOldText.getBytes()), new ByteArrayLog("past", pastText.getBytes()));
@@ -203,7 +204,7 @@ public class DailyRollingLogTest {
 
 		// The same, but with missing reference "liveOld" => Start from
 		// beginning
-		log = new DailyRollingLog(new ByteArrayLog("liveNew", "zz\n".getBytes()),
+		log = new DailyRollingLog("abc", "abc.txt", new ByteArrayLog("liveNew", "zz\n".getBytes()),
 				new ByteArrayLog("unknown", "unknown\n".getBytes()),
 				new ByteArrayLog("continueHere", liveNewText.getBytes()),
 				new ByteArrayLog("past", pastText.getBytes()));
@@ -219,7 +220,7 @@ public class DailyRollingLogTest {
 		lis.close();
 
 		// Mark in the past and with list changes, but with still stable pointer
-		log = new DailyRollingLog(new ByteArrayLog("liveNew", "zz\n".getBytes()),
+		log = new DailyRollingLog("abc", "abc.txt", new ByteArrayLog("liveNew", "zz\n".getBytes()),
 				new ByteArrayLog("continueHere", liveNewText.getBytes()),
 				new ByteArrayLog("past", pastText.getBytes()));
 		lis = new LineInputStream(logAccess, logAccess.getInputStream(mark), "UTF-8");

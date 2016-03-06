@@ -32,32 +32,40 @@ import com.logsniffer.model.RollingLog;
  * 
  */
 public class DailyRollingLog implements RollingLog {
-
+	private final String name;
+	private final String path;
 	private final Log[] logs;
 
-	public DailyRollingLog(final Log liveLog, final List<Log> pastLogs) {
-		this(liveLog, pastLogs.toArray(new Log[pastLogs.size()]));
+	public DailyRollingLog(final String name, final String path, final Log liveLog, final List<Log> pastLogs) {
+		this(name, path, liveLog, pastLogs.toArray(new Log[pastLogs.size()]));
 	}
 
-	public DailyRollingLog(final Log liveLog, final Log... pastLogs) {
+	public DailyRollingLog(final String name, final String path, final Log liveLog, final Log... pastLogs) {
 		super();
 		this.logs = new Log[pastLogs.length + 1];
 		int i = 0;
 		this.logs[i++] = liveLog;
-		for (Log log : pastLogs) {
+		for (final Log log : pastLogs) {
 			this.logs[i++] = log;
 		}
+		this.name = name;
+		this.path = path;
+	}
+
+	@Override
+	public String getName() {
+		return name;
 	}
 
 	@Override
 	public String getPath() {
-		return logs[0].getPath();
+		return path;
 	}
 
 	@Override
 	public long getSize() {
 		long size = 0;
-		for (Log log : logs) {
+		for (final Log log : logs) {
 			size += log.getSize();
 		}
 		return size;
@@ -84,7 +92,7 @@ public class DailyRollingLog implements RollingLog {
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
-		DailyRollingLog other = (DailyRollingLog) obj;
+		final DailyRollingLog other = (DailyRollingLog) obj;
 		return logs[0].equals(other.logs[0]);
 	}
 
@@ -99,8 +107,7 @@ public class DailyRollingLog implements RollingLog {
 	}
 
 	@Override
-	public LogPointer getGlobalPointer(final String partPath,
-			final LogPointer partPointer) {
+	public LogPointer getGlobalPointer(final String partPath, final LogPointer partPointer) {
 		// TODO Auto-generated method stub
 		return null;
 	}
