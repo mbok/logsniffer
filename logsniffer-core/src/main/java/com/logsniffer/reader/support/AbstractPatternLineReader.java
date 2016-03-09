@@ -59,6 +59,8 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 
 	private int maxUnfomattedLines = DEFAULT_MAX_UNFORMATTED_LINES;
 
+	private boolean initialized = false;
+
 	@JsonProperty
 	@NotEmpty
 	private String charset = "UTF-8";
@@ -85,10 +87,14 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 	 *             in case pattern initialization errors
 	 */
 	protected void init() throws FormatException {
-		if (maxUnformattedLinesConfigValue != null) {
-			maxUnfomattedLines = maxUnformattedLinesConfigValue.get();
+		if (!initialized) {
+			if (maxUnformattedLinesConfigValue != null) {
+				maxUnfomattedLines = maxUnformattedLinesConfigValue.get();
+			}
+			logger.debug("Init {} with max multiple lines without matching pattern: {}", getClass(),
+					maxUnfomattedLines);
+			initialized = true;
 		}
-		logger.debug("Init {} with max multiple lines without matching pattern: {}", getClass(), maxUnfomattedLines);
 	}
 
 	public interface ReadingContext<MatcherContext> {
@@ -231,7 +237,18 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 			try {
 				threadSemaphore.acquire(parallelCount);
 			} catch (final InterruptedException e) {
-				logger.error("Failed to wait for parallel threads", e);
+				synchronized (processingSemaphore) {
+					logger.error("Failed to wait for parallel threads", e);
+					finished = true;
+					if (terminationException == null) {
+						terminationException = e;
+					}
+				}
+			} finally {
+				synchronized (processingSemaphore) {
+					// Unblock possibly running threads
+					lineBuffer.clear();
+				}
 			}
 			// Probably not all processed lines
 			processParsingResults(null);
@@ -273,7 +290,8 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 
 		public PatternMatcherThread(final AbstractPatternLineReader<MatcherContext>.ParallelReadingExecutor executor,
 				final ReadingContext<MatcherContext> readingContext) throws InterruptedException {
-			super(PatternMatcherThread.class.getSimpleName() + "_" + executor.threadSemaphore.availablePermits());
+			super(PatternMatcherThread.class.getSimpleName() + "_" + executor.threadSemaphore.availablePermits() + "_"
+					+ executor.parallelCount);
 			this.executor = executor;
 			this.readingContext = readingContext;
 			executor.threadSemaphore.acquire(1);

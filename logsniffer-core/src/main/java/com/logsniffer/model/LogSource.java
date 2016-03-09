@@ -79,12 +79,13 @@ public interface LogSource<ACCESSTYPE extends LogRawAccess<? extends LogInputStr
 			WrappedBean<LogSource<LogRawAccess<? extends LogInputStream>>> {
 		private LogSource<LogRawAccess<? extends LogInputStream>> wrapped;
 
+		@SuppressWarnings("unchecked")
 		public static final LogSource<LogRawAccess<? extends LogInputStream>> unwrap(
-				final LogSource<LogRawAccess<? extends LogInputStream>> possiblyWrapped) {
+				final LogSource<? extends LogRawAccess<? extends LogInputStream>> possiblyWrapped) {
 			if (possiblyWrapped instanceof LogSourceWrapper) {
 				return ((LogSourceWrapper) possiblyWrapped).getSource();
 			}
-			return possiblyWrapped;
+			return (LogSource<LogRawAccess<? extends LogInputStream>>) possiblyWrapped;
 		}
 
 		private LogSource<LogRawAccess<? extends LogInputStream>> getSource() {

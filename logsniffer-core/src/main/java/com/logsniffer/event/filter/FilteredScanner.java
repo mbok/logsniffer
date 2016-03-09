@@ -45,9 +45,9 @@ public class FilteredScanner implements Scanner {
 	}
 
 	@Override
-	public void find(final LogEntryReader<LogRawAccess<LogInputStream>> reader,
-			final LogEntryReaderStrategy readerStrategy, final Log log, final LogRawAccess<LogInputStream> logAccess,
-			final IncrementData incrementData, final EventConsumer eventConsumer) throws IOException, FormatException {
+	public <R extends LogRawAccess<? extends LogInputStream>> void find(final LogEntryReader<R> reader,
+			final LogEntryReaderStrategy readerStrategy, final Log log, final R logAccess,
+			final IncrementData incrementData, final EventConsumer eventConsumer) throws IOException {
 		targetScanner.find(reader, readerStrategy, log, logAccess, incrementData, new EventConsumer() {
 			@Override
 			public void consume(final Event eventData) throws IOException, FormatException {
@@ -123,10 +123,9 @@ public class FilteredScanner implements Scanner {
 		}
 
 		@Override
-		public void find(final LogEntryReader<LogRawAccess<LogInputStream>> reader,
-				final LogEntryReaderStrategy readerStrategy, final Log log,
-				final LogRawAccess<LogInputStream> logAccess, final IncrementData incrementData,
-				final EventConsumer eventConsumer) throws IOException, FormatException {
+		public <R extends LogRawAccess<? extends LogInputStream>> void find(final LogEntryReader<R> reader,
+				final LogEntryReaderStrategy readerStrategy, final Log log, final R logAccess,
+				final IncrementData incrementData, final EventConsumer eventConsumer) throws IOException {
 			try {
 				getWrappedScanner().find(reader, readerStrategy, log, logAccess, incrementData, eventConsumer);
 			} catch (final ConfigException e) {

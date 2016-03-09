@@ -141,7 +141,8 @@ public class SnifferJob implements ContextAwareJob, InterruptableJob {
 		}
 	}
 
-	protected void sniff(final Sniffer sniffer, final LogSource<LogRawAccess<? extends LogInputStream>> source,
+	protected void sniff(final Sniffer sniffer,
+			final LogSource<? extends LogRawAccess<? extends LogInputStream>> source,
 			final InterruptionStatus interruption) throws IOException, ParseException, PublishException {
 		for (final Log log : source.getLogs()) {
 			try {
@@ -166,9 +167,9 @@ public class SnifferJob implements ContextAwareJob, InterruptableJob {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	protected void sniff(final Sniffer sniffer, final LogSource<LogRawAccess<? extends LogInputStream>> source,
-			final Log log, final InterruptionStatus interruption)
-					throws IOException, FormatException, PublishException {
+	protected void sniff(final Sniffer sniffer,
+			final LogSource<? extends LogRawAccess<? extends LogInputStream>> source, final Log log,
+			final InterruptionStatus interruption) throws IOException, FormatException, PublishException {
 		logger.debug("Sniffing log={} in context of sniffer={} and log source={}", log, sniffer, source);
 		final IncrementData incData = snifferPersistence.getIncrementData(sniffer, source, log);
 		final long startTime = System.currentTimeMillis();

@@ -227,9 +227,9 @@ public class ComposedLogReader implements LogEntryReader<ComposedLogAccess> {
 					blockedBuffer = false;
 				}
 				if (!running) {
-					// Error occurred, stop all threads
+					// Finished, stop all threads
 					for (final SubReaderThread tr : activeThreads) {
-						tr.interrupt();
+						instanceEntryBuffer[tr.logInstanceIndex].release(BUFFER_SIZE_PER_THREAD);
 					}
 					activeThreads.clear();
 				}
@@ -292,7 +292,7 @@ public class ComposedLogReader implements LogEntryReader<ComposedLogAccess> {
 
 		public SubReaderThread(final CompositionReaderExecutor compositionReaderExecutor, final int logInstanceIndex,
 				final LogInstance logInstance, final PointerPart start) throws InterruptedException {
-			super();
+			super("ComposedReader_" + logInstanceIndex + "_" + compositionReaderExecutor.instanceCounters.length);
 			this.logInstance = logInstance;
 			this.logSourceId = logInstance.getLogSourceId();
 			this.logPath = logInstance.getLog().getPath();
@@ -306,7 +306,7 @@ public class ComposedLogReader implements LogEntryReader<ComposedLogAccess> {
 		@Override
 		public void run() {
 			try {
-				final LogEntryReader<LogRawAccess<LogInputStream>> reader = logInstance.getReader();
+				final LogEntryReader<LogRawAccess<? extends LogInputStream>> reader = logInstance.getReader();
 				final LogEntryConsumer consumer = new LogEntryConsumer() {
 					@Override
 					public boolean consume(final Log log, final LogPointerFactory pointerFactory, final LogEntry entry)

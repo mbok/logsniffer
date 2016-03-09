@@ -159,7 +159,7 @@ public class ComposedLogAccess
 							refreshedPointer);
 				}
 				final ComposedLogPointer cpr = new ComposedLogPointer(refreshedParts, cp.getCurrentTimestamp());
-				logger.debug("Refreshed pointer {} in {}ms: {}", System.currentTimeMillis() - start, cp, cpr);
+				logger.debug("Refreshed pointer in {}ms {} => {}", System.currentTimeMillis() - start, cp, cpr);
 				return cpr;
 			}
 		};

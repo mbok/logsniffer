@@ -47,8 +47,8 @@ public abstract class SingleEntryIncrementalMatcher implements Scanner {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	@Override
-	public void find(final LogEntryReader<LogRawAccess<LogInputStream>> reader,
-			final LogEntryReaderStrategy readerStrategy, final Log log, final LogRawAccess<LogInputStream> logAccess,
+	public <R extends LogRawAccess<? extends LogInputStream>> void find(final LogEntryReader<R> reader,
+			final LogEntryReaderStrategy readerStrategy, final Log log, final R logAccess,
 			final IncrementData incrementData, final EventConsumer eventConsumer) throws IOException, FormatException {
 		try {
 			reader.readEntries(log, logAccess, incrementData.getNextOffset(logAccess), new LogEntryConsumer() {

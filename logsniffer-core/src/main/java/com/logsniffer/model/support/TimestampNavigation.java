@@ -39,17 +39,25 @@ public class TimestampNavigation implements Navigation<Date> {
 	private LogPointer navigate(final long haystackOffset, long leftBound, long rightBound) throws IOException {
 		int i = 0;
 		LogEntry lastEntry = null;
+		final long start = System.currentTimeMillis();
 		while (leftBound <= rightBound) {
 			i++;
 			final long mid = leftBound + (rightBound - leftBound) / 2;
 			final LogPointer midPointer = logAccess.createRelative(null, mid);
 			final LogEntry entry = getEntryNextTo(midPointer);
 			if (entry != null) {
-				lastEntry = entry;
 				final long entryOffset = entry.getTimeStamp().getTime();
+				if (lastEntry != null && lastEntry.getStartOffset().equals(entry.getStartOffset())) {
+					LOGGER.info(
+							"Found in {} the desired timestamp {} at position {} after {} iterations ({}ms) and no changes during repositioning",
+							log, haystackOffset, entry.getStartOffset(), i, System.currentTimeMillis() - start);
+					return entry.getStartOffset();
+				}
+				lastEntry = entry;
 				if (entryOffset == haystackOffset) {
-					LOGGER.info("Found in {} exactly the desired timestamp {} at position {} after {} iterations", log,
-							haystackOffset, entry.getStartOffset(), i);
+					LOGGER.info(
+							"Found in {} exactly the desired timestamp {} at position {} after {} iterations ({}ms)",
+							log, haystackOffset, entry.getStartOffset(), i, System.currentTimeMillis() - start);
 					return entry.getStartOffset();
 				} else if (entryOffset < haystackOffset) {
 					leftBound = Math.max(mid + 1, logAccess.getDifference(null, entry.getEndOffset()));
@@ -69,18 +77,21 @@ public class TimestampNavigation implements Navigation<Date> {
 			final long lastEntryOffset = lastEntry.getTimeStamp().getTime();
 			if (lastEntryOffset >= haystackOffset) {
 				LOGGER.info(
-						"Found in {} an entry with timestamp {} next to the desired timestamp {} in {} iterations, returning the start offset: {}",
-						log, lastEntryOffset, haystackOffset, i, lastEntry.getStartOffset());
+						"Found in {} an entry with timestamp {} next to the desired timestamp {} in {} iterations ({}ms), returning the start offset: {}",
+						log, lastEntryOffset, haystackOffset, i, System.currentTimeMillis() - start,
+						lastEntry.getStartOffset());
 				return lastEntry.getStartOffset();
 			} else {
 				LOGGER.info(
-						"Found in {} an entry with timestamp {} before to desired timestamp {} in {} iterations, returning the end offset: {}",
-						log, lastEntry.getTimeStamp(), haystackOffset, i, lastEntry.getEndOffset());
+						"Found in {} an entry with timestamp {} before to desired timestamp {} in {} iterations ({}ms), returning the end offset: {}",
+						log, lastEntry.getTimeStamp(), haystackOffset, i, System.currentTimeMillis() - start,
+						lastEntry.getEndOffset());
 				return lastEntry.getEndOffset();
 
 			}
 		} else {
-			LOGGER.warn("Failed to find in {} after {} iterations an entry near to {}", log, i, haystackOffset);
+			LOGGER.warn("Failed to find in {} after {} iterations ({}ms) an entry near to {}", log, i,
+					System.currentTimeMillis() - start, haystackOffset);
 		}
 		return null;
 	}

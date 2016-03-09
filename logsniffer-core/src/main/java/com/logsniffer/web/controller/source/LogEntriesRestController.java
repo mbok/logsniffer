@@ -120,7 +120,6 @@ public class LogEntriesRestController {
 		return -1;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@RequestMapping(value = "/sources/entries", method = RequestMethod.POST)
 	@ResponseBody
 	LogEntriesResult getEntries(
@@ -178,7 +177,6 @@ public class LogEntriesRestController {
 		}
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@RequestMapping(value = "/sources/randomAccessEntries", method = RequestMethod.POST)
 	@ResponseBody
 	LogEntriesResult getRandomAccessEntries(
@@ -198,7 +196,6 @@ public class LogEntriesRestController {
 			}
 			final BufferedConsumer bc = new BufferedConsumer(count + 1);
 			if (pointer != null) {
-				pointer = logAccess.refresh(pointer).get();
 				if (pointer.isEOF()) {
 					// End pointer, return the last 10 simply
 					final BufferedConsumer bcLast = new BufferedConsumer(10);
@@ -209,8 +206,7 @@ public class LogEntriesRestController {
 							getHighlightEntryIndex(pointer, -10, readEntries));
 				}
 			}
-			activeLogSource.getReader().readEntries(log, logAccess,
-					pointer != null ? logAccess.refresh(pointer).get() : null, bc);
+			activeLogSource.getReader().readEntries(log, logAccess, pointer != null ? pointer : null, bc);
 			final List<LogEntry> entries = bc.getBuffer();
 			if (entries.size() > 0) {
 				final LogEntry first = entries.get(0);
@@ -316,7 +312,7 @@ public class LogEntriesRestController {
 				count);
 		final LogSource<LogRawAccess<? extends LogInputStream>> source = getActiveLogSource(logSource);
 		final Log log = getLog(source, logPath);
-		final LogRawAccess<LogInputStream> logAccess = (LogRawAccess<LogInputStream>) source.getLogAccess(log);
+		final LogRawAccess<? extends LogInputStream> logAccess = source.getLogAccess(log);
 		final IncrementData incData = new IncrementData();
 		LogPointer searchPointer = null;
 		if (StringUtils.isNotEmpty(mark)) {
@@ -324,7 +320,7 @@ public class LogEntriesRestController {
 		}
 		incData.setNextOffset(searchPointer);
 		final SearchResult searchResult = new SearchResult();
-		LogEntryReader<LogRawAccess<LogInputStream>> reader = null;
+		LogEntryReader<LogRawAccess<? extends LogInputStream>> reader = null;
 		if (count >= 0) {
 			reader = ((LogSource) source).getReader();
 		} else {
@@ -366,8 +362,8 @@ public class LogEntriesRestController {
 		return searchResult;
 	}
 
-	private Log getLog(final LogSource<LogRawAccess<? extends LogInputStream>> activeLogSource, final String logPath)
-			throws IOException, ResourceNotFoundException {
+	private Log getLog(final LogSource<? extends LogRawAccess<? extends LogInputStream>> activeLogSource,
+			final String logPath) throws IOException, ResourceNotFoundException {
 		if (logPath == null) {
 			return null;
 		}
@@ -394,7 +390,7 @@ public class LogEntriesRestController {
 	}
 
 	private static interface NavigationResolver {
-		NavigationFuture navigate(LogSource<LogRawAccess<? extends LogInputStream>> logSource,
+		NavigationFuture navigate(LogSource<? extends LogRawAccess<? extends LogInputStream>> logSource,
 				LogRawAccess<? extends LogInputStream> logAccess, Log log, String strPosition) throws IOException;
 	}
 
@@ -409,7 +405,7 @@ public class LogEntriesRestController {
 	private static class ByteNavigationResolver implements NavigationResolver {
 
 		@Override
-		public NavigationFuture navigate(final LogSource<LogRawAccess<? extends LogInputStream>> logSource,
+		public NavigationFuture navigate(final LogSource<? extends LogRawAccess<? extends LogInputStream>> logSource,
 				final LogRawAccess<? extends LogInputStream> logAccess, final Log log, final String strPosition) {
 			return new NavigationFuture() {
 				@Override
@@ -424,7 +420,7 @@ public class LogEntriesRestController {
 
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		@Override
-		public NavigationFuture navigate(final LogSource<LogRawAccess<? extends LogInputStream>> logSource,
+		public NavigationFuture navigate(final LogSource<? extends LogRawAccess<? extends LogInputStream>> logSource,
 				final LogRawAccess<? extends LogInputStream> logAccess, final Log log, final String strPosition)
 						throws IOException {
 			if (NumberUtils.isNumber(strPosition)) {

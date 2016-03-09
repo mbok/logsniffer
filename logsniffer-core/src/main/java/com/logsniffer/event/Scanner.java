@@ -69,9 +69,9 @@ public interface Scanner extends ConfiguredBean, FieldsHost {
 	 * @param eventConsumer
 	 *            event consumer
 	 */
-	public void find(LogEntryReader<LogRawAccess<LogInputStream>> reader, LogEntryReaderStrategy readerStrategy,
-			Log log, LogRawAccess<LogInputStream> logAccess, IncrementData incrementData, EventConsumer eventConsumer)
-					throws IOException, FormatException;
+	public <R extends LogRawAccess<? extends LogInputStream>> void find(LogEntryReader<R> reader,
+			LogEntryReaderStrategy readerStrategy, Log log, R logAccess, IncrementData incrementData,
+			EventConsumer eventConsumer) throws IOException, FormatException;
 
 	/**
 	 * Wrapper for delegated strategy e.g. to allow lazy initiation.
@@ -133,10 +133,10 @@ public interface Scanner extends ConfiguredBean, FieldsHost {
 		}
 
 		@Override
-		public void find(final LogEntryReader<LogRawAccess<LogInputStream>> reader,
-				final LogEntryReaderStrategy readerStrategy, final Log log,
-				final LogRawAccess<LogInputStream> logAccess, final IncrementData incrementData,
-				final EventConsumer eventConsumer) throws IOException, FormatException {
+		public <R extends LogRawAccess<? extends LogInputStream>> void find(final LogEntryReader<R> reader,
+				final LogEntryReaderStrategy readerStrategy, final Log log, final R logAccess,
+				final IncrementData incrementData, final EventConsumer eventConsumer)
+						throws IOException, FormatException {
 			try {
 				getWrappedScanner().find(reader, readerStrategy, log, logAccess, incrementData, eventConsumer);
 			} catch (final ConfigException e) {
