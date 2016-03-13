@@ -31,6 +31,11 @@
 			<a href="<c:url value="/c/settings" />">Settings</a>
 		</li>
        </ul>
+		<ul class="nav navbar-right navbar-nav">
+			<li>
+				<a href="#" title="Open system messages"><i class="fa fa-bell"></i> <sup><span class="label label-danger">1</span></sup></a>
+			</li>
+        </ul>
      </div><!--/.nav-collapse -->
    </div>
  </div>

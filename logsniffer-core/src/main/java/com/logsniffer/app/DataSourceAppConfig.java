@@ -45,7 +45,7 @@ import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
  */
 @Configuration
 public class DataSourceAppConfig {
-	private static final String DB_SETUP_VERSION = "0.5.1";
+	private static final String DB_SETUP_VERSION = "0.5.4";
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
