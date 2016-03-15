@@ -37,7 +37,7 @@ public class SystemNotificationsResource {
 	@ResponseBody
 	public PageableResult<Notification> getUserNootifications(HttpServletRequest request,
 			HttpServletResponse response) {
-		return notificationProvider.getNotifications(tokenProvider.getToken(request, response), 0, 10);
+		return notificationProvider.getNotifications(tokenProvider.getToken(request, response), 0, 100);
 	}
 
 	@RequestMapping(value = "/system/notifications", method = RequestMethod.POST)

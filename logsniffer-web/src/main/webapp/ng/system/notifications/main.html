@@ -5,13 +5,16 @@
 		No pending notifications available so far!
 	</p>
 	<div ng-if="notifications.totalCount > 0">
-		<div ng-repeat="n in notifications.items" class="alert alert-info">
+		<div ng-repeat="n in notifications.items" class="alert"
+			ng-class="n.level=='ERROR'?'alert-danger':(n.level=='WARN'?'alert-warning':'alert-info')">
 			<h4><i class="glyphicon pull-right"
 				ng-class="n.level=='ERROR'?'glyphicon glyphicon-flash':(n.level=='WARN'?'glyphicon-exclamation-sign':'glyphicon-info-sign')"></i> {{n.title}}</h4>
 			<p>{{n.message | sanitize}}</p>
 			<small>{{n.creationDate | date:'medium'}}</small>
 			<p>
-				<button type="button" class="btn btn-info" ng-click="acknowledge(n.id)"><i class="glyphicon glyphicon-check"></i> Got it</button>
+				<button type="button" class="btn"
+					ng-class="n.level=='ERROR'?'btn-danger':(n.level=='WARN'?'btn-warning':'btn-info')"
+					ng-click="acknowledge(n.id)"><i class="glyphicon glyphicon-check"></i> Got it</button>
 			</p>
 		</div>
 	</div>
