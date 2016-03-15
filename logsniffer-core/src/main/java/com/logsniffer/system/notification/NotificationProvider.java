@@ -87,7 +87,7 @@ public interface NotificationProvider {
 	 * @param userToken
 	 *            user token
 	 */
-	void aknowledge(String notificationId, String userToken);
+	void acknowledge(String notificationId, String userToken);
 
 	/**
 	 * Deletes a notification physically, thus it won't be available for any

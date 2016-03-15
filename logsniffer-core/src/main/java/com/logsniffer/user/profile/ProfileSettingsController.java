@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.HandlerMapping;
 
 import com.logsniffer.fields.FieldsMap;
+import com.logsniffer.user.UserTokenProvider;
 
 /**
  * Exposes profile settings feature via REST.
@@ -25,7 +26,7 @@ import com.logsniffer.fields.FieldsMap;
 public class ProfileSettingsController {
 	private static final String RESOURCE_PATH = "/user/profile/settings";
 	@Autowired
-	private ProfileSettingsTokenProvider tokenProvider;
+	private UserTokenProvider tokenProvider;
 
 	@Autowired
 	private ProfileSettingsStorage storage;

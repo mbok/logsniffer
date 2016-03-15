@@ -16,9 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
 angular
-.module('SettingsElasticModule',[])
+.module('SystemSettingsElasticModule',[])
 .controller(
-	"SettingsElasticController",
+	"SystemSettingsElasticController",
 	[
 	 '$scope',
 	 '$http',
@@ -32,7 +32,7 @@ angular
 	     };
 	     $scope.settings = null;
 	     $scope.status = null;
-		 $scope.settingsRessource = $scope.contextPath + "/c/settings/elastic";	     
+		 $scope.settingsRessource = $scope.contextPath + "/c/system/settings/elastic";	     
 
 		 var initResponse = function (data) {
 			$log.info("Update ES settings and status: ", data)

@@ -1,6 +1,7 @@
 package com.logsniffer.user.profile;
 
 import com.logsniffer.fields.FieldsMap;
+import com.logsniffer.user.UserTokenProvider;
 
 /**
  * Stores arbitrary profile data associated with a user using logsniffer. Data
@@ -17,7 +18,7 @@ public interface ProfileSettingsStorage {
 	 * Stores data under a node located by the path for the given user token.
 	 * 
 	 * @param token
-	 *            the user token, see {@link ProfileSettingsTokenProvider}
+	 *            the user token, see {@link UserTokenProvider}
 	 * @param settingsPath
 	 *            the node path starting at root with a leading "/"
 	 * @param data
@@ -29,7 +30,7 @@ public interface ProfileSettingsStorage {
 	 * Deletes settings located at given node for the user token.
 	 * 
 	 * @param token
-	 *            the user token, see {@link ProfileSettingsTokenProvider}
+	 *            the user token, see {@link UserTokenProvider}
 	 * @param path
 	 *            the node path starting at root with a leading "/"
 	 * @param recursive
@@ -42,7 +43,7 @@ public interface ProfileSettingsStorage {
 	 * Returns stored data from given path.
 	 * 
 	 * @param token
-	 *            the user token, see {@link ProfileSettingsTokenProvider}
+	 *            the user token, see {@link UserTokenProvider}
 	 * @param path
 	 *            the node path starting at root with a leading "/"
 	 * @param recursive

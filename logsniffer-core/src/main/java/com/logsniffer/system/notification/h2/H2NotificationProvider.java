@@ -152,7 +152,7 @@ public class H2NotificationProvider implements NotificationProvider {
 	}
 
 	@Override
-	public void aknowledge(String notificationId, String userToken) {
+	public void acknowledge(String notificationId, String userToken) {
 		jdbcTemplate.update("INSERT INTO " + TABLE_NAME_ACK + " SET ID = ?, USER = ?", notificationId, userToken);
 	}
 

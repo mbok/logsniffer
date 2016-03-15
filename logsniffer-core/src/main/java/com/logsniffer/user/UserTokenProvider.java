@@ -1,15 +1,15 @@
-package com.logsniffer.user.profile;
+package com.logsniffer.user;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Provides a profile storage token assigned to the surfing user.
+ * Provides a token associated with current surfing user.
  * 
  * @author mbok
  *
  */
-public interface ProfileSettingsTokenProvider {
+public interface UserTokenProvider {
 	/**
 	 * Returns a token associated with the user currently applying the request.
 	 * 

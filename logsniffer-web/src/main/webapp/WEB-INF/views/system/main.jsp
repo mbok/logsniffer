@@ -8,7 +8,7 @@
 <%@taglib prefix="spring" uri="http://www.springframework.org/tags"%>
 
 <spring:message code="logsniffer.breadcrumb.settings" var="settingsLabel" />
-<tpl:bodySidebar title="${activeNode.title} - ${rootNode.title}" activeNavbar="settings" ngModules="'SettingsRootModule'">
+<tpl:bodySidebar title="${activeNode.title} - ${rootNode.title}" activeNavbar="system" ngModules="'SystemRootModule'">
 	<jsp:attribute name="htmlHead">
 		<c:if test="${not empty activeNode.pageContext.jsFiles}">
 			<!-- NG page -->
@@ -17,11 +17,11 @@
 			</c:forEach>
 		</c:if>
 		<script type="text/javascript">
-			angular.module('SettingsRootModule',
+			angular.module('SystemRootModule',
 				[<c:if test="${not empty activeNode.pageContext.module}">'${activeNode.pageContext.module}'</c:if>]
 			)
 			.controller(
-					"SettingsAbstractController",
+					"SystemAbstractController",
 					[
 					 '$scope',
 					 '$http',
@@ -116,7 +116,7 @@
 	<jsp:attribute name="sidebar">
 		<ul class="nav nav-sidebar">
 			<c:forEach var="node1" items="${rootNode.subNodes}">
-				<c:url value="/c/settings" var="url">
+				<c:url value="/c/system" var="url">
 					<c:if test="${node1!=rootNode}"><c:param name="path" value="${node1.path}"/></c:if>
 				</c:url>
 				<li class="${logfn:contains(breadcrumbNodes, node1) || node1 == activeNode ? 'active':''}"><a href="${url}">${node1.title}</a>
@@ -128,7 +128,7 @@
 	<jsp:body>
 		<ul class="breadcrumb">
 			<c:forEach var="node" items="${breadcrumbNodes}">
-				<c:url value="/c/settings" var="url">
+				<c:url value="/c/system" var="url">
 					<c:if test="${node!=rootNode}"><c:param name="path" value="${node.path}"/></c:if>
 				</c:url>
 				<li><a href="${url}">${node.title}</a></li>
@@ -136,7 +136,7 @@
 			<li class="active">${activeNode.title}</li>
 		</ul>
 		
-		<div ng-controller="SettingsAbstractController">
+		<div ng-controller="SystemAbstractController">
 			<c:if test="${not empty activeNode.pageContext.module}">
 				<div ng-controller="${activeNode.pageContext.controller}" ng-include="'<c:url value="/${activeNode.pageContext.template}" />?v=${logsnifferProps['logsniffer.version']}'"></div>
 			</c:if>

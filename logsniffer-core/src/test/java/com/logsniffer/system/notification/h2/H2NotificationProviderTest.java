@@ -102,12 +102,12 @@ public class H2NotificationProviderTest {
 		Assert.assertEquals(2, provider.getSummary("user1").getCount());
 
 		// Ack 2
-		provider.aknowledge("update2", "user1");
+		provider.acknowledge("update2", "user1");
 		Assert.assertEquals(Level.WARN, provider.getSummary("user1").getWorstLevel());
 		Assert.assertEquals(1, provider.getSummary("user1").getCount());
 
 		// Ack 1
-		provider.aknowledge("update1", "user1");
+		provider.acknowledge("update1", "user1");
 		Assert.assertNull(provider.getSummary("user1").getWorstLevel());
 		Assert.assertEquals(0, provider.getSummary("user1").getCount());
 
@@ -166,7 +166,7 @@ public class H2NotificationProviderTest {
 		Assert.assertEquals(1, provider.getNotifications("user1", 0, 10).getItems().size());
 
 		// Acknowledging without effect for the message type
-		provider.aknowledge("update1", "user1");
+		provider.acknowledge("update1", "user1");
 		Assert.assertEquals(Level.WARN, provider.getSummary("user1").getWorstLevel());
 		Assert.assertEquals(1, provider.getSummary("user1").getCount());
 		Assert.assertEquals(1, provider.getNotifications("user1", 0, 10).getItems().size());

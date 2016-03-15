@@ -38,8 +38,8 @@ import com.logsniffer.model.Log;
 import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.model.LogSourceProvider;
+import com.logsniffer.user.UserTokenProvider;
 import com.logsniffer.user.profile.ProfileSettingsStorage;
-import com.logsniffer.user.profile.ProfileSettingsTokenProvider;
 import com.logsniffer.web.ViewController;
 import com.logsniffer.web.controller.exception.ResourceNotFoundException;
 import com.logsniffer.web.wizard2.WizardInfo;
@@ -59,7 +59,7 @@ public class SourcesController {
 	private WizardInfoController wizardController;
 
 	@Autowired
-	private ProfileSettingsTokenProvider tokenProvider;
+	private UserTokenProvider tokenProvider;
 
 	@Autowired
 	private ProfileSettingsStorage profileSettingsStorage;

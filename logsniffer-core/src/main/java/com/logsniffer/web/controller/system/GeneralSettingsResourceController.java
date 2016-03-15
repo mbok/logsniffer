@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
-package com.logsniffer.web.controller.settings;
+package com.logsniffer.web.controller.system;
 
 import java.io.IOException;
 
@@ -214,7 +214,7 @@ public class GeneralSettingsResourceController {
 	@Configured(ConfigValueAppConfig.LOGSNIFFER_BASE_URL)
 	private ConfigValue<String> baseUrl;
 
-	@RequestMapping(value = "/settings/general", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(value = "/system/settings/general", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
 	public GeneralSettings getGeneralSettings() {
 		GeneralSettings settings = new GeneralSettings();
@@ -232,7 +232,7 @@ public class GeneralSettingsResourceController {
 		return settings;
 	}
 
-	@RequestMapping(value = "/settings/general", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(value = "/system/settings/general", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(HttpStatus.OK)
 	public void saveGeneralSettings(
 			@RequestBody @Valid final GeneralSettings settings)
