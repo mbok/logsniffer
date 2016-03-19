@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.logsniffer.web.nav.NavNode;
 import com.logsniffer.web.nav.support.NgPage;
+import com.logsniffer.web.nav.support.NgTemplate;
 
 /**
  * Spring app config for navigation.
@@ -57,6 +58,10 @@ public class NavigationAppConfig {
 		notifications.setPageContext(new NgPage("ng/system/notifications/app.js", "SystemNotificationsModule",
 				"SystemNotificationsController", "ng/system/notifications/main.html"));
 		systemNode.addSubNode(notifications);
+
+		final NavNode about = new NavNode("About", "about");
+		about.setPageContext(new NgTemplate("ng/system/about.html"));
+		systemNode.addSubNode(about);
 		return systemNode;
 	}
 }

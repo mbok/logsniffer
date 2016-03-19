@@ -17,19 +17,16 @@
  *******************************************************************************/
 package com.logsniffer.web.nav.support;
 
-import com.logsniffer.web.nav.IPageContext;
-
 /**
  * Represents a a Angular page.
  * 
  * @author mbok
  * 
  */
-public class NgPage implements IPageContext {
+public class NgPage extends NgTemplate {
 	private String[] jsFiles;
 	private String module;
 	private String controller;
-	private String template;
 
 	/**
 	 * @param jsFile
@@ -37,8 +34,7 @@ public class NgPage implements IPageContext {
 	 * @param controller
 	 * @param template
 	 */
-	public NgPage(final String jsFile, final String module,
-			final String controller, final String template) {
+	public NgPage(final String jsFile, final String module, final String controller, final String template) {
 		this(new String[] { jsFile }, module, controller, template);
 	}
 
@@ -48,13 +44,11 @@ public class NgPage implements IPageContext {
 	 * @param controller
 	 * @param template
 	 */
-	public NgPage(final String[] jsFiles, final String module,
-			final String controller, final String template) {
-		super();
+	public NgPage(final String[] jsFiles, final String module, final String controller, final String template) {
+		super(template);
 		this.jsFiles = jsFiles;
 		this.module = module;
 		this.controller = controller;
-		this.template = template;
 	}
 
 	/**
@@ -102,19 +96,9 @@ public class NgPage implements IPageContext {
 		this.controller = controller;
 	}
 
-	/**
-	 * @return the template
-	 */
-	public String getTemplate() {
-		return template;
-	}
-
-	/**
-	 * @param template
-	 *            the template to set
-	 */
-	public void setTemplate(final String template) {
-		this.template = template;
+	@Override
+	public String getTypeName() {
+		return "ngPage";
 	}
 
 }

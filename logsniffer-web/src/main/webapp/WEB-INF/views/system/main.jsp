@@ -1,5 +1,3 @@
-<%@page import="com.logsniffer.model.RollingLog"%>
-<%@page import="com.logsniffer.model.Log"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="tpl" tagdir="/WEB-INF/tags/templates"%>
@@ -8,9 +6,11 @@
 <%@taglib prefix="spring" uri="http://www.springframework.org/tags"%>
 
 <spring:message code="logsniffer.breadcrumb.settings" var="settingsLabel" />
+<c:set var="isNgPage" value="${activeNode.pageContext.typeName=='ngPage'}" />
+<c:set var="isNgTemplate" value="${activeNode.pageContext.typeName=='ngTemplate'}" />
 <tpl:bodySidebar title="${activeNode.title} - ${rootNode.title}" activeNavbar="system" ngModules="'SystemRootModule'">
 	<jsp:attribute name="htmlHead">
-		<c:if test="${not empty activeNode.pageContext.jsFiles}">
+		<c:if test="${isNgPage}">
 			<!-- NG page -->
 			<c:forEach var="jsFile" items="${activeNode.pageContext.jsFiles}">
 			    <script type="text/javascript" src="<c:url value="/${jsFile}" />?v=${logsnifferProps['logsniffer.version']}"></script>
@@ -18,7 +18,7 @@
 		</c:if>
 		<script type="text/javascript">
 			angular.module('SystemRootModule',
-				[<c:if test="${not empty activeNode.pageContext.module}">'${activeNode.pageContext.module}'</c:if>]
+				[<c:if test="${isNgPage}">'${activeNode.pageContext.module}'</c:if>]
 			)
 			.controller(
 					"SystemAbstractController",
@@ -137,9 +137,14 @@
 		</ul>
 		
 		<div ng-controller="SystemAbstractController">
-			<c:if test="${not empty activeNode.pageContext.module}">
-				<div ng-controller="${activeNode.pageContext.controller}" ng-include="'<c:url value="/${activeNode.pageContext.template}" />?v=${logsnifferProps['logsniffer.version']}'"></div>
-			</c:if>
+			<c:choose>
+				<c:when test="${isNgPage}">
+					<div ng-controller="${activeNode.pageContext.controller}" ng-include="'<c:url value="/${activeNode.pageContext.template}" />?v=${logsnifferProps['logsniffer.version']}'"></div>
+				</c:when>
+				<c:when test="${isNgTemplate}">
+					<div ng-include="'<c:url value="/${activeNode.pageContext.template}" />?v=${logsnifferProps['logsniffer.version']}'"></div>
+				</c:when>
+			</c:choose>
 		</div>
 	</jsp:body>
 </tpl:bodySidebar>
