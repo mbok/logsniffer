@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
 angular
-.module('SystemNotificationsModule',[])
+.module('SystemNotificationsModule',["ngSanitize"])
 .controller(
 	"SystemNotificationsController",
 	[
@@ -24,7 +24,8 @@ angular
 	 '$http',
 	 '$log',
 	 'lsfAlerts',
-	 function($scope, $http, $log, lsfAlerts) {
+	 '$sce',
+	 function($scope, $http, $log, lsfAlerts, $sce) {
 	     $scope.alerts = lsfAlerts.create();
 	     $scope.bindErrors = {};
 	     $scope.state =  {
@@ -61,12 +62,12 @@ angular
 			);
 		 };
 		 
+		 $scope.sanitizeMessage = function(n) {
+			 return $sce.trustAsHtml(n.message);
+		 };
+		 
 		 // Init
 	     $scope.loadSettings($scope).success(initResponse);
 	 }
 	]
-).filter("sanitize", ['$sce', function($sce) {
-  return function(htmlCode){
-	    return $sce.trustAsHtml(htmlCode);
-	  }
-}]);
+);

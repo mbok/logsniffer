@@ -42,9 +42,16 @@ public class SystemNotificationsResource {
 
 	@RequestMapping(value = "/system/notifications", method = RequestMethod.POST)
 	@ResponseBody
-	public NotificationSummary acknowledge(@RequestParam("id") String id, HttpServletRequest request, HttpServletResponse response) {
-		String userToken= tokenProvider.getToken(request, response);
-		notificationProvider.acknowledge(id,userToken);
+	public NotificationSummary acknowledge(@RequestParam("id") String id, HttpServletRequest request,
+			HttpServletResponse response) {
+		String userToken = tokenProvider.getToken(request, response);
+		notificationProvider.acknowledge(id, userToken);
 		return notificationProvider.getSummary(userToken);
+	}
+
+	@RequestMapping(value = "/system/notifications", method = RequestMethod.DELETE)
+	@ResponseStatus(HttpStatus.OK)
+	public void delete(@RequestParam("id") String id) {
+		notificationProvider.delete(id);
 	}
 }

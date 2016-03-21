@@ -9,7 +9,7 @@
 			ng-class="n.level=='ERROR'?'alert-danger':(n.level=='WARN'?'alert-warning':'alert-info')">
 			<h4><i class="glyphicon pull-right"
 				ng-class="n.level=='ERROR'?'glyphicon glyphicon-flash':(n.level=='WARN'?'glyphicon-exclamation-sign':'glyphicon-info-sign')"></i> {{n.title}}</h4>
-			<p>{{n.message | sanitize}}</p>
+			<p ng-bind-html="sanitizeMessage(n)"></p>
 			<small>{{n.creationDate | date:'medium'}}</small>
 			<p>
 				<button type="button" class="btn"
