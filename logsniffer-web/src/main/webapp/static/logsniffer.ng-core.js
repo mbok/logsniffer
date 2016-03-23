@@ -232,7 +232,8 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	       parentBindErrors: '=bindErrors',
 	       bindErrorsPrefix: '@',
 	       beanTypeLabel: '@',
-	       styleClass: '@'
+	       styleClass: '@',
+	       modelExclude: '&'
 	   },
 	   controller: function($scope) {
 	       	$scope.contextPath = LogSniffer.config.contextPath;
@@ -298,7 +299,9 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		};
 	   },
 	   template: 
-	      '<div ng-form="form" class="bean-wizard" ng-class="{\'well well-sm\' : !styleClass, styleClass: styleClass}"><div class="row">' +
+	      '<div ng-form="form" class="bean-wizard" ng-class="{\'well well-sm\' : !styleClass, styleClass: styleClass}">' +
+	      	'<lsf-model-editor model="bean" exclude="modelExclude()"></lsf-model-editor>' +
+		    '<div class="row">' +
 	      	'<div class="col-md-6 form-group required" ng-class="{\'has-error\': form.selectedWizard.$invalid && !form.selectedWizard.$pristine}">' +
 			'<label class="control-label">{{beanTypeLabel}}</label>' +
 			'<div class="controls">' +
@@ -1376,4 +1379,58 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		      	 '</table>'+
 		      	'</div>'
     };
+})
+.directive('lsfModelEditor', function() {
+    return {
+ 	   restrict: 'AE',
+ 	   replace: true,
+ 	   scope: {
+ 	       model: '=',
+ 	       exclude: '&'
+ 	   },
+ 	   controller: function($scope, $modal) {
+ 		   $scope.editModel = function() {
+			$modal.open({
+			      templateUrl: LogSniffer.config.contextPath + '/ng/util/modelEditor.html',
+			      controller: 'ModelEditorCtrl',
+			      size: 'lg',
+			      scope: $scope,
+			      resolve: {
+			        model: function () {
+						return $scope.model;
+			        },
+			        exclude: function () {
+			        	return $scope.exclude();
+			        }
+			      }
+			    });
+  
+ 		   };
+ 	   },
+ 	   template: 
+ 	      '<a href class="close" ng-click="editModel()" title="Edit in JSON editor"><i class="fa fa-pencil-square-o"></i></a>'
+    };
+})
+.controller('ModelEditorCtrl', function($scope, $modalInstance, model, exclude) {
+	$scope.modelStr = "";
+	var exMap = {};
+	if (angular.isArray(exclude)) {
+		for(var i=0;i<exclude.length;i++) {
+			exMap[exclude[i]]=true;
+		}
+	} 
+	function replacer(key, value)
+	{
+		if (exMap[key] || key.indexOf("$$")==0) return undefined;
+	    else return value;
+	}
+	if (typeof model != "undefined" && model!=null) {
+		$scope.modelStr = JSON.stringify(model, replacer, 4);
+	}
+	$scope.cancel = function() {
+	   $modalInstance.close();
+	};
+	$scope.apply = function() {
+	   $modalInstance.close();
+	};
 });

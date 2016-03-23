@@ -165,6 +165,7 @@
 </script>
 <div id="source-editor" ng-controller="SourceBeanWizardControllerWrapper" ng-form="form2">
 	<div lsf-alerts alerts="alerts"></div>
+	<lsf-model-editor model="beanWrapper[0]" exclude="['id']"></lsf-model-editor>
 	<tabset>
     	<tab>
     		<tab-heading>
@@ -185,8 +186,7 @@
 					</div>
 					<!-- Wizard -->
 					<lfs-bean-wizard bean="beanWrapper[0]" bean-type-label="Source type" wizards="sourceWizards"
-						shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="">
-						
+						shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="" model-exclude="['reader','uiSettings','id']">
 						<button type="button" class="btn btn-default btn-xs" ng-click="testResolvingLogs()" ng-disabled="form.$invalid">
 							<i class="glyphicon glyphicon-check"></i> Test resolving logs
 						</button> <i class="fa" ng-class="{'fa-refresh fa-spin': resolvingTestLogsInProgress}"></i>
