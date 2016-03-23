@@ -96,7 +96,7 @@
 		</div>
 		<hr>
 		<footer>
-			<p>logsniffer, v${logsnifferProps['logsniffer.version']} - <a href="http://www.logsniffer.com">www.logsniffer.com</a><br>&copy; Scaleborn 2015</p>
+			<p>logsniffer, v${logsnifferProps['logsniffer.version']} - <a href="http://www.logsniffer.com">www.logsniffer.com</a><br>&copy; Scaleborn 2016</p>
 		</footer>
 	</body>
 </html>
