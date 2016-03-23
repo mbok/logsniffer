@@ -19,12 +19,19 @@ package com.logsniffer.web.advice;
 
 import java.util.Properties;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
 import com.logsniffer.app.CoreAppConfig;
+import com.logsniffer.system.notification.NotificationProvider;
+import com.logsniffer.system.notification.NotificationProvider.NotificationSummary;
+import com.logsniffer.user.UserTokenProvider;
+import com.logsniffer.web.ViewController;
 
 /**
  * General advice for common model attributes.
@@ -32,11 +39,17 @@ import com.logsniffer.app.CoreAppConfig;
  * @author mbok
  *
  */
-@ControllerAdvice
+@ControllerAdvice(annotations = ViewController.class)
 public class CommonControllerAdvice {
 	@Autowired
 	@Qualifier(CoreAppConfig.BEAN_LOGSNIFFER_PROPS)
 	private Properties logsnifferProps;
+
+	@Autowired
+	private NotificationProvider notificationProvider;
+
+	@Autowired
+	private UserTokenProvider userTokenProvider;
 
 	/**
 	 * Exposes the CoreAppConfig#BEAN_LOGSNIFFER_PROPS as general modell
@@ -47,5 +60,10 @@ public class CommonControllerAdvice {
 	@ModelAttribute("logsnifferProps")
 	public Properties logsnifferProps() {
 		return logsnifferProps;
+	}
+
+	@ModelAttribute("systemNotificationSummary")
+	public NotificationSummary systemNotificationSummary(HttpServletRequest request, HttpServletResponse response) {
+		return notificationProvider.getSummary(userTokenProvider.getToken(request, response));
 	}
 }

@@ -15,17 +15,45 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
-package com.logsniffer.web.nav;
+package com.logsniffer.web.nav.support;
+
+import com.logsniffer.web.nav.IPageContext;
 
 /**
- * Returns the page context behind a {@link NavNode}.
+ * Represents a simple Angular template page without JS controller logic.
  * 
  * @author mbok
  * 
  */
-public interface IPageContext {
+public class NgTemplate implements IPageContext {
+	private String template;
+
 	/**
-	 * @return the page context type name.
+	 * 
+	 * @param template
 	 */
-	String getTypeName();
+	public NgTemplate(final String template) {
+		this.template = template;
+	}
+
+	/**
+	 * @return the template
+	 */
+	public String getTemplate() {
+		return template;
+	}
+
+	/**
+	 * @param template
+	 *            the template to set
+	 */
+	public void setTemplate(final String template) {
+		this.template = template;
+	}
+
+	@Override
+	public String getTypeName() {
+		return "ngTemplate";
+	}
+
 }

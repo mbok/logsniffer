@@ -27,10 +27,17 @@
 			<a href="<c:url value="/c/reports" />">Dashboards</a>
 		</li>
 		 -->
-		<li class="${active=='settings'?'active':'' }">
-			<a href="<c:url value="/c/settings" />">Settings</a>
+		<li class="${active=='system'?'active':'' }">
+			<a href="<c:url value="/c/system" />">System</a>
 		</li>
        </ul>
+		<ul class="nav navbar-right navbar-nav">
+			<li>
+				<a href="<c:url value="/c/system?path=notifications" />" title="{{systemNotificationSummary.count}} unread notification{{systemNotificationSummary.count!=1?'s':''}}"><i class="fa fa-bell"></i>
+				<sup ng-if="systemNotificationSummary.count!=0"><span class="label"
+					ng-class="systemNotificationSummary.worstLevel=='ERROR'?'label-danger':(systemNotificationSummary.worstLevel=='WARN'?'label-warning':'label-info')">{{systemNotificationSummary.count}}</span></sup></a>					
+			</li>
+        </ul>
      </div><!--/.nav-collapse -->
    </div>
  </div>

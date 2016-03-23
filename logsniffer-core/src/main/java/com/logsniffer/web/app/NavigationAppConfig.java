@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.logsniffer.web.nav.NavNode;
 import com.logsniffer.web.nav.support.NgPage;
+import com.logsniffer.web.nav.support.NgTemplate;
 
 /**
  * Spring app config for navigation.
@@ -32,27 +33,35 @@ import com.logsniffer.web.nav.support.NgPage;
  */
 @Configuration
 public class NavigationAppConfig {
-	public static final String NAV_NODE_SETTINGS = "settingsNode";
+	public static final String NAV_NODE_SYSTEM = "systemNode";
 
 	/**
 	 * 
 	 * @return the settings root node exposed by {@link Qualifier}
-	 *         {@value NavigationAppConfig#NAV_NODE_SETTINGS}.
+	 *         {@value NavigationAppConfig#NAV_NODE_SYSTEM}.
 	 */
-	@Bean(name = NAV_NODE_SETTINGS)
-	public NavNode settingsNode() {
-		final NavNode settings = new NavNode("Settings", "settings");
+	@Bean(name = NAV_NODE_SYSTEM)
+	public NavNode systemNode() {
+		final NavNode systemNode = new NavNode("System", "system");
 
-		final NavNode general = new NavNode("General", "general");
-		settings.addSubNode(general);
-		general.setPageContext(new NgPage("ng/settings/general/app.js", "SettingsGeneralModule",
-				"SettingsGeneralController", "ng/settings/general/main.html"));
+		final NavNode general = new NavNode("General settings", "general");
+		systemNode.addSubNode(general);
+		general.setPageContext(new NgPage("ng/system/settings/general/app.js", "SystemSettingsGeneralModule",
+				"SystemSettingsGeneralController", "ng/system/settings/general/main.html"));
 
 		final NavNode elasticsearch = new NavNode("Elasticsearch", "elastic");
-		elasticsearch.setPageContext(new NgPage("ng/settings/elastic/app.js", "SettingsElasticModule",
-				"SettingsElasticController", "ng/settings/elastic/main.html"));
-		settings.addSubNode(elasticsearch);
+		elasticsearch.setPageContext(new NgPage("ng/system/settings/elastic/app.js", "SystemSettingsElasticModule",
+				"SystemSettingsElasticController", "ng/system/settings/elastic/main.html"));
+		systemNode.addSubNode(elasticsearch);
 
-		return settings;
+		final NavNode notifications = new NavNode("Notifications", "notifications");
+		notifications.setPageContext(new NgPage("ng/system/notifications/app.js", "SystemNotificationsModule",
+				"SystemNotificationsController", "ng/system/notifications/main.html"));
+		systemNode.addSubNode(notifications);
+
+		final NavNode about = new NavNode("About", "about");
+		about.setPageContext(new NgTemplate("ng/system/about.html"));
+		systemNode.addSubNode(about);
+		return systemNode;
 	}
 }

@@ -17,6 +17,7 @@
 		<script type="text/javascript" src="<c:url value="/static/angular/1.3.15/angular.min.js" />"></script>
 		<script type="text/javascript" src="<c:url value="/static/angular/1.3.15/angular-route.min.js" />"></script>
 		<script type="text/javascript" src="<c:url value="/static/angular/1.3.15/angular-animate.min.js" />"></script>
+		<script type="text/javascript" src="<c:url value="/static/angular/1.3.15/angular-sanitize.min.js" />"></script>
 		<script src="<c:url value="/static/angular/ui-bootstrap-tpls-0.12.0.min.js" />"></script>			
 		<script type="text/javascript" src="<c:url value="/static/angular/message-center-master/message-center.js?v=${logsnifferProps['logsniffer.version']}" />"></script>
 		<script
@@ -74,7 +75,10 @@
 				      }
 				    });
 			    };
-
+				$scope.systemNotificationSummary = {worstLevel:'${not empty systemNotificationSummary.worstLevel?systemNotificationSummary.worstLevel:''}', count: ${systemNotificationSummary.count}};
+				$scope.$on("systemNotificationSummaryChanged", function(event, summary) {
+					$scope.systemNotificationSummary = summary;
+				});
 			}]);
 			LogSnifferNgApp.filter('escape', function() {
 				  return window.encodeURIComponent;
@@ -92,7 +96,7 @@
 		</div>
 		<hr>
 		<footer>
-			<p>logsniffer, v${logsnifferProps['logsniffer.version']} - <a href="http://www.logsniffer.com">www.logsniffer.com</a><br>&copy; Scaleborn 2015</p>
+			<p>logsniffer, v${logsnifferProps['logsniffer.version']} - <a href="http://www.logsniffer.com">www.logsniffer.com</a><br>&copy; Scaleborn 2016</p>
 		</footer>
 	</body>
 </html>

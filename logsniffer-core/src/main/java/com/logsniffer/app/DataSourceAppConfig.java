@@ -45,7 +45,7 @@ import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
  */
 @Configuration
 public class DataSourceAppConfig {
-	private static final String DB_SETUP_VERSION = "0.5.1";
+	private static final String DB_SETUP_VERSION = "0.5.4.1";
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -93,6 +93,7 @@ public class DataSourceAppConfig {
 		flyway.setLocations("classpath:sql/migration");
 		flyway.setDataSource(pool);
 		flyway.setSqlMigrationPrefix("VOS-");
+		flyway.setIgnoreFailedFutureMigration(true);
 
 		final JdbcTemplate tpl = new JdbcTemplate(pool);
 		if (tpl.queryForObject("select count(*) from information_schema.tables where table_name = 'LOG_SOURCES'",

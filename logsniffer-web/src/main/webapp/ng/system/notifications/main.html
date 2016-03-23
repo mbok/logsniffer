@@ -1,0 +1,21 @@
+<form lsf-busy-container busy="state.busy" name="form" method="post" role="form" novalidate="novalidate">
+	<div lsf-alerts alerts="alerts"></div>
+
+	<p ng-if="notifications.totalCount == 0" class="alert alert-info">
+		No pending notifications available so far!
+	</p>
+	<div ng-if="notifications.totalCount > 0">
+		<div ng-repeat="n in notifications.items" class="alert"
+			ng-class="n.level=='ERROR'?'alert-danger':(n.level=='WARN'?'alert-warning':'alert-info')">
+			<h4><i class="glyphicon pull-right"
+				ng-class="n.level=='ERROR'?'glyphicon glyphicon-flash':(n.level=='WARN'?'glyphicon-exclamation-sign':'glyphicon-info-sign')"></i> {{n.title}}</h4>
+			<p ng-bind-html="sanitizeMessage(n)"></p>
+			<small>{{n.creationDate | date:'medium'}}</small>
+			<p>
+				<button type="button" class="btn"
+					ng-class="n.level=='ERROR'?'btn-danger':(n.level=='WARN'?'btn-warning':'btn-info')"
+					ng-click="acknowledge(n.id)"><i class="glyphicon glyphicon-check"></i> Got it</button>
+			</p>
+		</div>
+	</div>
+</form>

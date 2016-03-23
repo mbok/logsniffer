@@ -20,6 +20,7 @@ package com.logsniffer.web.ide;
 import java.io.File;
 import java.net.URL;
 
+import org.eclipse.jetty.webapp.MetaInfConfiguration;
 import org.eclipse.jetty.webapp.WebInfConfiguration;
 
 import com.logsniffer.web.util.JettyLauncher;
@@ -37,8 +38,7 @@ public class JettyIDELauncher extends JettyLauncher {
 	protected void configureWebAppContext(final WebContextWithExtraConfigurations context) throws Exception {
 		super.configureWebAppContext(context);
 		WebContextWithExtraConfigurations webAppContext = context;
-		// webAppContext.replaceConfiguration(MetaInfConfiguration.class,
-		// new MetaInfFolderConfiguration());
+		webAppContext.replaceConfiguration(MetaInfConfiguration.class, MetaInfFolderConfiguration.class);
 		// webAppContext.replaceConfiguration(FragmentConfiguration.class,
 		// FragmentFolderConfiguration.class);
 		webAppContext.replaceConfiguration(WebInfConfiguration.class, WebInfFolderExtendedConfiguration.class);

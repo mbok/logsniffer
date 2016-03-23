@@ -1,4 +1,4 @@
-package com.logsniffer.user.profile.support;
+package com.logsniffer.user.support;
 
 import java.util.UUID;
 
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.CookieGenerator;
 import org.springframework.web.util.WebUtils;
 
-import com.logsniffer.user.profile.ProfileSettingsTokenProvider;
+import com.logsniffer.user.UserTokenProvider;
 
 /**
  * Manages generated token using browser cookies.
@@ -21,7 +21,7 @@ import com.logsniffer.user.profile.ProfileSettingsTokenProvider;
  *
  */
 @Component
-public class CookieTokenProvider implements ProfileSettingsTokenProvider {
+public class CookieTokenProvider implements UserTokenProvider {
 	private final static String COOKIE_KEY = "profileKey";
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 

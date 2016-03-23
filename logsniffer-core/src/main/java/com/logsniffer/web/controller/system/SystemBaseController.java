@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
-package com.logsniffer.web.controller.settings;
+package com.logsniffer.web.controller.system;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,26 +34,26 @@ import com.logsniffer.web.app.NavigationAppConfig;
 import com.logsniffer.web.nav.NavNode;
 
 /**
- * Base controller for settings pages.
+ * Base controller for system pages.
  * 
  * @author mbok
  * 
  */
 @ViewController
-public class SettingsBaseController {
+public class SystemBaseController {
 	@Autowired
-	@Qualifier(NavigationAppConfig.NAV_NODE_SETTINGS)
-	private NavNode settingsNode;
+	@Qualifier(NavigationAppConfig.NAV_NODE_SYSTEM)
+	private NavNode systemNode;
 
-	@RequestMapping(value = "/settings", method = RequestMethod.GET)
-	public ModelAndView renderSettings(
+	@RequestMapping(value = "/system", method = RequestMethod.GET)
+	public ModelAndView renderSystem(
 			@RequestParam(value = "path", required = false) final String path) {
 		List<NavNode> breadcrumbNodes = new ArrayList<NavNode>();
-		breadcrumbNodes.add(settingsNode);
+		breadcrumbNodes.add(systemNode);
 
-		ModelAndView mv = new ModelAndView("settings/main");
-		mv.addObject("rootNode", settingsNode);
-		NavNode activeNode = getActiveNode(settingsNode, path);
+		ModelAndView mv = new ModelAndView("system/main");
+		mv.addObject("rootNode", systemNode);
+		NavNode activeNode = getActiveNode(systemNode, path);
 
 		mv.addObject("breadcrumbNodes", getBreadcrumb(activeNode));
 		mv.addObject("activeNode", activeNode);

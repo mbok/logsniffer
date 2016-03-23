@@ -1,5 +1,3 @@
-<%@page import="com.logsniffer.model.RollingLog"%>
-<%@page import="com.logsniffer.model.Log"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="tpl" tagdir="/WEB-INF/tags/templates"%>
@@ -8,20 +6,22 @@
 <%@taglib prefix="spring" uri="http://www.springframework.org/tags"%>
 
 <spring:message code="logsniffer.breadcrumb.settings" var="settingsLabel" />
-<tpl:bodySidebar title="${activeNode.title} - ${rootNode.title}" activeNavbar="settings" ngModules="'SettingsRootModule'">
+<c:set var="isNgPage" value="${activeNode.pageContext.typeName=='ngPage'}" />
+<c:set var="isNgTemplate" value="${activeNode.pageContext.typeName=='ngTemplate'}" />
+<tpl:bodySidebar title="${activeNode.title} - ${rootNode.title}" activeNavbar="system" ngModules="'SystemRootModule'">
 	<jsp:attribute name="htmlHead">
-		<c:if test="${not empty activeNode.pageContext.jsFiles}">
+		<c:if test="${isNgPage}">
 			<!-- NG page -->
 			<c:forEach var="jsFile" items="${activeNode.pageContext.jsFiles}">
 			    <script type="text/javascript" src="<c:url value="/${jsFile}" />?v=${logsnifferProps['logsniffer.version']}"></script>
 			</c:forEach>
 		</c:if>
 		<script type="text/javascript">
-			angular.module('SettingsRootModule',
-				[<c:if test="${not empty activeNode.pageContext.module}">'${activeNode.pageContext.module}'</c:if>]
+			angular.module('SystemRootModule',
+				[<c:if test="${isNgPage}">'${activeNode.pageContext.module}'</c:if>]
 			)
 			.controller(
-					"SettingsAbstractController",
+					"SystemAbstractController",
 					[
 					 '$scope',
 					 '$http',
@@ -116,7 +116,7 @@
 	<jsp:attribute name="sidebar">
 		<ul class="nav nav-sidebar">
 			<c:forEach var="node1" items="${rootNode.subNodes}">
-				<c:url value="/c/settings" var="url">
+				<c:url value="/c/system" var="url">
 					<c:if test="${node1!=rootNode}"><c:param name="path" value="${node1.path}"/></c:if>
 				</c:url>
 				<li class="${logfn:contains(breadcrumbNodes, node1) || node1 == activeNode ? 'active':''}"><a href="${url}">${node1.title}</a>
@@ -128,7 +128,7 @@
 	<jsp:body>
 		<ul class="breadcrumb">
 			<c:forEach var="node" items="${breadcrumbNodes}">
-				<c:url value="/c/settings" var="url">
+				<c:url value="/c/system" var="url">
 					<c:if test="${node!=rootNode}"><c:param name="path" value="${node.path}"/></c:if>
 				</c:url>
 				<li><a href="${url}">${node.title}</a></li>
@@ -136,10 +136,15 @@
 			<li class="active">${activeNode.title}</li>
 		</ul>
 		
-		<div ng-controller="SettingsAbstractController">
-			<c:if test="${not empty activeNode.pageContext.module}">
-				<div ng-controller="${activeNode.pageContext.controller}" ng-include="'<c:url value="/${activeNode.pageContext.template}" />?v=${logsnifferProps['logsniffer.version']}'"></div>
-			</c:if>
+		<div ng-controller="SystemAbstractController">
+			<c:choose>
+				<c:when test="${isNgPage}">
+					<div ng-controller="${activeNode.pageContext.controller}" ng-include="'<c:url value="/${activeNode.pageContext.template}" />?v=${logsnifferProps['logsniffer.version']}'"></div>
+				</c:when>
+				<c:when test="${isNgTemplate}">
+					<div ng-include="'<c:url value="/${activeNode.pageContext.template}" />?v=${logsnifferProps['logsniffer.version']}'"></div>
+				</c:when>
+			</c:choose>
 		</div>
 	</jsp:body>
 </tpl:bodySidebar>

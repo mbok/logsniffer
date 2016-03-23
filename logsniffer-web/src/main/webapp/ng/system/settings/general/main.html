@@ -24,6 +24,20 @@
 			</lsf-form-group>
 		</div>
 	</div>
+	<div class="row">
+		<div class="col-md-12">
+			<lsf-form-group class="form-group" field-name="systemUpdateCheckEnabled" field-path="systemUpdateCheckEnabled" bind-errors="bindErrors">
+				<lsf-info-label label="System updates check:">If enabled logsniffer will check anonymously on a daily basis for new versions and notify in case of upgrades.
+				</lsf-info-label>
+				<div class="checkbox">
+					<label>
+						<input type="checkbox" ng-model="settings.systemUpdateCheckEnabled" name="systemUpdateCheckEnabled" id="systemUpdateCheckEnabled">
+						Check regularly for system updates
+					</label>
+				</div>
+			</lsf-form-group>
+		</div>
+	</div>
 	
 	<div class="well well-sm">
 		<h4>Mail settings</h4>

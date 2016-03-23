@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
-package com.logsniffer.web.controller.settings;
+package com.logsniffer.web.controller.system;
 
 import java.io.IOException;
 
@@ -43,6 +43,7 @@ import com.logsniffer.app.MailAppConfig;
 import com.logsniffer.app.MailAppConfig.MailSettings;
 import com.logsniffer.settings.http.HttpProxy;
 import com.logsniffer.settings.http.HttpSettings;
+import com.logsniffer.system.version.SystemUpdatesCheckTask;
 import com.logsniffer.util.value.ConfigValue;
 import com.logsniffer.util.value.ConfigValueStore;
 import com.logsniffer.util.value.Configured;
@@ -132,6 +133,8 @@ public class GeneralSettingsResourceController {
 		@Valid
 		private HttpProxy httpProxy;
 
+		private boolean systemUpdateCheckEnabled;
+
 		/**
 		 * @return the httpProxy
 		 */
@@ -191,10 +194,24 @@ public class GeneralSettingsResourceController {
 		public void setBaseUrl(final String baseUrl) {
 			this.baseUrl = baseUrl;
 		}
+
+		/**
+		 * @return the systemUpdateCheckEnabled
+		 */
+		public boolean isSystemUpdateCheckEnabled() {
+			return systemUpdateCheckEnabled;
+		}
+
+		/**
+		 * @param systemUpdateCheckEnabled
+		 *            the systemUpdateCheckEnabled to set
+		 */
+		public void setSystemUpdateCheckEnabled(boolean systemUpdateCheckEnabled) {
+			this.systemUpdateCheckEnabled = systemUpdateCheckEnabled;
+		}
 	}
 
-	private static final Logger LOGGER = LoggerFactory
-			.getLogger(GeneralSettingsResourceController.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(GeneralSettingsResourceController.class);
 
 	@Autowired
 	private LogSnifferHome home;
@@ -214,12 +231,16 @@ public class GeneralSettingsResourceController {
 	@Configured(ConfigValueAppConfig.LOGSNIFFER_BASE_URL)
 	private ConfigValue<String> baseUrl;
 
-	@RequestMapping(value = "/settings/general", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	@Configured(value = SystemUpdatesCheckTask.PROP_LOGSNIFFER_UPDATES_CHECK_ENABLED, defaultValue = "true")
+	private ConfigValue<Boolean> updatesCheckEnabled;
+
+	@RequestMapping(value = "/system/settings/general", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
 	public GeneralSettings getGeneralSettings() {
 		GeneralSettings settings = new GeneralSettings();
 		settings.setHomeDir(home.getHomeDir().getAbsolutePath());
 		settings.setBaseUrl(baseUrl.get());
+		settings.setSystemUpdateCheckEnabled(updatesCheckEnabled.get());
 
 		MailSettingsBean mailSettingsBean = new MailSettingsBean();
 		mailSettingsBean.setHost(mailSettings.getMailHost().get());
@@ -232,45 +253,32 @@ public class GeneralSettingsResourceController {
 		return settings;
 	}
 
-	@RequestMapping(value = "/settings/general", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(value = "/system/settings/general", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(HttpStatus.OK)
-	public void saveGeneralSettings(
-			@RequestBody @Valid final GeneralSettings settings)
-			throws IOException {
-		configStore.store(ConfigValueAppConfig.LOGSNIFFER_BASE_URL,
-				settings.getBaseUrl());
+	public void saveGeneralSettings(@RequestBody @Valid final GeneralSettings settings) throws IOException {
+		configStore.store(ConfigValueAppConfig.LOGSNIFFER_BASE_URL, settings.getBaseUrl());
+		configStore.store(SystemUpdatesCheckTask.PROP_LOGSNIFFER_UPDATES_CHECK_ENABLED,
+				Boolean.toString(settings.isSystemUpdateCheckEnabled()));
 
 		// Propagate changes to mail sender
-		configStore.store(MailSettings.PROP_LOGSNIFFER_MAIL_HOST, settings
-				.getMailSettings().getHost());
-		configStore.store(MailSettings.PROP_LOGSNIFFER_MAIL_PORT, settings
-				.getMailSettings().getPort() + "");
-		configStore.store(MailSettings.PROP_LOGSNIFFER_MAIL_USER, settings
-				.getMailSettings().getUser());
-		configStore.store(MailSettings.PROP_LOGSNIFFER_MAIL_PASSWORD, settings
-				.getMailSettings().getPassword());
+		configStore.store(MailSettings.PROP_LOGSNIFFER_MAIL_HOST, settings.getMailSettings().getHost());
+		configStore.store(MailSettings.PROP_LOGSNIFFER_MAIL_PORT, settings.getMailSettings().getPort() + "");
+		configStore.store(MailSettings.PROP_LOGSNIFFER_MAIL_USER, settings.getMailSettings().getUser());
+		configStore.store(MailSettings.PROP_LOGSNIFFER_MAIL_PASSWORD, settings.getMailSettings().getPassword());
 		LOGGER.info("Propagate mail settings to mail sender");
 		mailAppConfig.refreshMailSenderConfiguration();
 
 		// Propagate http proxy settings
-		configStore.store(HttpSettings.PROP_HTTP_PROXY_HOST, settings
-				.getHttpProxy() != null ? settings.getHttpProxy().getHost()
-				: null);
+		configStore.store(HttpSettings.PROP_HTTP_PROXY_HOST,
+				settings.getHttpProxy() != null ? settings.getHttpProxy().getHost() : null);
 		configStore.store(HttpSettings.PROP_HTTP_PROXY_PORT,
-				settings.getHttpProxy() != null ? settings.getHttpProxy()
-						.getPort() + "" : null);
-		configStore.store(
-				HttpSettings.PROP_HTTP_PROXY_USER,
-				settings.getHttpProxy() != null
-						&& StringUtils.isNotBlank(settings.getHttpProxy()
-								.getUser()) ? settings.getHttpProxy().getUser()
-						: null);
-		configStore.store(
-				HttpSettings.PROP_HTTP_PROXY_PASSWORD,
-				settings.getHttpProxy() != null
-						&& StringUtils.isNotBlank(settings.getHttpProxy()
-								.getPassword()) ? settings.getHttpProxy()
-						.getPassword() : null);
+				settings.getHttpProxy() != null ? settings.getHttpProxy().getPort() + "" : null);
+		configStore.store(HttpSettings.PROP_HTTP_PROXY_USER,
+				settings.getHttpProxy() != null && StringUtils.isNotBlank(settings.getHttpProxy().getUser())
+						? settings.getHttpProxy().getUser() : null);
+		configStore.store(HttpSettings.PROP_HTTP_PROXY_PASSWORD,
+				settings.getHttpProxy() != null && StringUtils.isNotBlank(settings.getHttpProxy().getPassword())
+						? settings.getHttpProxy().getPassword() : null);
 		LOGGER.info("Propagate HTTP proxy settings");
 		httpSettings.refreshProxySettings();
 	}

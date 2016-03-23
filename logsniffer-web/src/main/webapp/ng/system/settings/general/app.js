@@ -16,9 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
 angular
-.module('SettingsGeneralModule',[])
+.module('SystemSettingsGeneralModule',[])
 .controller(
-	"SettingsGeneralController",
+	"SystemSettingsGeneralController",
 	[
 	 '$scope',
 	 '$http',
@@ -35,7 +35,7 @@ angular
 	     $scope.loadSettings = function() {
 		 $scope.state.busy = true;
 		 $http({
-		     url : $scope.contextPath + "/c/settings/general",
+		     url : $scope.contextPath + "/c/system/settings/general",
 		     method : "GET"
 		 })
 		.success(
@@ -67,7 +67,7 @@ angular
 		}
 		$log.info("Saving settings", $scope.settings);
 		 $http({
-		     url : $scope.contextPath + "/c/settings/general",
+		     url : $scope.contextPath + "/c/system/settings/general",
 		     method : "POST",
 		     data: $scope.settings
 		 })

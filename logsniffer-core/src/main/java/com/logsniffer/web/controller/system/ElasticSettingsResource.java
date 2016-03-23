@@ -1,4 +1,4 @@
-package com.logsniffer.web.controller.settings;
+package com.logsniffer.web.controller.system;
 
 import java.io.IOException;
 
@@ -17,7 +17,7 @@ import com.logsniffer.app.ElasticSearchAppConfig.ClientCallback;
 import com.logsniffer.app.ElasticSearchAppConfig.ElasticClientTemplate;
 import com.logsniffer.app.ElasticSearchAppConfig.EsSettings;
 import com.logsniffer.app.ElasticSearchAppConfig.EsSettingsHolder;
-import com.logsniffer.web.controller.settings.ElasticSettingsResource.EsStatusAndSettings.EsStatus;
+import com.logsniffer.web.controller.system.ElasticSettingsResource.EsStatusAndSettings.EsStatus;
 
 /**
  * Settings REST source for elasticsearch.
@@ -33,13 +33,13 @@ public class ElasticSettingsResource {
 	@Autowired
 	private ElasticClientTemplate esClientTpl;
 
-	@RequestMapping(value = "/settings/elastic", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(value = "/system/settings/elastic", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
 	public EsStatusAndSettings EsStatusAndSettings() {
 		return getStatus(settingsHolder.getSettings());
 	}
 
-	@RequestMapping(value = "/settings/elastic", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(value = "/system/settings/elastic", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
 	public EsStatusAndSettings saveElasticSettings(@RequestBody @Valid final EsSettings settings) throws IOException {
 		settingsHolder.storeSettings(settings);
