@@ -29,7 +29,6 @@ import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.model.LogEntry;
 import com.logsniffer.model.SeverityLevel;
 import com.logsniffer.reader.FormatException;
-import com.logsniffer.validators.NotDefaultPrimitiveValue;
 
 /**
  * Scanns for log entries matching the level of interest.
@@ -69,7 +68,6 @@ public class LevelScanner extends SingleEntryIncrementalMatcher {
 
 	@JsonProperty
 	@JsonInclude(Include.NON_DEFAULT)
-	@NotDefaultPrimitiveValue
 	private int severityNumber;
 
 	@NotNull
