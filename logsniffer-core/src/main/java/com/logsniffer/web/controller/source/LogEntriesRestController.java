@@ -341,7 +341,11 @@ public class LogEntriesRestController {
 			@Override
 			public void consume(final Event eventData) throws IOException {
 				searchResult.event = eventData;
-				searchResult.lastPointer = eventData.getEntries().get(0).getStartOffset();
+				if (eventData.getEntries() != null && !eventData.getEntries().isEmpty()) {
+					searchResult.lastPointer = eventData.getEntries().get(0).getStartOffset();
+				} else if (incData.getNextOffset() != null) {
+					searchResult.lastPointer = incData.getNextOffset();
+				}
 			}
 		});
 		searchResult.scannedTime = System.currentTimeMillis() - start;
