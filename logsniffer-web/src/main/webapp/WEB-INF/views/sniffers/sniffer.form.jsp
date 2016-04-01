@@ -201,7 +201,7 @@
 </script>
 	
 <fieldset id="sniffer-editor" ng-controller="SnifferBeanWizardControllerWrapper" ng-disabled="${scheduled}" ng-form="rootForm">
-	<lsf-model-editor model="bean" name="Overall sniffer configuration" exclude="['aspects']"></lsf-model-editor>
+	<lsf-model-editor model="bean" name="Overall sniffer configuration" exclude="['aspects','fieldTypes','supportedSeverities']"></lsf-model-editor>
 	<tabset>
     	<tab heading="Main">
 	   		<tab-heading>

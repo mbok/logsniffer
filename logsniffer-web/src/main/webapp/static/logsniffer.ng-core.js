@@ -1448,6 +1448,12 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		$log.debug("Applying model from/to: ", model, $scope.modelStr);
 		var obj = JSON.parse($scope.modelStr);
 		if (obj) {
+			// Delete first from origin
+			for(var i in model) {
+				if (!exMap[i]) {
+					delete model[i];
+				}
+			}
 			for(var i in obj) {
 				if (!exMap[i]) {
 					model[i] = obj[i];
