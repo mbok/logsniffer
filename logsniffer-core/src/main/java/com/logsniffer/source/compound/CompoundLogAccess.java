@@ -1,4 +1,4 @@
-package com.logsniffer.source.composition;
+package com.logsniffer.source.compound;
 
 import java.io.IOException;
 import java.util.Date;
@@ -17,8 +17,8 @@ import com.logsniffer.model.Navigation.DateOffsetNavigation;
 import com.logsniffer.model.support.ByteLogAccess;
 import com.logsniffer.model.support.TimestampNavigation;
 import com.logsniffer.reader.LogEntryReader;
-import com.logsniffer.source.composition.ComposedLogPointer.LogInstanceResolver;
-import com.logsniffer.source.composition.ComposedLogPointer.PointerPart;
+import com.logsniffer.source.compound.CompoundLogPointer.LogInstanceResolver;
+import com.logsniffer.source.compound.CompoundLogPointer.PointerPart;
 
 /**
  * Access to composed logs.
@@ -26,9 +26,9 @@ import com.logsniffer.source.composition.ComposedLogPointer.PointerPart;
  * @author mbok
  *
  */
-public class ComposedLogAccess
+public class CompoundLogAccess
 		implements LogRawAccess<LogInputStream>, LogInputStream, DateOffsetNavigation, LogInstanceResolver {
-	private static final Logger logger = LoggerFactory.getLogger(ComposedLogAccess.class);
+	private static final Logger logger = LoggerFactory.getLogger(CompoundLogAccess.class);
 	private final PointerPartBuilder POINTER_BUILDER_START = new PointerPartBuilder() {
 		@Override
 		public LogPointer build(final LogInstance logInstance) throws IOException {
@@ -49,7 +49,7 @@ public class ComposedLogAccess
 		LogPointer build(LogInstance logInstance) throws IOException;
 	}
 
-	public ComposedLogAccess(final Log thisLog, final List<LogInstance> composedLogs) {
+	public CompoundLogAccess(final Log thisLog, final List<LogInstance> composedLogs) {
 		super();
 		this.thisLog = thisLog;
 		this.composedLogs = composedLogs;
@@ -63,11 +63,11 @@ public class ComposedLogAccess
 	private long getPositionFromStart(final LogPointer pointer) throws IOException {
 		if (pointer == null) {
 			return 0;
-		} else if (!(pointer instanceof ComposedLogPointer)) {
+		} else if (!(pointer instanceof CompoundLogPointer)) {
 			throw new IOException("Pointer has a wrong type: " + pointer);
 		}
 		long totalPos = 0;
-		final ComposedLogPointer cp = (ComposedLogPointer) pointer;
+		final CompoundLogPointer cp = (CompoundLogPointer) pointer;
 		for (final Pair<LogInstance, LogPointer> p : mapPointer(cp)) {
 			if (p.getRight() != null) {
 				totalPos += p.getLeft().getLogAccess().getDifference(null, p.getRight());
@@ -77,7 +77,7 @@ public class ComposedLogAccess
 	}
 
 	@SuppressWarnings("unchecked")
-	protected Pair<LogInstance, LogPointer>[] mapPointer(final ComposedLogPointer cp) {
+	protected Pair<LogInstance, LogPointer>[] mapPointer(final CompoundLogPointer cp) {
 		final Pair<LogInstance, LogPointer>[] mapped = new Pair[composedLogs.size()];
 		int i = 0;
 		for (final LogInstance sl : composedLogs) {
@@ -100,7 +100,7 @@ public class ComposedLogAccess
 
 	@Override
 	public LogPointer getFromJSON(final String data) throws IOException {
-		return ComposedLogPointer.fromJson(data, this);
+		return CompoundLogPointer.fromJson(data, this);
 	}
 
 	@Override
@@ -120,12 +120,12 @@ public class ComposedLogAccess
 
 	@Override
 	public LogPointer end() throws IOException {
-		return new ComposedLogPointer(buildPointerParts(POINTER_BUILDER_END), new Date(Long.MAX_VALUE));
+		return new CompoundLogPointer(buildPointerParts(POINTER_BUILDER_END), new Date(Long.MAX_VALUE));
 	}
 
 	@Override
 	public LogPointer start() throws IOException {
-		return new ComposedLogPointer(buildPointerParts(POINTER_BUILDER_START), new Date(0));
+		return new CompoundLogPointer(buildPointerParts(POINTER_BUILDER_START), new Date(0));
 	}
 
 	@Override
@@ -137,14 +137,14 @@ public class ComposedLogAccess
 					return null;
 				}
 			};
-		} else if (!(toRefresh instanceof ComposedLogPointer)) {
+		} else if (!(toRefresh instanceof CompoundLogPointer)) {
 			throw new IOException("Pointer has a wrong type: " + toRefresh);
 		}
 		return new NavigationFuture() {
 			@Override
 			public LogPointer get() throws IOException {
 				final long start = System.currentTimeMillis();
-				final ComposedLogPointer cp = (ComposedLogPointer) toRefresh;
+				final CompoundLogPointer cp = (CompoundLogPointer) toRefresh;
 				final PointerPart[] refreshedParts = new PointerPart[composedLogs.size()];
 				final int i = 0;
 				for (final Pair<LogInstance, LogPointer> p : mapPointer(cp)) {
@@ -158,7 +158,7 @@ public class ComposedLogAccess
 					refreshedParts[i] = new PointerPart(logInstance.getLogSourceId(), logInstance.getLog().getPath(),
 							refreshedPointer);
 				}
-				final ComposedLogPointer cpr = new ComposedLogPointer(refreshedParts, cp.getCurrentTimestamp());
+				final CompoundLogPointer cpr = new CompoundLogPointer(refreshedParts, cp.getCurrentTimestamp());
 				logger.debug("Refreshed pointer in {}ms {} => {}", System.currentTimeMillis() - start, cp, cpr);
 				return cpr;
 			}
@@ -194,7 +194,7 @@ public class ComposedLogAccess
 	@Override
 	public NavigationFuture absolute(final Date offset) throws IOException {
 		logger.debug("Navigating to date offset: {}", offset);
-		return refresh(new ComposedLogPointer(new PointerPart[0], offset));
+		return refresh(new CompoundLogPointer(new PointerPart[0], offset));
 	}
 
 	@Override

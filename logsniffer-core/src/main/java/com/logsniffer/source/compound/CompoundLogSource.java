@@ -1,4 +1,4 @@
-package com.logsniffer.source.composition;
+package com.logsniffer.source.compound;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,7 +29,7 @@ import com.logsniffer.model.LogSourceProvider;
 import com.logsniffer.model.support.BaseLogsSource;
 import com.logsniffer.model.support.DefaultLog;
 import com.logsniffer.reader.filter.FilteredLogEntryReader;
-import com.logsniffer.source.composition.ComposedLogSource.ComposedLogSourceProducer;
+import com.logsniffer.source.compound.CompoundLogSource.ComposedLogSourceProducer;
 import com.logsniffer.validators.NotDefaultPrimitiveValue;
 
 /**
@@ -39,8 +39,8 @@ import com.logsniffer.validators.NotDefaultPrimitiveValue;
  *
  */
 @PostConstructed(constructor = ComposedLogSourceProducer.class)
-public class ComposedLogSource extends BaseLogsSource<ComposedLogAccess> {
-	private static final Logger LOGGER = LoggerFactory.getLogger(ComposedLogSource.class);
+public class CompoundLogSource extends BaseLogsSource<CompoundLogAccess> {
+	private static final Logger LOGGER = LoggerFactory.getLogger(CompoundLogSource.class);
 
 	/**
 	 * Passes the {@link LogSourceProvider} dependency to the source.
@@ -49,12 +49,12 @@ public class ComposedLogSource extends BaseLogsSource<ComposedLogAccess> {
 	 *
 	 */
 	@Component
-	public static class ComposedLogSourceProducer implements BeanPostConstructor<ComposedLogSource> {
+	public static class ComposedLogSourceProducer implements BeanPostConstructor<CompoundLogSource> {
 		@Autowired
 		private LogSourceProvider logSourceProvider;
 
 		@Override
-		public void postConstruct(final ComposedLogSource bean, final BeanConfigFactoryManager configManager)
+		public void postConstruct(final CompoundLogSource bean, final BeanConfigFactoryManager configManager)
 				throws ConfigException {
 			bean.logSourceProvider = logSourceProvider;
 		}
@@ -114,7 +114,7 @@ public class ComposedLogSource extends BaseLogsSource<ComposedLogAccess> {
 
 	private List<LogInstance> instances;
 
-	public ComposedLogSource() {
+	public CompoundLogSource() {
 		super();
 	}
 
@@ -172,8 +172,8 @@ public class ComposedLogSource extends BaseLogsSource<ComposedLogAccess> {
 	}
 
 	@Override
-	public ComposedLogAccess getLogAccess(final Log log) throws IOException {
-		return new ComposedLogAccess(log, getPartInstances());
+	public CompoundLogAccess getLogAccess(final Log log) throws IOException {
+		return new CompoundLogAccess(log, getPartInstances());
 	}
 
 	/**
@@ -192,10 +192,10 @@ public class ComposedLogSource extends BaseLogsSource<ComposedLogAccess> {
 	}
 
 	@Override
-	public FilteredLogEntryReader<ComposedLogAccess> getReader() {
-		final FilteredLogEntryReader<ComposedLogAccess> reader = super.getReader();
+	public FilteredLogEntryReader<CompoundLogAccess> getReader() {
+		final FilteredLogEntryReader<CompoundLogAccess> reader = super.getReader();
 		if (reader.getTargetReader() == null) {
-			reader.setTargetReader(new ComposedLogReader(getPartInstances()));
+			reader.setTargetReader(new CompoundLogReader(getPartInstances()));
 		}
 		return reader;
 	}

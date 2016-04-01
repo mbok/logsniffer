@@ -1,4 +1,4 @@
-package com.logsniffer.source.composition;
+package com.logsniffer.source.compound;
 
 import java.io.IOException;
 

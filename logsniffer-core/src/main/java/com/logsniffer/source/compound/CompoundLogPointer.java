@@ -1,4 +1,4 @@
-package com.logsniffer.source.composition;
+package com.logsniffer.source.compound;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -13,8 +13,8 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 
-public class ComposedLogPointer implements LogPointer {
-	private static final Logger LOGGER = LoggerFactory.getLogger(ComposedLogPointer.class);
+public class CompoundLogPointer implements LogPointer {
+	private static final Logger LOGGER = LoggerFactory.getLogger(CompoundLogPointer.class);
 
 	public static interface LogInstanceResolver {
 		LogInstance resolveForPathHash(long sourceId, int pathHash);
@@ -132,7 +132,7 @@ public class ComposedLogPointer implements LogPointer {
 	private final PointerPart[] parts;
 	private final Date currentTimestamp;
 
-	public ComposedLogPointer(final PointerPart[] parts, final Date currentTimestamp) {
+	public CompoundLogPointer(final PointerPart[] parts, final Date currentTimestamp) {
 		super();
 		this.parts = parts;
 		this.currentTimestamp = currentTimestamp;
@@ -190,7 +190,7 @@ public class ComposedLogPointer implements LogPointer {
 		return true;
 	}
 
-	static ComposedLogPointer fromJson(final String jsonStr, final LogInstanceResolver lir) throws IOException {
+	static CompoundLogPointer fromJson(final String jsonStr, final LogInstanceResolver lir) throws IOException {
 		try {
 			final JSONObject json = JSONObject.fromObject(jsonStr);
 			Date tmst = null;
@@ -209,12 +209,12 @@ public class ComposedLogPointer implements LogPointer {
 			} else {
 				parts = new PointerPart[0];
 			}
-			final ComposedLogPointer cp = new ComposedLogPointer(parts, tmst);
+			final CompoundLogPointer cp = new CompoundLogPointer(parts, tmst);
 			LOGGER.debug("Transfered JSON '{}' into pointer: {}", jsonStr, cp);
 			return cp;
 		} catch (final JSONException e) {
 			LOGGER.warn("Failed to read pointer from invalid JSON: " + jsonStr, e);
-			return new ComposedLogPointer(new PointerPart[0], new Date(0));
+			return new CompoundLogPointer(new PointerPart[0], new Date(0));
 		}
 	}
 
@@ -250,7 +250,7 @@ public class ComposedLogPointer implements LogPointer {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		final ComposedLogPointer other = (ComposedLogPointer) obj;
+		final CompoundLogPointer other = (CompoundLogPointer) obj;
 		if (!Arrays.equals(parts, other.parts))
 			return false;
 		return true;

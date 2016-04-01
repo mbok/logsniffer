@@ -1,0 +1,10 @@
+<div id="source-wildcard-rolling-file-wizard">
+	<lsf-info-label label="Compounds log data from multiple logs into a continuous stream ordered by the timestamp" class="text-muted">
+		This source concats a live actively written log file with older rolled over files into a single continuous log.
+		The live log has a static name and it's the single file which can change size. After it's rolled, the file got renamed to
+		a fix timestamp based name and no longer changed to enable exact navigation in the concated logs. 
+		<strong>Important:</strong> This source supports rolling only based on a timestamp name pattern, because this guarantees 
+		static names of rolled over files, which is the key for navigating in the concated files.
+	</lsf-info-label>
+
+</div>

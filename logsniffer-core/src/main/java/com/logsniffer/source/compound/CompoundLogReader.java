@@ -1,4 +1,4 @@
-package com.logsniffer.source.composition;
+package com.logsniffer.source.compound;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.SeverityLevel;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.LogEntryReader;
-import com.logsniffer.source.composition.ComposedLogPointer.PointerPart;
+import com.logsniffer.source.compound.CompoundLogPointer.PointerPart;
 
 /**
  * Composed reader accessing multiple logs in parallel and delegating to a
@@ -34,13 +34,13 @@ import com.logsniffer.source.composition.ComposedLogPointer.PointerPart;
  * @author mbok
  *
  */
-public class ComposedLogReader implements LogEntryReader<ComposedLogAccess> {
+public class CompoundLogReader implements LogEntryReader<CompoundLogAccess> {
 	protected static final int BUFFER_SIZE_PER_THREAD = 20;
-	private static final Logger logger = LoggerFactory.getLogger(ComposedLogReader.class);
+	private static final Logger logger = LoggerFactory.getLogger(CompoundLogReader.class);
 
 	private final List<LogInstance> composedLogs;
 
-	public ComposedLogReader(final List<LogInstance> composedLogs) {
+	public CompoundLogReader(final List<LogInstance> composedLogs) {
 		super();
 		this.composedLogs = composedLogs;
 	}
@@ -175,11 +175,11 @@ public class ComposedLogReader implements LogEntryReader<ComposedLogAccess> {
 								final LogEntry nextEntry = nextEntryInstance.entry;
 								lastOffsets[instanceIndex] = new PointerPart(nextEntryInstance.logSourceId,
 										nextEntryInstance.logPath, nextEntry.getEndOffset());
-								final ComposedLogPointer startPointer = new ComposedLogPointer(lastOffsets,
+								final CompoundLogPointer startPointer = new CompoundLogPointer(lastOffsets,
 										nextEntry.getTimeStamp());
 								lastOffsets[instanceIndex] = new PointerPart(nextEntryInstance.logSourceId,
 										nextEntryInstance.logPath, nextEntry.getEndOffset());
-								final ComposedLogPointer endPointer = new ComposedLogPointer(lastOffsets,
+								final CompoundLogPointer endPointer = new CompoundLogPointer(lastOffsets,
 										nextEntry.getTimeStamp());
 								nextEntry.setStartOffset(startPointer);
 								nextEntry.setEndOffset(endPointer);
@@ -344,14 +344,14 @@ public class ComposedLogReader implements LogEntryReader<ComposedLogAccess> {
 	}
 
 	@Override
-	public void readEntries(final Log log, final ComposedLogAccess logAccess, final LogPointer startOffset,
+	public void readEntries(final Log log, final CompoundLogAccess logAccess, final LogPointer startOffset,
 			final com.logsniffer.reader.LogEntryReader.LogEntryConsumer consumer) throws IOException, FormatException {
 		readEntries(log, logAccess, startOffset, consumer, false);
 	}
 
-	private void readEntries(final Log log, final ComposedLogAccess logAccess, final LogPointer startOffset,
+	private void readEntries(final Log log, final CompoundLogAccess logAccess, final LogPointer startOffset,
 			final LogEntryConsumer consumer, final boolean reverse) throws IOException, FormatException {
-		final ComposedLogPointer clp = (ComposedLogPointer) logAccess.refresh(startOffset).get();
+		final CompoundLogPointer clp = (CompoundLogPointer) logAccess.refresh(startOffset).get();
 		final PointerPart[] parts = new PointerPart[composedLogs.size()];
 		for (int i = 0; i < composedLogs.size(); i++) {
 			parts[i] = clp != null ? clp.getPart(composedLogs.get(i).getLog().getPath()) : null;
@@ -366,7 +366,7 @@ public class ComposedLogReader implements LogEntryReader<ComposedLogAccess> {
 	}
 
 	@Override
-	public void readEntriesReverse(final Log log, final ComposedLogAccess logAccess, final LogPointer startOffset,
+	public void readEntriesReverse(final Log log, final CompoundLogAccess logAccess, final LogPointer startOffset,
 			final com.logsniffer.reader.LogEntryReader.LogEntryConsumer consumer) throws IOException {
 		readEntries(log, logAccess, startOffset, consumer, true);
 	}

@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Configuration;
 import com.logsniffer.model.file.RollingLogsSource;
 import com.logsniffer.model.file.RollingLogsSourceDynamicLiveName;
 import com.logsniffer.model.file.WildcardLogsSource;
+import com.logsniffer.source.compound.CompoundLogSource;
 import com.logsniffer.web.wizard2.ConfigBeanWizard;
 import com.logsniffer.web.wizard2.SimpleBeanWizard;
 
@@ -36,26 +37,28 @@ import com.logsniffer.web.wizard2.SimpleBeanWizard;
 public class SourceWizardsAppConfig {
 	@Bean
 	public ConfigBeanWizard<WildcardLogsSource> wildcardFileSourceWizard() {
-		return new SimpleBeanWizard<WildcardLogsSource>(
-				"logsniffer.wizard.source.file.wildcard",
-				"wizards/source/file.wildcard", WildcardLogsSource.class,
-				new WildcardLogsSource());
+		return new SimpleBeanWizard<WildcardLogsSource>("logsniffer.wizard.source.file.wildcard",
+				"wizards/source/file.wildcard", WildcardLogsSource.class, new WildcardLogsSource());
 	}
 
 	@Bean
 	public ConfigBeanWizard<RollingLogsSource> rollingFileStaticLiveSourceWizard() {
-		return new SimpleBeanWizard<RollingLogsSource>(
-				"logsniffer.wizard.source.file.timestampRollingStaticLiveName",
-				"/ng/wizards/source/timestampRollingFileStaticLiveName.html",
-				RollingLogsSource.class, new RollingLogsSource());
+		return new SimpleBeanWizard<RollingLogsSource>("logsniffer.wizard.source.file.timestampRollingStaticLiveName",
+				"/ng/wizards/source/timestampRollingFileStaticLiveName.html", RollingLogsSource.class,
+				new RollingLogsSource());
 	}
 
 	@Bean
 	public ConfigBeanWizard<RollingLogsSourceDynamicLiveName> rollingFileDynamicLiveSourceWizard() {
 		return new SimpleBeanWizard<RollingLogsSourceDynamicLiveName>(
 				"logsniffer.wizard.source.file.timestampRollingDynamicLiveName",
-				"/ng/wizards/source/timestampRollingFileDynamicLiveName.html",
-				RollingLogsSourceDynamicLiveName.class,
+				"/ng/wizards/source/timestampRollingFileDynamicLiveName.html", RollingLogsSourceDynamicLiveName.class,
 				new RollingLogsSourceDynamicLiveName());
+	}
+
+	@Bean
+	public ConfigBeanWizard<CompoundLogSource> compoundLogSourceWizard() {
+		return new SimpleBeanWizard<CompoundLogSource>("logsniffer.wizard.source.compoundLogSource",
+				"/ng/wizards/source/compoundLog.html", CompoundLogSource.class, new CompoundLogSource());
 	}
 }

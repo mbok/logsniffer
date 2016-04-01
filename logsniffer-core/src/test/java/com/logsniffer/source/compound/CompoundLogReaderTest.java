@@ -1,4 +1,4 @@
-package com.logsniffer.source.composition;
+package com.logsniffer.source.compound;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,6 +33,9 @@ import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.LogEntryReader;
 import com.logsniffer.reader.LogEntryReader.LogEntryConsumer;
 import com.logsniffer.reader.support.BufferedConsumer;
+import com.logsniffer.source.compound.CompoundLogAccess;
+import com.logsniffer.source.compound.CompoundLogReader;
+import com.logsniffer.source.compound.LogInstance;
 
 /**
  * Test for {@link CompositionReader}.
@@ -42,8 +45,8 @@ import com.logsniffer.reader.support.BufferedConsumer;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { CoreAppConfig.class })
-public class ComposedLogReaderTest {
-	private static Logger logger = LoggerFactory.getLogger(ComposedLogReaderTest.class);
+public class CompoundLogReaderTest {
+	private static Logger logger = LoggerFactory.getLogger(CompoundLogReaderTest.class);
 
 	private static final class DummySubReader implements LogEntryReader<LogRawAccess<LogInputStream>> {
 		private final int maxCount;
@@ -110,13 +113,13 @@ public class ComposedLogReaderTest {
 	@Test
 	public void testCorrectComposition() throws FormatException, IOException {
 		final List<LogInstance> subLogs = new ArrayList<>();
-		final ComposedLogReader r = new ComposedLogReader(subLogs);
+		final CompoundLogReader r = new CompoundLogReader(subLogs);
 		final Log log1 = new ByteArrayLog("log1", new byte[0]);
 		final Log log2 = new ByteArrayLog("log2", new byte[0]);
 		subLogs.add(new LogInstance(1, log1, Mockito.mock(LogRawAccess.class), new DummySubReader(200, 2, 0)));
 		subLogs.add(new LogInstance(2, log2, Mockito.mock(LogRawAccess.class), new DummySubReader(250, 2, 1)));
 		final BufferedConsumer c = new BufferedConsumer(15000);
-		r.readEntries(Mockito.mock(Log.class), new ComposedLogAccess(Mockito.mock(Log.class), subLogs), null, c);
+		r.readEntries(Mockito.mock(Log.class), new CompoundLogAccess(Mockito.mock(Log.class), subLogs), null, c);
 
 		Assert.assertEquals(450, c.getBuffer().size());
 		for (int i = 0; i < 400; i++) {
@@ -141,13 +144,13 @@ public class ComposedLogReaderTest {
 	@Test
 	public void testCorrectCompositionReverse() throws FormatException, IOException {
 		final List<LogInstance> subLogs = new ArrayList<>();
-		final ComposedLogReader r = new ComposedLogReader(subLogs);
+		final CompoundLogReader r = new CompoundLogReader(subLogs);
 		final Log log1 = new ByteArrayLog("log1", new byte[0]);
 		final Log log2 = new ByteArrayLog("log2", new byte[0]);
 		subLogs.add(new LogInstance(1, log1, Mockito.mock(LogRawAccess.class), new DummySubReader(200, 2, 0)));
 		subLogs.add(new LogInstance(2, log2, Mockito.mock(LogRawAccess.class), new DummySubReader(250, 2, 1)));
 		final BufferedConsumer c = new BufferedConsumer(15000);
-		r.readEntriesReverse(Mockito.mock(Log.class), new ComposedLogAccess(Mockito.mock(Log.class), subLogs), null, c);
+		r.readEntriesReverse(Mockito.mock(Log.class), new CompoundLogAccess(Mockito.mock(Log.class), subLogs), null, c);
 
 		Assert.assertEquals(450, c.getBuffer().size());
 		for (int i = 0; i < 50; i++) {
@@ -172,16 +175,16 @@ public class ComposedLogReaderTest {
 	@Test
 	public void testErrorInOneSource() throws FormatException, IOException {
 		final List<LogInstance> subLogs = new ArrayList<>();
-		final ComposedLogReader r = new ComposedLogReader(subLogs);
+		final CompoundLogReader r = new CompoundLogReader(subLogs);
 		final Log log1 = new ByteArrayLog("log1", new byte[0]);
 		final Log log2 = new ByteArrayLog("log2", new byte[0]);
 		subLogs.add(new LogInstance(1, log1, Mockito.mock(LogRawAccess.class), new DummySubReader(200, 2, 0, 100)));
 		subLogs.add(new LogInstance(2, log2, Mockito.mock(LogRawAccess.class), new DummySubReader(250, 2, 1)));
 		final BufferedConsumer c = new BufferedConsumer(15000);
 		try {
-			r.readEntries(Mockito.mock(Log.class), new ComposedLogAccess(Mockito.mock(Log.class), subLogs), null, c);
+			r.readEntries(Mockito.mock(Log.class), new CompoundLogAccess(Mockito.mock(Log.class), subLogs), null, c);
 		} catch (final IOException e) {
-			Assert.assertTrue(200 - ComposedLogReader.BUFFER_SIZE_PER_THREAD <= c.getBuffer().size());
+			Assert.assertTrue(200 - CompoundLogReader.BUFFER_SIZE_PER_THREAD <= c.getBuffer().size());
 			return;
 		}
 		Assert.fail("Exception expected");
@@ -198,13 +201,13 @@ public class ComposedLogReaderTest {
 	public void testLongComposition() throws FormatException, IOException {
 		final long start = System.currentTimeMillis();
 		final List<LogInstance> subLogs = new ArrayList<>();
-		final ComposedLogReader r = new ComposedLogReader(subLogs);
+		final CompoundLogReader r = new CompoundLogReader(subLogs);
 		final Log log1 = new ByteArrayLog("log1", new byte[0]);
 		final Log log2 = new ByteArrayLog("log2", new byte[0]);
 		subLogs.add(new LogInstance(1, log1, Mockito.mock(LogRawAccess.class), new DummySubReader(20000000, 2, 0)));
 		subLogs.add(new LogInstance(2, log2, Mockito.mock(LogRawAccess.class), new DummySubReader(25000000, 2, 1)));
 		final AtomicInteger count = new AtomicInteger();
-		r.readEntries(Mockito.mock(Log.class), new ComposedLogAccess(Mockito.mock(Log.class), subLogs), null,
+		r.readEntries(Mockito.mock(Log.class), new CompoundLogAccess(Mockito.mock(Log.class), subLogs), null,
 				new LogEntryConsumer() {
 					@Override
 					public boolean consume(final Log log, final LogPointerFactory pointerFactory, final LogEntry entry)
