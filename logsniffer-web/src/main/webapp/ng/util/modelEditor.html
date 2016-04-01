@@ -1,10 +1,19 @@
 <div class="modal-header">
-	<h4 class="modal-title">JSON model editor</h4>
+	<h4 class="modal-title">JSON model editor for: {{modelName}}</h4>
 </div>
-<div class="modal-body">
-	<textarea ng-model="modelStr" rows="20" class="form-control"></textarea>
+<div class="modal-body" ng-form="modelForm">
+	<div class="form-group required" ng-class="{'has-error': modelForm.modelJson.$invalid}">
+		<lsf-info-label label="Model configuration:" for="modelJson">
+			logsniffer's model objects are persisted internally in JSON format. These objects can be configured in general via
+			powerful UI wizards. Additionaly you can use this editor to import and export model configuration directly via the JSON format.
+		</lsf-info-label>
+		<div class="controls">
+			<textarea ng-model="modelStr" name="modelJson" id="modelJson" rows="20" class="form-control" lsf-json-constraint></textarea>
+		</div>
+		<div class="help-block" ng-if="modelForm.modelJson.$invalid">JSON syntax error</div>
+	</div>
 </div>
 <div class="modal-footer">
-	<button class="btn btn-primary" ng-click="apply()">Apply</button>
+	<button class="btn btn-primary" ng-click="apply()" ng-disabled="modelForm.$invalid">Apply</button>
 	<button class="btn btn-default" ng-click="cancel()">Cancel</button>
 </div>

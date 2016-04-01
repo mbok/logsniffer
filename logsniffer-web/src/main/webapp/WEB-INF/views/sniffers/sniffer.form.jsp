@@ -201,6 +201,7 @@
 </script>
 	
 <fieldset id="sniffer-editor" ng-controller="SnifferBeanWizardControllerWrapper" ng-disabled="${scheduled}" ng-form="rootForm">
+	<lsf-model-editor model="bean" name="Overall sniffer configuration" exclude="['aspects']"></lsf-model-editor>
 	<tabset>
     	<tab heading="Main">
 	   		<tab-heading>
@@ -298,7 +299,7 @@
 					<!-- Reader strategy wizard -->
 					<div id="sniffer-reader-strategy-editor">
 						<h4>Log reader strategy <small>Defines how much of the log should be scanned consecutively per iteration</small></h4>
-						<lfs-bean-wizard bean="bean.readerStrategy" bean-type-label="Strategy type" wizards="readerStrategyWizards"
+						<lfs-bean-wizard bean="bean.readerStrategy" bean-type-label="Log reader strategy" wizards="readerStrategyWizards"
 							shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="readerStrategy."></lfs-bean-wizard>
 					</div>
 				</div>
@@ -315,7 +316,7 @@
 			<div ng-form="form">
 				<h4>Event scanner configuration
 					<small>Configures the scanner sniffing the log consecutively for new events</small></h4>
-				<lfs-bean-wizard bean="bean.scanner.targetScanner" bean-type-label="Scanner type" wizards="scannerWizards"
+				<lfs-bean-wizard bean="bean.scanner.targetScanner" bean-type-label="Scanner" wizards="scannerWizards"
 					shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="scanner.targetScanner.">
 				</lfs-bean-wizard>
 		
@@ -330,7 +331,7 @@
 						</div>
 						<div class="panel-body" ng-form="form">
 							<div ng-controller="ScannerFilterHelpController">
-								<lfs-bean-wizard bean="filter" bean-type-label="Filter type" wizards="scannerFilterWizards"
+								<lfs-bean-wizard bean="filter" bean-type-label="Filter" wizards="scannerFilterWizards"
 									shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="scanner.filters[{{$index}}].">
 								</lfs-bean-wizard>
 							</div>
@@ -382,7 +383,7 @@
 					</div>
 					<div class="panel-body" ng-form="form">
 						<div ng-controller="SnifferPublisherHelpController">
-							<lfs-bean-wizard bean="publisher" bean-type-label="Publisher type" wizards="publisherWizards"
+							<lfs-bean-wizard bean="publisher" bean-type-label="Publisher" wizards="publisherWizards"
 								shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="publishers[{{$index}}].">{{$parent.bean.logSourceId}}
 								<button type="button" class="btn btn-default btn-xs" ng-click="testPublisher(publisher)" ng-disabled="form.$invalid || scannerForm.$invalid || !sharedScope.source"><i class="glyphicon glyphicon-check"></i> Test publishing</button>
 							</lfs-bean-wizard>

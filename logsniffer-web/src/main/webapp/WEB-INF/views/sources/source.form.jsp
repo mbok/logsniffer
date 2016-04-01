@@ -44,10 +44,13 @@
 						newValue.reader = oldValue.reader;
 					}
 			    });
-				$scope.$watch('dummy.statefullName', function(newValue, oldValue) {
+				$scope.nameChanged = function() {
 					if ($scope.beanWrapper[0]) {
-						$scope.beanWrapper[0].name = newValue;
-					}
+						$scope.beanWrapper[0].name = $scope.dummy.statefullName;
+					}					
+				};
+				$scope.$watch('beanWrapper[0].name', function(newValue, oldValue) {
+					$scope.dummy.statefullName = newValue;
 			    });
 
 				$scope.$watch('bindErrors', function(newValue, oldValue) {
@@ -107,6 +110,9 @@
 			    };
 
 				$scope.addReaderFilter = function() {
+					if (!angular.isArray($scope.beanWrapper[0].reader.filters)) {
+						$scope.beanWrapper[0].reader.filters = [];
+					}
 				    $scope.beanWrapper[0].reader.filters.push({});  
 				};
 
@@ -165,7 +171,7 @@
 </script>
 <div id="source-editor" ng-controller="SourceBeanWizardControllerWrapper" ng-form="form2">
 	<div lsf-alerts alerts="alerts"></div>
-	<lsf-model-editor model="beanWrapper[0]" exclude="['id']"></lsf-model-editor>
+	<lsf-model-editor model="beanWrapper[0]" name="Overall log source configuration" exclude="['fieldTypes', 'supportedSeverities']"></lsf-model-editor>
 	<tabset>
     	<tab>
     		<tab-heading>
@@ -179,13 +185,13 @@
 							class="col-md-6 form-group" ng-class="{'has-error': form.name.$invalid && !form.name.$pristine || bindErrors.name && form.name.$pristine}">
 							<label class="control-label" for="name">Name*:</label>
 							<div class="controls">
-						        <input type="text" ng-model="dummy.statefullName" name="name" id="name" class="form-control" placeholder="Name" required>
+						        <input type="text" ng-model="dummy.statefullName" ng-change="nameChanged()" name="name" id="name" class="form-control" placeholder="Name" required>
 						    </div>
 						    <div class="help-block" ng-if="bindErrors.name && form.name.$pristine">{{bindErrors.name}}</div>
 					    </div>
 					</div>
 					<!-- Wizard -->
-					<lfs-bean-wizard bean="beanWrapper[0]" bean-type-label="Source type" wizards="sourceWizards"
+					<lfs-bean-wizard bean="beanWrapper[0]" bean-type-label="Source" wizards="sourceWizards"
 						shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="" model-exclude="['reader','uiSettings','id']">
 						<button type="button" class="btn btn-default btn-xs" ng-click="testResolvingLogs()" ng-disabled="form.$invalid">
 							<i class="glyphicon glyphicon-check"></i> Test resolving logs
@@ -218,8 +224,8 @@
 				<div id="log-reader-editor" ng-if="beanWrapper[0]['@type']" ng-form="form">
 					<lsf-form-valid-observer form="readerForm" on-valid-change="readerFormValid" />
 					<h4>Log entry reader</h4>
-					<lfs-bean-wizard bean="beanWrapper[0].reader.targetReader" bean-type-label="Reader type" wizards="readerWizards"
-						shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="reader.targetReader.">
+					<lfs-bean-wizard bean="beanWrapper[0].reader.targetReader" bean-type-label="Reader" wizards="readerWizards"
+						shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="reader.targetReader." model-exclude="['fieldTypes', 'supportedSeverities']">
 					</lfs-bean-wizard>
 				</div>
 			</div>
@@ -254,7 +260,7 @@
 						</div>
 						<div class="panel-body" ng-form="form">
 							<div ng-controller="SourceReaderFilterHelpController">
-								<lfs-bean-wizard bean="filter" bean-type-label="Filter type" wizards="readerFilterWizards"
+								<lfs-bean-wizard bean="filter" bean-type-label="Filter" wizards="readerFilterWizards"
 									shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="reader.filters[{{$index}}].">
 								</lfs-bean-wizard>
 							</div>
@@ -276,6 +282,7 @@
 			<div ng-form="uiForm">
 				<div id="source-ui" ng-form="form">
 					<lsf-form-valid-observer form="uiForm" on-valid-change="uiFormValid" />
+					<lsf-model-editor model="beanWrapper[0].uiSettings" name="Viewer fields"></lsf-model-editor>
 					<h4>Viewer fields <small>Configures fields which should be visible by default in the viewer</small></h4>
 					<div ng-if="beanWrapper[0].uiSettings.viewerFields">
 						<lsf-busy-container busy="loadingPotentialFields">
@@ -284,7 +291,7 @@
 								configured-fields="beanWrapper[0].uiSettings.viewerFields"></lsf-log-viewer-fields-selection>					
 							<div class="row">
 								<div class="col-md-12">
-									<button type="button" class="btn btn-default btn-xs" ng-click="reloadPotentialFields()">
+									<button type="button" class="btn btn-default btn-xs" ng-click="reloadPotentialFields()" ng-disabled="form2.$invalid">
 										<i class="glyphicon glyphicon-repeat"></i> Refresh known fields
 									</button>
 									<button type="button" class="btn btn-default btn-xs" ng-click="disableFieldsVisibility()">
@@ -299,7 +306,7 @@
 						
 						<div class="row">
 							<div class="col-md-12">
-								<button type="button" class="btn btn-default btn-xs" ng-click="enableFieldsVisibility()">
+								<button type="button" class="btn btn-default btn-xs" ng-click="enableFieldsVisibility()" ng-disabled="form2.$invalid">
 									<i class="glyphicon glyphicon-wrench"></i> Enable field visibility settings
 								</button>
 						 	</div>

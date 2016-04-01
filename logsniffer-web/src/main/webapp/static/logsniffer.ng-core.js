@@ -235,10 +235,13 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	       styleClass: '@',
 	       modelExclude: '&'
 	   },
-	   controller: function($scope) {
-	       	$scope.contextPath = LogSniffer.config.contextPath;
-	       	$scope.version = LogSniffer.config.version;
-	       	$scope.beanWrapper = [$scope.bean];
+	   controller: function($scope, $log) {
+		if (!$scope.bean) {
+			$scope.bean = {};
+		}
+		$scope.contextPath = LogSniffer.config.contextPath;
+	    $scope.version = LogSniffer.config.version;
+	    $scope.beanWrapper = [$scope.bean];
 		$scope.selectedWizard = null;
 		$scope.templateLoading = false;
 		$scope.bindErrors = {};
@@ -246,6 +249,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		var unwrapAndSetBean = function(beanWrapper, setType) {
 			$scope.bean = beanWrapper.length > 0 ? beanWrapper[0]: {};
 			var beanType = $scope.bean ? $scope.bean["@type"]: null;
+			$log.debug("Set bean for '"+$scope.beanTypeLabel+"' to: ", $scope.bean);
 			if (setType && beanType) {
 				for(var z=0;z<$scope.wizards.length;z++) {
 					var wizard=$scope.wizards[z];
@@ -261,10 +265,10 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		$scope.$watch('beanWrapper', function(newValue, oldValue) {
 			$scope.bean = newValue[0];
 		}, true);
-		console.log($scope.bindErrors);
+
 		$scope.$watch('parentBindErrors', function(newValue, oldValue) {
 			$scope.bindErrors = LogSniffer.stripPrefix(newValue, $scope.bindErrorsPrefix);
-			console.log("Updating bindErrors", newValue, $scope.bindErrorsPrefix, $scope.bindErrors);
+			console.log("Updating bindErrors for '"+$scope.beanTypeLabel+"'", newValue, $scope.bindErrorsPrefix, $scope.bindErrors);
 		});
 
 		$scope.$watch('bean', function(newValue, oldValue) {
@@ -272,11 +276,13 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 				$scope.beanWrapper[0] = newValue;
 			}
 		});
-		$scope.$watch('selectedWizard', function(newValue, oldValue) {
-			if (newValue != oldValue && newValue) {
+		$scope.wizardTypeChanged = function() {
+			var newValue = $scope.selectedWizard;
+			$log.debug("Wizard type changed for '"+$scope.beanTypeLabel+"': ", newValue);
+			if (newValue) {
 				unwrapAndSetBean(angular.copy([newValue.template]));
-			}
-			if (!newValue) {
+			} else {
+				$scope.beanWrapper[0] = {};
 				unwrapAndSetBean({});
 			}
 			if (newValue) {
@@ -284,8 +290,13 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 				$scope.beanWrapper[0] = $scope.bean;
 				$scope.templateLoading = true;
 			}
+		};
+		$scope.$watch("bean['@type']", function(newValue, oldValue) {
+			if (newValue != oldValue) {
+				$log.debug("Bean type changed for '"+$scope.beanTypeLabel+"' to '"+newValue+"', unwrap and set bean", $scope.beanWrapper);
+				unwrapAndSetBean([$scope.bean], true);
+			}
 		});
-		
 		$scope.getWizardView = function(selectedWizard) {
 		    if (selectedWizard.view.indexOf("/ng/") == 0) {
 			return LogSniffer.config.contextPath + selectedWizard.view + '?v=' + LogSniffer.config.version;
@@ -300,12 +311,12 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	   },
 	   template: 
 	      '<div ng-form="form" class="bean-wizard" ng-class="{\'well well-sm\' : !styleClass, styleClass: styleClass}">' +
-	      	'<lsf-model-editor model="bean" exclude="modelExclude()"></lsf-model-editor>' +
+	      	'<lsf-model-editor model="bean" exclude="modelExclude()" name="{{beanTypeLabel}}"></lsf-model-editor>' +
 		    '<div class="row">' +
 	      	'<div class="col-md-6 form-group required" ng-class="{\'has-error\': form.selectedWizard.$invalid && !form.selectedWizard.$pristine}">' +
-			'<label class="control-label">{{beanTypeLabel}}</label>' +
+			'<label class="control-label">{{beanTypeLabel}} type</label>' +
 			'<div class="controls">' +
-				'<select ng-model="selectedWizard" name="selectedWizard" class="form-control" ng-options="w.label for w in wizards" required>' +
+				'<select ng-model="selectedWizard" name="selectedWizard" ng-change="wizardTypeChanged()" class="form-control" ng-options="w.label for w in wizards" required>' +
 					'<option value="">- Please select -</option>' +
 				'</select>' +
 			'</div>' +
@@ -1386,6 +1397,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
  	   replace: true,
  	   scope: {
  	       model: '=',
+ 	       name: '@',
  	       exclude: '&'
  	   },
  	   controller: function($scope, $modal) {
@@ -1401,24 +1413,26 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 			        },
 			        exclude: function () {
 			        	return $scope.exclude();
-			        }
+			        },
+			        modelName: function () { return $scope.name; }
 			      }
 			    });
   
  		   };
  	   },
  	   template: 
- 	      '<a href class="close" ng-click="editModel()" title="Edit in JSON editor"><i class="fa fa-pencil-square-o"></i></a>'
+ 	      '<a href class="close" ng-click="editModel()" title="Configure model object in JSON editor"><i class="fa fa-pencil-square-o"></i></a>'
     };
 })
-.controller('ModelEditorCtrl', function($scope, $modalInstance, model, exclude) {
+.controller('ModelEditorCtrl', function($scope, $modalInstance, $log, model, modelName, exclude) {
 	$scope.modelStr = "";
+	$scope.modelName = modelName;
 	var exMap = {};
 	if (angular.isArray(exclude)) {
 		for(var i=0;i<exclude.length;i++) {
 			exMap[exclude[i]]=true;
 		}
-	} 
+	}
 	function replacer(key, value)
 	{
 		if (exMap[key] || key.indexOf("$$")==0) return undefined;
@@ -1431,6 +1445,34 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	   $modalInstance.close();
 	};
 	$scope.apply = function() {
-	   $modalInstance.close();
+		$log.debug("Applying model from/to: ", model, $scope.modelStr);
+		var obj = JSON.parse($scope.modelStr);
+		if (obj) {
+			for(var i in obj) {
+				if (!exMap[i]) {
+					model[i] = obj[i];
+				}
+			}
+		};
+		$modalInstance.close();
 	};
-});
+})
+.directive('lsfJsonConstraint', function($log) {
+    return {
+        restrict: 'A',
+        require: 'ngModel',
+        link: function(scope, element, attr, ctrl) {
+        	function customValidator(ngModelValue) {
+        		try {
+        			JSON.parse(ngModelValue);
+            		ctrl.$setValidity('validJson', true);        			
+        		} catch (e) {
+        			$log.debug("Invalid JSON: ", ngModelValue, e);
+            		ctrl.$setValidity('validJson', false);        			
+        		}
+        		return ngModelValue;
+        	};
+        	ctrl.$parsers.push(customValidator);
+        }
+      };
+  });
