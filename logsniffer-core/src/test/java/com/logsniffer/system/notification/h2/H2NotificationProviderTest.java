@@ -42,14 +42,14 @@ public class H2NotificationProviderTest {
 	@DirtiesContext
 	@Test
 	public void testStoring() {
-		Notification n1 = new Notification();
-		n1.setExpirationDate(new Date(new Date().getTime() + 1000));
+		final Date now = new Date();
+		final Notification n1 = new Notification();
+		n1.setExpirationDate(new Date(now.getTime() + 1000));
 		n1.setTitle("Title");
 		n1.setMessage("msg");
 		n1.setLevel(Level.WARN);
 		n1.setType(Type.TOPIC);
 		n1.setId("update");
-		Date now = new Date();
 		Assert.assertEquals(true, provider.store(n1, false));
 
 		PageableResult<Notification> notifs = provider.getNotifications("user1", 0, 10);
@@ -61,9 +61,9 @@ public class H2NotificationProviderTest {
 		Assert.assertEquals("update", notifs.getItems().get(0).getId());
 		Assert.assertTrue(notifs.getItems().get(0).getCreationDate().getTime() >= now.getTime() - 2000);
 
-		// Try to manipulate
+		// Try to manipulate with old expiration date
 		n1.setCreationDate(new Date(0));
-		n1.setExpirationDate(new Date(0));
+		// n1.setExpirationDate(new Date(0));
 		n1.setTitle("xxx");
 		n1.setMessage("xxx");
 		n1.setLevel(Level.ERROR);
@@ -78,13 +78,29 @@ public class H2NotificationProviderTest {
 		Assert.assertEquals(Level.WARN, notifs.getItems().get(0).getLevel());
 		Assert.assertEquals(Type.TOPIC, notifs.getItems().get(0).getType());
 		Assert.assertEquals("update", notifs.getItems().get(0).getId());
+		Assert.assertEquals(now.getTime() + 1000, notifs.getItems().get(0).getExpirationDate().getTime());
 		Assert.assertTrue(notifs.getItems().get(0).getCreationDate().getTime() >= now.getTime() - 2000);
+
+		// Try to manipulate with new expiration date
+		n1.setExpirationDate(new Date(now.getTime() + 2000));
+		Assert.assertEquals(true, provider.store(n1, false));
+		notifs = provider.getNotifications("user1", 0, 10);
+		Assert.assertEquals(1, notifs.getTotalCount());
+
+		// Still the same unchanged data, but newer expiration date
+		Assert.assertEquals("Title", notifs.getItems().get(0).getTitle());
+		Assert.assertEquals("msg", notifs.getItems().get(0).getMessage());
+		Assert.assertEquals(Level.WARN, notifs.getItems().get(0).getLevel());
+		Assert.assertEquals(Type.TOPIC, notifs.getItems().get(0).getType());
+		Assert.assertEquals("update", notifs.getItems().get(0).getId());
+		Assert.assertTrue(notifs.getItems().get(0).getCreationDate().getTime() >= now.getTime() - 2000);
+		Assert.assertEquals(now.getTime() + 2000, notifs.getItems().get(0).getExpirationDate().getTime());
 	}
 
 	@DirtiesContext
 	@Test
 	public void testAcknowledging() {
-		Notification n1 = new Notification();
+		final Notification n1 = new Notification();
 		n1.setExpirationDate(new Date(new Date().getTime() + 2000));
 		n1.setTitle("Title");
 		n1.setMessage("msg");
@@ -131,7 +147,7 @@ public class H2NotificationProviderTest {
 	@DirtiesContext
 	@Test
 	public void testExpiration() throws InterruptedException {
-		Notification n1 = new Notification();
+		final Notification n1 = new Notification();
 		n1.setExpirationDate(new Date(new Date().getTime() + 1500));
 		n1.setTitle("Title");
 		n1.setMessage("msg");
@@ -153,7 +169,7 @@ public class H2NotificationProviderTest {
 	@DirtiesContext
 	@Test
 	public void testDeletion() {
-		Notification n1 = new Notification();
+		final Notification n1 = new Notification();
 		n1.setExpirationDate(new Date(new Date().getTime() + 1500));
 		n1.setTitle("Title");
 		n1.setMessage("msg");

@@ -6,11 +6,13 @@ import java.util.Properties;
 import org.apache.velocity.app.VelocityEngine;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -78,6 +80,14 @@ public class SystemUpdatesCheckTaskTest {
 	@Qualifier(CoreAppConfig.BEAN_LOGSNIFFER_PROPS)
 	private Properties logsnifferProperties;
 
+	@Value(value = "${logsniffer.version}")
+	private String currentVersion;
+
+	@Before
+	public void verifyDeletionForCurrentVersion() {
+		Mockito.verify(notificationProvider, Mockito.times(1)).delete("/system/updateAvailable/" + currentVersion);
+	}
+
 	@Test
 	public void testUpdateCheck() throws IOException {
 		Mockito.when(updProvider.getLatestStableVersion(Mockito.any(UpdatesInfoContext.class)))
@@ -85,13 +95,13 @@ public class SystemUpdatesCheckTaskTest {
 		task.checkForUpdates();
 		Mockito.verify(notificationProvider).store(Mockito.argThat(new BaseMatcher<Notification>() {
 			@Override
-			public boolean matches(Object arg0) {
-				Notification n = (Notification) arg0;
+			public boolean matches(final Object arg0) {
+				final Notification n = (Notification) arg0;
 				return n.getTitle().length() > 0 && n.getType() == Type.TOPIC;
 			}
 
 			@Override
-			public void describeTo(Description arg0) {
+			public void describeTo(final Description arg0) {
 			}
 		}), Mockito.eq(false));
 	}
