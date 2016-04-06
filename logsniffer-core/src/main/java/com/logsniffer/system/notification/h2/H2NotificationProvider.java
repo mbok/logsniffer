@@ -154,7 +154,7 @@ public class H2NotificationProvider implements NotificationProvider {
 		if (r.get("c") != null) {
 			c = ((Number) r.get("c")).intValue();
 		}
-		logger.debug("Took {}ms for caluclating notification summary", System.currentTimeMillis() - start);
+		logger.debug("Took {}ms for calculating notification summary", System.currentTimeMillis() - start);
 		return new NotificationSummary(c, worst);
 	}
 
@@ -166,6 +166,7 @@ public class H2NotificationProvider implements NotificationProvider {
 	@Override
 	@Transactional
 	public void delete(final String notificationId) {
+		logger.debug("Deleting notification: {}", notificationId);
 		jdbcTemplate.update("DELETE FROM " + TABLE_NAME_ACK + " WHERE ID = ?", notificationId);
 		jdbcTemplate.update("DELETE FROM " + TABLE_NAME + " WHERE ID = ?", notificationId);
 	}
