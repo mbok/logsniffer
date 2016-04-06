@@ -47,7 +47,7 @@
 			});
 		</script>
 		<script type="text/javascript">
-			LogSniffer.config.contextPath = '${request.contextPath}';
+			LogSniffer.config.contextPath = '<%=request.getContextPath()%>';
 			LogSniffer.config.version = '${logsnifferProps['logsniffer.version']}';
 			var LogSnifferNgApp=angular.module('LogSnifferNgApp', ['LogSnifferCore', 'ui.bootstrap', 'angularSpinner', 'MessageCenterModule', 'angularScreenfull','ngclipboard',${ngModules}]);
 			LogSnifferNgApp.config(function($controllerProvider, $compileProvider, $filterProvider, $provide)
