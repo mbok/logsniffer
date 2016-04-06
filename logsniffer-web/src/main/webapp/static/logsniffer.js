@@ -434,7 +434,7 @@ LogPosition.prototype.resetToEnd = function() {
 				html = JSON.stringify(fieldValue);
 				break;
 			default:
-				html = fieldValue;
+				html = $("<div>").text(fieldValue).html();
 			}
 			return '<span class="'+fieldType+'">'+html+'</span>';
 		} else {
