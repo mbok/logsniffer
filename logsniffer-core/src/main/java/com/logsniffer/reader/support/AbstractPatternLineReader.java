@@ -327,6 +327,7 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 		LogEntry entry = null;
 		StringBuilder text = new StringBuilder(STRING_BUILDER_CAPACITY);
 		LogPointer lastOffset;
+		private boolean consumptionCancelled = false;
 
 	}
 
@@ -358,6 +359,7 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 							sCtx.entry.setRawContent(sCtx.text.toString());
 							sCtx.entry.setEndOffset(sCtx.lastOffset);
 							if (!consumer.consume(log, logAccess, sCtx.entry)) {
+								sCtx.consumptionCancelled = true;
 								return false;
 							}
 						}
@@ -386,6 +388,7 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 							sCtx.entry.setRawContent(sCtx.text.toString());
 							sCtx.entry.setEndOffset(sCtx.lastOffset);
 							if (!consumer.consume(log, logAccess, sCtx.entry)) {
+								sCtx.consumptionCancelled = true;
 								return false;
 							}
 							sCtx.entry = null;
@@ -397,10 +400,9 @@ public abstract class AbstractPatternLineReader<MatcherContext> implements LogEn
 					sCtx.lastOffset = currentOffset;
 					return true;
 				}
-
 			}.executeParallel();
 
-			if (sCtx.entry != null) {
+			if (sCtx.entry != null && !sCtx.consumptionCancelled) {
 				sCtx.entry.setRawContent(sCtx.text.toString());
 				sCtx.entry.setEndOffset(sCtx.lastOffset);
 				consumer.consume(log, logAccess, sCtx.entry);

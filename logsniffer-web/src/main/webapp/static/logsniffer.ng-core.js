@@ -1473,7 +1473,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
         			JSON.parse(ngModelValue);
             		ctrl.$setValidity('validJson', true);        			
         		} catch (e) {
-        			$log.debug("Invalid JSON: ", ngModelValue, e);
+        			$log.debug("Invalid JSON: ", ngModelValue, e.message);
             		ctrl.$setValidity('validJson', false);        			
         		}
         		return ngModelValue;

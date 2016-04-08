@@ -22,7 +22,9 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.FileUtils;
@@ -209,6 +211,32 @@ public class Log4jTextReaderTest {
 		final LogEntry[] entries = readEntries(reader, new ByteArrayLog(FileUtils.readFileToByteArray(f)), null, 2000);
 
 		Assert.assertEquals(46, entries.length);
+	}
+
+	@Test
+	public void testReadingFirstLineOnlyWithUnmodifiedEndOffset()
+			throws FormatException, UnsupportedEncodingException, IOException, ParseException {
+		final String[] logLines = new String[] {
+				"00:27:29,456 ERROR [com.logsniffer.parser.log4j.Log4jParser] Prepared parsing pattern",
+				"22:27:29,456 INFO  [com.logsniffer.parser.log4j.Log4jParser] Finished" };
+		final ByteArrayLog log = createLog(0, StringUtils.join(logLines, "\n"));
+		final LogPointer start = log.getInputStream(null).getPointer();
+		final Log4jTextReader reader = new Log4jTextReader("%d{ABSOLUTE} %-5p [%c] %m%n", "UTF-8");
+		final List<LogEntry> entries = new ArrayList<>();
+		reader.readEntries(log, log, start, new LogEntryConsumer() {
+			@Override
+			public boolean consume(final Log log, final LogPointerFactory pointerFactory, final LogEntry entry)
+					throws IOException {
+				entry.setRawContent(entry.getRawContent() + entry.getRawContent());
+				Assert.assertNotNull(entry.getEndOffset());
+				entry.setEndOffset(null);
+				entries.add(entry);
+				return false;
+			}
+		});
+		Assert.assertEquals(1, entries.size());
+		Assert.assertNull(entries.get(0).getEndOffset());
+		Assert.assertEquals(logLines[0] + logLines[0], entries.get(0).getRawContent());
 	}
 
 	@Test(timeout = 200 * 1000)

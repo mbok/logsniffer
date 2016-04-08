@@ -116,6 +116,7 @@ public class CompoundLogSource extends BaseLogsSource<CompoundLogAccess> {
 
 	public CompoundLogSource() {
 		super();
+		readerConfigurable = false;
 	}
 
 	protected List<LogInstance> getPartInstances() {
@@ -194,7 +195,7 @@ public class CompoundLogSource extends BaseLogsSource<CompoundLogAccess> {
 	@Override
 	public FilteredLogEntryReader<CompoundLogAccess> getReader() {
 		final FilteredLogEntryReader<CompoundLogAccess> reader = super.getReader();
-		if (reader.getTargetReader() == null) {
+		if (!(reader.getTargetReader() instanceof CompoundLogReader)) {
 			reader.setTargetReader(new CompoundLogReader(getPartInstances()));
 		}
 		return reader;

@@ -55,12 +55,14 @@ public class CompoundLogReader implements LogEntryReader<CompoundLogAccess> {
 	}
 
 	private final static class LogInstanceEntry implements Comparable<LogInstanceEntry> {
+		private static int counter = 0;
 		private final int instanceIndex;
 		private final LogEntry entry;
 		private final long logSourceId;
 		private final String logPath;
 		private long tmst;
 		private final boolean reverse;
+		private final int sameInstanceCount = counter++;
 
 		public LogInstanceEntry(final int instanceIndex, final LogEntry entry, final long logSourceId,
 				final String logPath, final boolean reverse) {
@@ -81,7 +83,12 @@ public class CompoundLogReader implements LogEntryReader<CompoundLogAccess> {
 		@Override
 		public int compareTo(final LogInstanceEntry o) {
 			if (tmst == o.tmst) {
-				return reverse ? (o.instanceIndex - instanceIndex) : (instanceIndex - o.instanceIndex);
+				if (o.instanceIndex == instanceIndex) {
+					return reverse ? (o.sameInstanceCount - sameInstanceCount)
+							: (sameInstanceCount - o.sameInstanceCount);
+				} else {
+					return reverse ? (o.instanceIndex - instanceIndex) : (instanceIndex - o.instanceIndex);
+				}
 			} else {
 				return (int) (reverse ? (o.tmst - tmst) : (tmst - o.tmst));
 			}

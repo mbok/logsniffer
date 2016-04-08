@@ -103,11 +103,11 @@ public class CompoundLogPointer implements LogPointer {
 		}
 
 		private void appendJson(final StringBuilder b) {
-			b.append("{s:");
+			b.append("{\"s\":");
 			b.append(logSourceId);
-			b.append(",p:");
+			b.append(",\"p\":");
 			b.append(logPathHash);
-			b.append(",o:");
+			b.append(",\"o\":");
 			b.append(offset != null ? offset.getJson() : "null");
 			b.append("}");
 		}
@@ -222,7 +222,7 @@ public class CompoundLogPointer implements LogPointer {
 	public String getJson() {
 		final StringBuilder b = new StringBuilder("{\"d\":");
 		b.append(currentTimestamp != null ? currentTimestamp.getTime() : 0);
-		b.append(",p:[");
+		b.append(",\"p\":[");
 		int i = 0;
 		for (final PointerPart p : parts) {
 			if (i++ > 0) {

@@ -58,6 +58,10 @@ public abstract class BaseLogsSource<ACCESSTYPE extends LogRawAccess<? extends L
 	@JsonView(Views.Info.class)
 	private FieldsMap uiSettings = new FieldsMap();
 
+	@JsonProperty
+	@JsonView(Views.Info.class)
+	protected boolean readerConfigurable = true;
+
 	/**
 	 * @return the id
 	 */
@@ -120,6 +124,16 @@ public abstract class BaseLogsSource<ACCESSTYPE extends LogRawAccess<? extends L
 	 */
 	public void setUiSettings(final FieldsMap uiSettings) {
 		this.uiSettings = uiSettings;
+	}
+
+	/**
+	 * Indicates if the reader is configurable for this source. Sometimes a log
+	 * source brings its own reader.
+	 * 
+	 * @return the readerConfigurable
+	 */
+	public boolean isReaderConfigurable() {
+		return readerConfigurable;
 	}
 
 }

@@ -365,6 +365,8 @@ public class H2SnifferPersistence implements SnifferPersistence {
 		args.add(source.getId());
 		args.add(log.getPath());
 		final Object[] a = args.toArray(new Object[args.size()]);
+		logger.debug("Storing inc data for sniffer={}, source={} and log={} with next offset: {}", observer, source,
+				log, data.getNextOffset());
 		if (jdbcTemplate.update(
 				"UPDATE SNIFFERS_SCANNER_IDATA SET NEXT_POINTER=?, DATA=? WHERE SNIFFER=? AND SOURCE=? AND LOG=?",
 				a) == 0) {

@@ -139,6 +139,14 @@ public class CompoundLogAccess
 			};
 		} else if (!(toRefresh instanceof CompoundLogPointer)) {
 			throw new IOException("Pointer has a wrong type: " + toRefresh);
+		} else if (((CompoundLogPointer) toRefresh).getCurrentTimestamp() != null
+				&& ((CompoundLogPointer) toRefresh).getCurrentTimestamp().getTime() == 0) {
+			return new NavigationFuture() {
+				@Override
+				public LogPointer get() throws IOException {
+					return start();
+				}
+			};
 		}
 		return new NavigationFuture() {
 			@Override
