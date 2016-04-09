@@ -56,14 +56,16 @@ public class FluentReverseReader<ACCESSORTYPE extends ByteLogAccess> implements 
 		List<LogEntry> entries = new BackwardReader(forwardReader).readEntries(log, logAccess, startOffset, -101);
 		logger.debug("Starting fluent backward consumption with first block of {} entries", entries.size());
 		while (entries.size() > 0) {
+			// Record the pointer to continue from in next iteration due to the
+			// log entry can be changed after consumption
+			final LogPointer toContinueFrom = entries.get(0).getStartOffset();
 			for (int i = entries.size() - 1; i >= 0; i--) {
 				if (!consumer.consume(log, logAccess, entries.get(i))) {
 					logger.debug("Cancelled fluent backward consumption");
 					return;
 				}
 			}
-			entries = new BackwardReader(forwardReader).readEntries(log, logAccess, entries.get(0).getStartOffset(),
-					-101);
+			entries = new BackwardReader(forwardReader).readEntries(log, logAccess, toContinueFrom, -101);
 			logger.debug("Continue fluent backward consumption with next block of {} entries", entries.size());
 		}
 		logger.debug("Finished fluent backward consumption because of SOF");
