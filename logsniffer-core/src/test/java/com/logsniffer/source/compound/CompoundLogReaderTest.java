@@ -47,7 +47,7 @@ public class CompoundLogReaderTest {
 
 	private static final class DummySubReader implements LogEntryReader<LogRawAccess<LogInputStream>> {
 		private final int maxCount;
-		private final float factor;
+		private final double factor;
 		private final int start;
 		private final int exceptionAt;
 
@@ -55,7 +55,7 @@ public class CompoundLogReaderTest {
 			this(maxCount, factor, start, -1);
 		}
 
-		public DummySubReader(final int maxCount, final float factor, final int start, final int exceptionAt) {
+		public DummySubReader(final int maxCount, final double factor, final int start, final int exceptionAt) {
 			super();
 			this.maxCount = maxCount;
 			this.factor = factor;
@@ -126,7 +126,7 @@ public class CompoundLogReaderTest {
 			} else {
 				Assert.assertEquals("Error at entry " + i, 1 + (i - 2) / 4, e.getTimeStamp().getTime());
 			}
-			if (i % 4 == 2 || i % 4 == 3 || i < 4) {
+			if ((i % 4 == 2 || i % 4 == 3 || i < 4) && i < 398) {
 				Assert.assertEquals("Error at entry " + i, 1l, e.get(Event.FIELD_SOURCE_ID));
 				Assert.assertEquals("Error at entry " + i, "log1", e.get(Event.FIELD_LOG_PATH));
 			} else if (i % 4 == 0 || i % 4 == 1) {
@@ -136,7 +136,7 @@ public class CompoundLogReaderTest {
 		}
 		for (int i = 400; i < c.getBuffer().size(); i++) {
 			final LogEntry e = c.getBuffer().get(i);
-			Assert.assertEquals((i - 400) * 0.5 + 401, e.getTimeStamp().getTime());
+			Assert.assertEquals((long) ((i - 400) * 0.5 + 101), e.getTimeStamp().getTime());
 			Assert.assertEquals("Error at entry " + i, 2l, e.get(Event.FIELD_SOURCE_ID));
 			Assert.assertEquals("Error at entry " + i, "log2", e.get(Event.FIELD_LOG_PATH));
 		}

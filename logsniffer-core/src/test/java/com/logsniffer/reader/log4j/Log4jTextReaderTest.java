@@ -286,7 +286,7 @@ public class Log4jTextReaderTest {
 		final long time = System.currentTimeMillis() - start;
 		logger.info("Read {} lines {} total bytes in {}ms: {} bytes/s", count.get() - 1, size, time,
 				size / time * 1000);
-		Assert.assertEquals(linesToRead + 1, count.get());
+		Assert.assertEquals(linesToRead, count.get());
 	}
 
 	public static ByteArrayLog createLog(final long offest, final String lines)
