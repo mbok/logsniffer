@@ -185,7 +185,7 @@ public class CompoundLogReaderTest {
 		try {
 			r.readEntries(Mockito.mock(Log.class), new CompoundLogAccess(Mockito.mock(Log.class), subLogs), null, c);
 		} catch (final IOException e) {
-			Assert.assertTrue(200 - CompoundLogReader.BUFFER_SIZE_PER_THREAD <= c.getBuffer().size());
+			Assert.assertTrue("Actual buffer size: " + c.getBuffer().size(), c.getBuffer().size() < 200);
 			return;
 		}
 		Assert.fail("Exception expected");
