@@ -26,6 +26,7 @@ import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.model.LogSourceProvider;
+import com.logsniffer.model.Navigation.NavigationType;
 import com.logsniffer.model.support.BaseLogsSource;
 import com.logsniffer.model.support.DefaultLog;
 import com.logsniffer.reader.filter.FilteredLogEntryReader;
@@ -199,6 +200,11 @@ public class CompoundLogSource extends BaseLogsSource<CompoundLogAccess> {
 			reader.setTargetReader(new CompoundLogReader(getPartInstances()));
 		}
 		return reader;
+	}
+
+	@Override
+	public NavigationType getNavigationType() {
+		return NavigationType.DATE;
 	}
 
 }

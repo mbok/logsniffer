@@ -57,6 +57,7 @@ import com.logsniffer.model.LogSource;
 import com.logsniffer.model.LogSourceProvider;
 import com.logsniffer.model.Navigation;
 import com.logsniffer.model.Navigation.DateOffsetNavigation;
+import com.logsniffer.model.Navigation.NavigationType;
 import com.logsniffer.model.support.ByteLogAccess;
 import com.logsniffer.model.support.TimestampNavigation;
 import com.logsniffer.reader.FormatException;
@@ -177,6 +178,14 @@ public class LogEntriesRestController {
 		}
 	}
 
+	private NavigationResolver getResolver(final NavigationType type) {
+		if (type == NavigationType.BYTE) {
+			return new ByteNavigationResolver();
+		} else {
+			return new DateNavigationResolver();
+		}
+	}
+
 	@RequestMapping(value = "/sources/randomAccessEntries", method = RequestMethod.POST)
 	@ResponseBody
 	LogEntriesResult getRandomAccessEntries(
@@ -192,7 +201,7 @@ public class LogEntriesRestController {
 			final LogRawAccess<? extends LogInputStream> logAccess = activeLogSource.getLogAccess(log);
 			LogPointer pointer = null;
 			if (StringUtils.isNotEmpty(position)) {
-				pointer = navType.resolve().navigate(activeLogSource, logAccess, log, position).get();
+				pointer = getResolver(navType).navigate(activeLogSource, logAccess, log, position).get();
 			}
 			final BufferedConsumer bc = new BufferedConsumer(count + 1);
 			if (pointer != null) {
@@ -378,19 +387,6 @@ public class LogEntriesRestController {
 			throw new ResourceNotFoundException(Log.class, logPath,
 					"Log not found in source " + activeLogSource + ": " + logPath);
 		}
-	}
-
-	public static enum NavigationType {
-		BYTE, DATE;
-
-		NavigationResolver resolve() {
-			if (this == BYTE) {
-				return new ByteNavigationResolver();
-			} else {
-				return new DateNavigationResolver();
-			}
-		}
-
 	}
 
 	private static interface NavigationResolver {

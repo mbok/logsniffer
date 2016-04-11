@@ -22,12 +22,14 @@ import javax.validation.Valid;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.logsniffer.fields.FieldsMap;
 import com.logsniffer.model.LogInputStream;
 import com.logsniffer.model.LogRawAccess;
 import com.logsniffer.model.LogSource;
+import com.logsniffer.model.Navigation.NavigationType;
 import com.logsniffer.reader.filter.FilteredLogEntryReader;
 import com.logsniffer.util.json.Views;
 
@@ -136,4 +138,12 @@ public abstract class BaseLogsSource<ACCESSTYPE extends LogRawAccess<? extends L
 		return readerConfigurable;
 	}
 
+	/**
+	 * Returns the natively supported navigation type by this source.
+	 * 
+	 * @return the natively supported navigation type by this source.
+	 */
+	@JsonProperty(access = Access.READ_ONLY)
+	@JsonView(Views.Info.class)
+	public abstract NavigationType getNavigationType();
 }

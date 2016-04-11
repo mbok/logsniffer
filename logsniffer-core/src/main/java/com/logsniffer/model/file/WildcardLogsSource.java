@@ -35,6 +35,7 @@ import org.springframework.util.AntPathMatcher;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logsniffer.model.Log;
 import com.logsniffer.model.LogRawAccessor;
+import com.logsniffer.model.Navigation.NavigationType;
 import com.logsniffer.model.support.BaseLogsSource;
 import com.logsniffer.model.support.ByteLogAccess;
 
@@ -134,5 +135,10 @@ public class WildcardLogsSource extends BaseLogsSource<ByteLogAccess> {
 
 	public void setLogAccessAdapter(final LogRawAccessor<ByteLogAccess, FileLog> logAccessAdapter) {
 		this.logAccessAdapter = logAccessAdapter;
+	}
+
+	@Override
+	public NavigationType getNavigationType() {
+		return NavigationType.BYTE;
 	}
 }

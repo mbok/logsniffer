@@ -16,6 +16,16 @@ import com.logsniffer.model.LogPointerFactory.NavigationFuture;
 public interface Navigation<M> {
 
 	/**
+	 * Navigation types.
+	 * 
+	 * @author mbok
+	 *
+	 */
+	public static enum NavigationType {
+		BYTE, DATE;
+	}
+
+	/**
 	 * Marker interface to navigate in byte offset oriented log.
 	 * 
 	 * @author mbok
