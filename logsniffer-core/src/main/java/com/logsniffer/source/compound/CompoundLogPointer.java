@@ -139,21 +139,23 @@ public class CompoundLogPointer implements LogPointer {
 	}
 
 	/**
-	 * Returns the correlating pointer part for given log path or null if no
-	 * part matches the path.
+	 * Returns index of the correlating pointer part for given log path or -1 if
+	 * no part matches the path. Part values could be null.
 	 * 
 	 * @param path
-	 * @return the correlating pointer part for given log path or null if no
-	 *         part matches the path.
+	 * @return index of the correlating pointer part for given log path or -1 if
+	 *         no part matches the path.
 	 */
-	protected PointerPart getPart(final String path) {
+	public static int getPartIndex(final PointerPart[] parts, final String path) {
 		final int hash = path.hashCode();
+		int i = 0;
 		for (final PointerPart part : parts) {
-			if (part.logPathHash == hash) {
-				return part;
+			if (part != null && part.logPathHash == hash) {
+				return i;
 			}
+			i++;
 		}
-		return null;
+		return -1;
 	}
 
 	/**
@@ -173,7 +175,7 @@ public class CompoundLogPointer implements LogPointer {
 	@Override
 	public boolean isSOF() {
 		for (final PointerPart p : parts) {
-			if (p.offset != null && !p.offset.isSOF()) {
+			if (p != null && p.offset != null && !p.offset.isSOF()) {
 				return false;
 			}
 		}
@@ -225,10 +227,12 @@ public class CompoundLogPointer implements LogPointer {
 		b.append(",\"p\":[");
 		int i = 0;
 		for (final PointerPart p : parts) {
-			if (i++ > 0) {
-				b.append(",");
+			if (p != null) {
+				if (i++ > 0) {
+					b.append(",");
+				}
+				p.appendJson(b);
 			}
-			p.appendJson(b);
 		}
 		b.append("]}");
 		return b.toString();

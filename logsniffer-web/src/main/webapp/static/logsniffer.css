@@ -182,6 +182,10 @@ ul.bordered-list li {
     background-color: #f9f9f9;
 }
 
+/** Angular UI **/
+.nav, .pagination, .carousel, .panel-title a { cursor: pointer; }
+
+
 /** Own **/
 .hidden2 {
 	display: none;

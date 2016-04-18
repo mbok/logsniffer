@@ -1,9 +1,9 @@
 <script type="text/javascript">
 	LogSnifferNgApp.controllerProvider.register(
-		"GroksHelpController", ['$scope', '$log', '$modal', function ($scope, $log, $modal) {
+		"GroksHelpController", ['$scope', '$log', '$uibModal', function ($scope, $log, $uibModal) {
 
 		$scope.showGroks = function () {
-			$modal.open({
+			$uibModal.open({
 			      templateUrl: $scope.contextPath + '/ng/help/listGroks.html?v=' + LogSniffer.config.version,
 			      controller: 'GroksListController',
 			      size: 'lg',
@@ -13,12 +13,12 @@
 		};
 	}]);
 	LogSnifferNgApp.controllerProvider.register(
-			"GroksListController", ['$scope', '$http', '$log', '$modalInstance', 'lsfAlerts', function ($scope, $http, $log, $modalInstance, lsfAlerts) {
+			"GroksListController", ['$scope', '$http', '$log', '$uibModalInstance', 'lsfAlerts', function ($scope, $http, $log, $uibModalInstance, lsfAlerts) {
 			    $scope.alerts = lsfAlerts.create();
 			    $scope.busy = false;
 
 				$scope.close = function () {
-					$modalInstance.close();
+					$uibModalInstance.close();
 				};
 				
 				$log.info("Resolving grok groups");

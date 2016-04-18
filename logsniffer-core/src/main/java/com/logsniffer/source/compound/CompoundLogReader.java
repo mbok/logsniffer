@@ -117,6 +117,12 @@ public class CompoundLogReader implements LogEntryReader<CompoundLogAccess> {
 			this.reverse = reverse;
 		}
 
+		private PointerPart[] copyLastOffsets() {
+			final PointerPart[] copy = new PointerPart[lastOffsets.length];
+			System.arraycopy(lastOffsets, 0, copy, 0, lastOffsets.length);
+			return copy;
+		}
+
 		protected boolean process(final LogInstanceEntry instanceEntry, final SubReaderThread subReaderThread) {
 			try {
 				boolean thisThreadShouldConsume = false;
@@ -181,12 +187,12 @@ public class CompoundLogReader implements LogEntryReader<CompoundLogAccess> {
 								}
 								final LogEntry nextEntry = nextEntryInstance.entry;
 								lastOffsets[instanceIndex] = new PointerPart(nextEntryInstance.logSourceId,
-										nextEntryInstance.logPath, nextEntry.getEndOffset());
-								final CompoundLogPointer startPointer = new CompoundLogPointer(lastOffsets,
+										nextEntryInstance.logPath, nextEntry.getStartOffset());
+								final CompoundLogPointer startPointer = new CompoundLogPointer(copyLastOffsets(),
 										nextEntry.getTimeStamp());
 								lastOffsets[instanceIndex] = new PointerPart(nextEntryInstance.logSourceId,
 										nextEntryInstance.logPath, nextEntry.getEndOffset());
-								final CompoundLogPointer endPointer = new CompoundLogPointer(lastOffsets,
+								final CompoundLogPointer endPointer = new CompoundLogPointer(copyLastOffsets(),
 										nextEntry.getTimeStamp());
 								nextEntry.setStartOffset(startPointer);
 								nextEntry.setEndOffset(endPointer);
@@ -360,8 +366,16 @@ public class CompoundLogReader implements LogEntryReader<CompoundLogAccess> {
 			final LogEntryConsumer consumer, final boolean reverse) throws IOException, FormatException {
 		final CompoundLogPointer clp = (CompoundLogPointer) logAccess.refresh(startOffset).get();
 		final PointerPart[] parts = new PointerPart[composedLogs.size()];
+		final PointerPart[] consumedParts = clp != null ? clp.getParts() : new PointerPart[0];
 		for (int i = 0; i < composedLogs.size(); i++) {
-			parts[i] = clp != null ? clp.getPart(composedLogs.get(i).getLog().getPath()) : null;
+			final int partIndex = CompoundLogPointer.getPartIndex(consumedParts,
+					composedLogs.get(i).getLog().getPath());
+			if (partIndex >= 0) {
+				parts[i] = consumedParts[partIndex];
+				consumedParts[i] = null;
+			} else {
+				parts[i] = null;
+			}
 		}
 		new CompositionReaderExecutor(parts, reverse) {
 			@Override

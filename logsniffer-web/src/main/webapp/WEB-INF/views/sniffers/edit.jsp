@@ -16,7 +16,7 @@
 		<jsp:include page="sniffer.breadcrumb.jsp">
 			<jsp:param value="Edit" name="context"/>
 		</jsp:include>
-		
+
 		<c:if test="${param.created}">
 			<div class="alert alert-success">
 				<button type="button" class="close" data-dismiss="alert">&times;</button>

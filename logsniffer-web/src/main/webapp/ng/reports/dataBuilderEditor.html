@@ -25,9 +25,9 @@
 </div>
 <div class="modal-body">
 	<form name="dbForm" ng-init="requestParts=dataBuilderConfig.builders[0].requestParts" ng-controller="DataBuilderEditorRequestParts">
-		<accordion close-others="true">
-			<accordion-group ng-repeat="builderData in requestParts" is-open="isopen">
-				<accordion-heading>
+		<uib-accordion close-others="true">
+			<uib-accordion-group ng-repeat="builderData in requestParts" is-open="isopen">
+				<uib-accordion-heading>
 	            	<a class="accordion-toggle" ng-click="isopen = !isopen"><i class="glyphicon" ng-class="{'glyphicon glyphicon-chevron-down': isopen, 'glyphicon glyphicon-chevron-right': !isopen}"></i> {{builderData.name}}</a> 
 	            	<div class="pull-right">
 		            	<div class="btn-group">
@@ -36,7 +36,7 @@
 			            	<button ng-click="deleteBuilder($index)" class="btn btn-default btn-sm glyphicon glyphicon-trash" title="Delete"></button>
 		            	</div>
 		            </div>
-	        	</accordion-heading>
+	        	</uib-accordion-heading>
 				<ng-form name="seriesForm">
 					<div class="row">
 						<div class="col-md-6 form-group" ng-class="{error: seriesForm.type.$invalid && !seriesForm.type.$pristine}">
@@ -54,8 +54,8 @@
 					</div>
 					<div class="slide-animate" ng-include="templatesPath + builderData._type + '.html'"></div>
 				</ng-form>
-			</accordion-group>
-		</accordion>
+			</uib-accordion-group>
+		</uib-accordion>
 	    <a ng-click="addBuilder()" class="btn btn-primary btn-sm"><i class="glyphicon glyphicon-plus icon-white"></i> Add data series</a>
 	</form>
 </div>

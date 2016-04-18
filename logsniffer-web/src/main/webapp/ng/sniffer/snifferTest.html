@@ -3,8 +3,8 @@
 </div>
 <div class="modal-body" class="zoom-entry-modal" style="padding-bottom:0">
 	<div class="backdrop-overlay" style="display:none" id="publisher-test-backdrop"></div>
-	<tabset>
-    	<tab heading="Event search" ng-form="form">
+	<uib-tabset>
+    	<uib-tab heading="Event search" ng-form="form">
     		<div class="row">
     			<div class="form-group col-md-12 required" ng-class="{'has-error': form.log.$invalid && !form.log.$pristine}">
 					<label class="control-label" for="log">Search for event in log:</label>
@@ -19,8 +19,8 @@
 					search-expanded="true"
 					configured-viewer-fields="source.uiSettings.viewerFields"></lsf-log-viewer>
 			</div>
-    	</tab>
-    	<tab heading="Event preview" disabled="!event">
+    	</uib-tab>
+    	<uib-tab heading="Event preview" disabled="!event">
     		<div>
 				<h4>Fields</h4>
 				<lfs-fields-table fields="event"></lfs-fields-table>
@@ -29,8 +29,8 @@
 				<h4>JSON</h4>
 				<json-formatter json="event" open="2"></json-formatter>
 			</div>
-    	</tab>
-    	<tab ng-if="publisher" heading="Publishing result" disabled="!event" active="publishingTabActive">
+    	</uib-tab>
+    	<uib-tab ng-if="publisher" heading="Publishing result" disabled="!event" active="publishingTabActive">
     		<div ng-if="!publishingResult" class="alert alert-info" role="alert">Click to publishing button on the bottom to get the result!</div>
     		<div us-spinner ng-if="publishing"></div>
     		<div ng-if="publishingResult.status == 'success'" class="alert alert-success"><h3>Event has been successfully published</h3></div>
@@ -38,8 +38,8 @@
     			<h3>Failed to publish event</h3>
     			<div class="log"><div class="text nowrap" style="overflow-x: auto">{{publishingResult.message}}</div></div>
     		</div>
-    	</tab>
-    </tabset>
+    	</uib-tab>
+    </uib-tabset>
 </div>
 <div class="modal-footer">
 	<span ng-if="publisher"><button class="btn btn-primary" ng-click="publish()" ng-disabled="!event || publishing"><i class="glyphicon glyphicon-bullhorn"></i> Test publishing event</button></span>

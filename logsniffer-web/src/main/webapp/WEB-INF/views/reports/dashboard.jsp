@@ -49,7 +49,7 @@
 			var dashboardApp=angular.module('dashboard', ['googlechart', 'ui.bootstrap']);
 			dashboardApp.controller(
 				"DashboardController",
-				function($scope, $modal, $log, $timeout) {				
+				function($scope, $uibModal, $log, $timeout) {				
 					$scope.changed = false;
 					$scope.addedWidgets = {};
 					
@@ -76,7 +76,7 @@
 					};
 					
 					$scope.addWidgetWizard = function () {
-						var modalInstance = $modal.open({
+						var modalInstance = $uibModal.open({
 							templateUrl: '${ngBasePath}/reports/addWidgetWizard.html',
 							controller: AddWidgetCtrl
 						});
@@ -130,7 +130,7 @@
 			dashboardApp
 			.controller(
 				"ChartWidgetController",
-				function($scope, $modal, $log) {																	
+				function($scope, $uibModal, $log) {																	
 					$scope.config = $scope.widget.data;
 					
 					$scope.chart = {};
@@ -177,7 +177,7 @@
 					};
 					
 					$scope.openDataBuilderEditor = function () {
-					  var modalInstance = $modal.open({
+					  var modalInstance = $uibModal.open({
 					    templateUrl: '${ngBasePath}/reports/dataBuilderEditor.html',
 					    windowClass: 'ds-editor',
 					    controller: DataBuilderEditorCtrl,
@@ -368,7 +368,7 @@
 		</div>
 		
 		<script type="text/javascript">
-			var DataBuilderEditorCtrl = function ($scope, $modalInstance, $log, dataBuilderConfig) {
+			var DataBuilderEditorCtrl = function ($scope, $uibModalInstance, $log, dataBuilderConfig) {
 			  	$scope.templatesPath = "${ngBasePath}/reports/dataBuilders/";
 				
 				$scope.dataBuilderConfigStr = JSON.stringify(dataBuilderConfig);
@@ -377,11 +377,11 @@
 				
 				$scope.ok = function () {
 					$log.info("Config: " + this.dataBuilderConfigStr);
-				   $modalInstance.close($scope.dataBuilderConfig);
+				   $uibModalInstance.close($scope.dataBuilderConfig);
 				};
 				
 				$scope.cancel = function () {
-				  $modalInstance.dismiss('cancel');
+				  $uibModalInstance.dismiss('cancel');
 				};
 			};	
 		</script>

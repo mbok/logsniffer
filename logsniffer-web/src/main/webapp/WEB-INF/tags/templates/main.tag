@@ -14,11 +14,12 @@
 		<link href="<%=request.getContextPath()%>/static/bootstrap/3.1.1/css/bootstrap-theme.min.css" rel="stylesheet" />
 		<script
 			src="<%=request.getContextPath()%>/static/jquery/jquery-1.9.1.min.js"></script>
-		<script type="text/javascript" src="<c:url value="/static/angular/1.3.15/angular.min.js" />"></script>
-		<script type="text/javascript" src="<c:url value="/static/angular/1.3.15/angular-route.min.js" />"></script>
-		<script type="text/javascript" src="<c:url value="/static/angular/1.3.15/angular-animate.min.js" />"></script>
-		<script type="text/javascript" src="<c:url value="/static/angular/1.3.15/angular-sanitize.min.js" />"></script>
-		<script src="<c:url value="/static/angular/ui-bootstrap-tpls-0.12.0.min.js" />"></script>			
+		<script type="text/javascript" src="<c:url value="/static/angular/1.5.3/angular.min.js" />"></script>
+		<script type="text/javascript" src="<c:url value="/static/angular/1.5.3/angular-route.min.js" />"></script>
+		<script type="text/javascript" src="<c:url value="/static/angular/1.5.3/angular-animate.min.js" />"></script>
+		<script type="text/javascript" src="<c:url value="/static/angular/1.5.3/angular-sanitize.min.js" />"></script>
+		<!-- <script src="<c:url value="/static/angular/ui-bootstrap-tpls-0.12.0.min.js" />"></script> -->
+		<script src="<c:url value="/static/angular-ui/ui-bootstrap-tpls-1.3.0.min.js" />"></script>
 		<script type="text/javascript" src="<c:url value="/static/angular/message-center-master/message-center.js?v=${logsnifferProps['logsniffer.version']}" />"></script>
 		<script
 			src="<%=request.getContextPath()%>/static/bootstrap/3.1.1/js/bootstrap.min.js"></script>
@@ -36,6 +37,7 @@
 		<script src="<c:url value="/static/ngclipboard/ngclipboard.min.js?v=${logsnifferProps['logsniffer.version']}" />"></script>
 		<script src="<c:url value="/static/scrollintoview/jquery.scrollintoview.min.js?v=${logsnifferProps['logsniffer.version']}" />"></script>
 		<link href="<c:url value="/static/fontawesome/css/font-awesome.min.css?v=${logsnifferProps['logsniffer.version']}" />" rel="stylesheet" />
+	    <script src="<c:url value="/static/date.js?v=${logsnifferProps['logsniffer.version']}" />"></script>
 		<script src="<%=request.getContextPath()%>/static/logsniffer.js?v=${logsnifferProps['logsniffer.version']}"></script>
 		<script src="<%=request.getContextPath()%>/static/logsniffer.ng-core.js?v=${logsnifferProps['logsniffer.version']}"></script>
 		<link href="<c:url value="/static/logsniffer.css" />?v=${logsnifferProps['logsniffer.version']}" rel="stylesheet" />
@@ -58,16 +60,17 @@
 			    LogSnifferNgApp.provide            = $provide;
 			});
 			LogSnifferNgApp.controller("BeanWizardController", LogSniffer.ng.BeanWizardController);
-			LogSnifferNgApp.controller("LogSnifferRootController", ['$scope', '$modal', function($scope, $modal) {
+			LogSnifferNgApp.controller("LogSnifferRootController", ['$scope', '$uibModal', '$document', function($scope, $uibModal, $document) {
 				$scope.contextPath = LogSniffer.config.contextPath;
 				$scope.version = LogSniffer.config.version;
 				LogSniffer.ng.dateFilter = angular.injector(["ng"]).get("$filter")("date");
 			    $scope.zoomEntry = function (context) {
-					$modal.open({
+					$uibModal.open({
 				      templateUrl: $scope.contextPath + '/ng/entry/zoomEntry.html',
 				      controller: 'ZoomLogEntryCtrl',
 				      size: 'lg',
 				      windowClass: 'zoom-entry-modal',
+				      appendTo: context.appendTo,
 				      resolve: {
 				        context: function () {
 				          return context;

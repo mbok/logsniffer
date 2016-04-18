@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
-angular.module('LogSnifferCore', ['jsonFormatter'])
+angular.module('LogSnifferCore', ['jsonFormatter','ui.bootstrap'])
 	// From http://stackoverflow.com/questions/18095727/limit-the-length-of-a-string-with-angularjs
 	.filter('cut', function () {
         return function (value, wordwise, max, tail, disabled) {
@@ -330,7 +330,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		'</div><div ng-transclude></div></div>'
        };
    })
-   .directive('lsfLogViewer', ['$timeout', '$location', '$anchorScroll', '$log', '$http', 'lsfAlerts', '$modal', '$q', function($timeout, $location, $anchorScroll, $log, $http, lsfAlerts, $modal, $q) {
+   .directive('lsfLogViewer', ['$timeout', '$location', '$anchorScroll', '$log', '$http', 'lsfAlerts', '$uibModal', '$q', function($timeout, $location, $anchorScroll, $log, $http, lsfAlerts, $uibModal, $q) {
 	var defaultLoadCount = 100;
 	var tailMaxFollowInterval=1500;
 	var tailMinFollowInterval=50;
@@ -437,7 +437,8 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 						}
 					}
 				}).error(function(data, status, headers, config, statusText) {
-				    	$scope.backdropOverlay.hide();
+				    $scope.backdropOverlay.hide();
+				    entriesUpdCallback(null);
 					$scope.searchStatus="error";
 					$scope.searchStatusText = "An error occurred during search: " + status;
 					$log.error("Error occurred during searching", status);
@@ -449,11 +450,12 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		};
 		
 		$scope.configureFields = function() {
-			$modal.open({
+			$uibModal.open({
 			      templateUrl: LogSniffer.config.contextPath + '/ng/entry/viewerFieldsConfig.html',
 			      controller: 'ViewerFieldsConfigCtrl',
 			      size: 'lg',
 			      scope: $scope,
+			      appendTo: angular.element($scope.element),
 			      resolve: {
 			        viewerFields: function () {
 						$log.info("Inject fields to configure visibility: ", $scope.viewerFields);
@@ -486,6 +488,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		scope.fullscreen = false;
 		scope.frameHeightBeforeFullscreen = null;
 		scope.viewerFields = scope.configuredViewerFields();
+		scope.element = element;
 		
 		scope.resizeViewerToFullHeight = function (windowRef, count) {
 			$timeout(function() {
@@ -688,7 +691,8 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	        	  "entry": logEntries[id],
 	        	  "sourceId": scope.source.id,
 	        	  "logPath": scope.log.path,
-	        	  "entryLoader": entryLoader
+	        	  "entryLoader": entryLoader,
+	        	  "appendTo": angular.element(element)
 	          });
 		};
 		function renderPrefixCells(fieldsTypes, e) {
@@ -730,8 +734,8 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		    }
 		};
 		
-		function loadRandomAccessEntries(jsonMark, highlight) {
-		    	scope.disableTailFollow();
+		function loadRandomAccessEntries(jsonMark, highlight, desiredNavType) {
+		    scope.disableTailFollow();
 			var entriesUpdCallback = scope.getEntriesUpdateCallback();
 			var pStr = "";
 			scope.setPointer(jsonMark);
@@ -742,23 +746,26 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 			var entriesCall = null;
 			if (scope.source.id) {
 			    entriesCall = $http({
-				    url: LogSniffer.config.contextPath + '/c/sources/'+ scope.source.id +'/randomAccessEntries?log=' + encodeURIComponent(scope.log.path) +'&mark=' + encodeURIComponent(pStr) + '&count=' + defaultLoadCount,
+				    url: LogSniffer.config.contextPath + '/c/sources/'+ scope.source.id +'/randomAccessEntries?log=' + encodeURIComponent(scope.log.path) +'&mark=' + encodeURIComponent(pStr) + '&count=' + defaultLoadCount + (desiredNavType?'&navType='+desiredNavType:''),
 				    method: "GET"
 				});
 			} else {
 			    entriesCall = $http({
-				    url: LogSniffer.config.contextPath + '/c/sources/randomAccessEntries?log=' + encodeURIComponent(scope.log.path) +'&mark=' + encodeURIComponent(pStr) + '&count=' + defaultLoadCount,
+				    url: LogSniffer.config.contextPath + '/c/sources/randomAccessEntries?log=' + encodeURIComponent(scope.log.path) +'&mark=' + encodeURIComponent(pStr) + '&count=' + defaultLoadCount + (desiredNavType?'&navType='+desiredNavType:''),
 				    method: "POST",
 				    data: scope.source
 				});
 			}
+			scope.backdropOverlay.show();
 			entriesCall.success(function(data, status, headers, config) {
 			      emptyViewerEntries();
 			      renderTableHead(data.fieldTypes);
 			      entriesUpdCallback(data.entries, highlight ? data.highlightEntry : -1);
+			      scope.backdropOverlay.hide();
 			}).error(function(data, status, headers, config, statusText) {
 			    entriesUpdCallback(null);
 			    scope.handleHttpError("Failed to load entries", data, status, headers, config, statusText);
+			    scope.backdropOverlay.hide();
 			});
 		};
 		scope.loadRandomAccessEntries = loadRandomAccessEntries;
@@ -1020,7 +1027,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		scope.$on('controlPositionChanged', function(event, args) {
 		   scope.mark = args.newPointer;
  		   console.log("Changed log pointer, has to load entries from: ", scope.mark);
- 		   loadRandomAccessEntries(scope.mark);
+ 		   loadRandomAccessEntries(scope.mark, false, args.navType);
  		});
 		
 		scope.fromStart = function() {
@@ -1054,7 +1061,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	   templateUrl: LogSniffer.config.contextPath + '/ng/entry/logViewer.html'
        };
    }])
-   .controller('ViewerFieldsConfigCtrl', function($scope, $modalInstance) {
+   .controller('ViewerFieldsConfigCtrl', function($scope, $uibModalInstance) {
 	   $scope.$watch('viewerFields', function(newValue, oldValue) {
 		  var d = $scope.defaultViewerFields ? $scope.defaultViewerFields() : null;
 		  $scope.isDefault = angular.equals(newValue, d); 
@@ -1066,11 +1073,11 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		   $scope.viewerFields = $scope.defaultViewerFields ? angular.copy($scope.defaultViewerFields()) : null;
 	   };
 	   $scope.cancel = function() {
-		   $modalInstance.close();
+		   $uibModalInstance.close();
 	   };
 	   $scope.apply = function() {
 		   $scope.$emit('viewerFieldsChanged', $scope.viewerFields);
-		   $modalInstance.close();
+		   $uibModalInstance.close();
 	   };
    })
    .directive('lsfLogPosition', function($timeout) {
@@ -1107,7 +1114,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 			console.log("Changing log pos from control for " + scope.name + ": ", p);
 			scope.$apply(function(){
 			    scope.pointer = p;
-			    scope.$emit('controlPositionChanged', { newPointer: p });
+			    scope.$emit('controlPositionChanged', { newPointer: p, navType: 'BYTE' });
 		    	}); 
 	       });
 	       $timeout(function () {
@@ -1118,7 +1125,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 	   templateUrl: LogSniffer.config.contextPath + '/ng/entry/logPosition.html'
        };
    })
-   .controller("ZoomLogEntryCtrl", ['$scope', '$modalInstance', '$log', 'lsfAlerts', 'context', function($scope, $modalInstance, $log, lsfAlerts, context) {
+   .controller("ZoomLogEntryCtrl", ['$scope', '$uibModalInstance', '$log', 'lsfAlerts', 'context', function($scope, $uibModalInstance, $log, lsfAlerts, context) {
 	   $scope.alerts = lsfAlerts.create();
        $scope.busy = false;
 	   $log.debug("Openning entry details", context);
@@ -1153,7 +1160,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
     	   );    	   
        };
        $scope.close = function () {
-    	   $modalInstance.close();
+    	   $uibModalInstance.close();
        };
    }])
    .directive('lsfFormGroup', function() {
@@ -1400,9 +1407,9 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
  	       name: '@',
  	       exclude: '&'
  	   },
- 	   controller: function($scope, $modal) {
+ 	   controller: function($scope, $uibModal) {
  		   $scope.editModel = function() {
-			$modal.open({
+			$uibModal.open({
 			      templateUrl: LogSniffer.config.contextPath + '/ng/util/modelEditor.html',
 			      controller: 'ModelEditorCtrl',
 			      size: 'lg',
@@ -1424,7 +1431,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
  	      '<a href class="close" ng-click="editModel()" title="Configure model object in JSON editor"><i class="fa fa-pencil-square-o"></i></a>'
     };
 })
-.controller('ModelEditorCtrl', function($scope, $modalInstance, $log, model, modelName, exclude) {
+.controller('ModelEditorCtrl', function($scope, $uibModalInstance, $log, model, modelName, exclude) {
 	$scope.modelStr = "";
 	$scope.modelName = modelName;
 	var exMap = {};
@@ -1442,7 +1449,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 		$scope.modelStr = JSON.stringify(model, replacer, 4);
 	}
 	$scope.cancel = function() {
-	   $modalInstance.close();
+	   $uibModalInstance.close();
 	};
 	$scope.apply = function() {
 		$log.debug("Applying model from/to: ", model, $scope.modelStr);
@@ -1460,7 +1467,7 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
 				}
 			}
 		};
-		$modalInstance.close();
+		$uibModalInstance.close();
 	};
 })
 .directive('lsfJsonConstraint', function($log) {
@@ -1481,4 +1488,132 @@ angular.module('LogSnifferCore', ['jsonFormatter'])
         	ctrl.$parsers.push(customValidator);
         }
       };
-  });
+  })
+.directive('lsfBarSlider', function($timeout, $log) {
+	return {
+		restrict: 'AE',
+		replace: true,
+		transclude: false,
+		scope: {
+			min: '=',
+			max: '=',
+			value: '=',
+			step: '=',
+			formater: '&',
+			slideStop: '&'
+		},
+		controller: function($scope) {
+		},
+		link: function(scope, element, attrs) {
+			if (!angular.isDefined(attrs.step)) {
+				scope.step = 1;
+			}
+			scope.slider = $(element)
+			.slider(
+				{
+					formater : angular.isDefined(attrs.formater) ? scope.formater() : function(v) {return v},
+					sliderClass : "slider progress"
+							+ (false ? " progress-striped active"
+									: ""),
+					sliderTrackClass : "none",
+					sliderSelectionClass : "slider-selection bar",
+					value : scope.value,
+					min : scope.min,
+					max : scope.max,
+					step: scope.step,
+					tooltipPlacement : true ? "bottom"
+							: "top"
+				})
+			.on('slide', function(e) {
+				var v = scope.slider.getValue();
+				scope.$apply(function() {
+					scope.value = v;
+				});
+			})
+			.on('slideStop', function(e) {
+				if (angular.isDefined(attrs.slideStop)) {
+					scope.$apply(function() {
+						scope.slideStop(e);
+					});
+				}
+			})
+			.data('slider');
+			// Two way watcher
+			var sliderUpdater = function(min, max, step, value) {
+				scope.slider.min = min;
+				scope.slider.max = max;
+				scope.slider.step = step;
+				scope.slider.setValue(value);				
+			};
+			scope.$watch('value', function(newValue, oldValue) { sliderUpdater(scope.min, scope.max, scope.step, newValue); });
+			scope.$watch('min', function(newValue, oldValue) { sliderUpdater(newValue, scope.max, scope.step, scope.value); });
+			scope.$watch('max', function(newValue, oldValue) { sliderUpdater(scope.min, newValue, scope.step, scope.value); });
+			scope.$watch('step', function(newValue, oldValue) { sliderUpdater(scope.min, scope.max, newValue, scope.value); });
+		},
+		template: '<input type="text" class="slider" data-slider-tooltip="show">'
+	};
+})
+.directive('lsfLogNavigatorDate', function($timeout, $log) {
+	return {
+		restrict: 'AE',
+		replace: true,
+		transclude: false,
+		scope: {
+		},
+		controller: function($scope) {
+			var getTimeSliderMin = function(value) {
+				return new Date(value.getTime()).clearTime();
+			};
+			var getTimeSliderMax = function(value) {
+				return getTimeSliderMin(value).addDays(1).addSeconds(-1);
+			};
+			var getDateTimeValue = function(dateValueTmst, timeValueTmst) {
+				var timeValue = new Date(timeValueTmst);
+				return new Date(dateValueTmst).set({hour: timeValue.getHours(),minute:timeValue.getMinutes(), second:timeValue.getSeconds()});
+			};
+			$scope.value = Date.today();
+			$scope.minDate = Date.today().add({ days: -60 });
+			$scope.maxDate = Date.today();
+			$scope.applicable = false;
+			$scope.dateSlider = {
+				step: 1000 * 60 * 60 * 24
+			};
+			$scope.timeSlider = {
+				step: 1000 * 60
+			};
+			$scope.dateSliderFormater = function(value) {
+				return LogSniffer.ng.dateFilter(new Date(value), 'mediumDate');
+			};
+			$scope.timeSliderFormater = function(value) {
+				return LogSniffer.ng.dateFilter(new Date(value), 'mediumTime');
+			};
+			
+			$scope.$on('updateCurrentPosition', function(event, args) {
+			   var pointer = args.newPointer;
+			   $log.debug("Updating date control position: ", pointer);
+			   if (angular.isDefined(pointer.d)) {
+				   $scope.value = new Date(pointer.d);
+				   $scope.applicable = false;
+			   }
+			});
+			$scope.$watch('value', function(newValue, oldValue) {
+				$scope.dateSlider.min = $scope.minDate.clearTime().getTime();
+				$scope.dateSlider.max = $scope.maxDate.clearTime().getTime();
+				$scope.dateSlider.value = new Date(newValue).clearTime().getTime();
+				
+				$scope.timeSlider.min = getTimeSliderMin(newValue).getTime();
+				$scope.timeSlider.max = getTimeSliderMax(newValue).getTime();
+				$scope.timeSlider.value = newValue.getTime();
+			});
+			$scope.onSliderChanged = function() {
+				$scope.applicable = true;				
+			};
+			$scope.navigate = function() {
+				var d = getDateTimeValue($scope.dateSlider.value, $scope.timeSlider.value);
+				$log.info("Navigatin to timestamp ", d);
+				$scope.$emit('controlPositionChanged', { newPointer: d.getTime(), navType: 'DATE' });
+			};
+		},
+		templateUrl: LogSniffer.config.contextPath + '/ng/entry/logNavigationByDate.html'
+	};
+});

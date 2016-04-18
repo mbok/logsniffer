@@ -1,6 +1,7 @@
 package com.logsniffer.source.compound;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -79,13 +80,22 @@ public class CompoundLogAccess
 	@SuppressWarnings("unchecked")
 	protected Pair<LogInstance, LogPointer>[] mapPointer(final CompoundLogPointer cp) {
 		final Pair<LogInstance, LogPointer>[] mapped = new Pair[composedLogs.size()];
+		final PointerPart[] parts = Arrays.copyOf(cp.getParts(), cp.getParts().length);
 		int i = 0;
 		for (final LogInstance sl : composedLogs) {
 			LogPointer partPointer = null;
-			for (final PointerPart pp : cp.getParts()) {
+			int z = -1;
+			for (final PointerPart pp : parts) {
+				z++;
+				if (pp == null) {
+					// Remove pointer to avoid reuse in case of the same log is
+					// referenced multiple times
+					continue;
+				}
 				if (pp.getLogSourceId() == sl.getLogSourceId()
 						&& pp.getLogPathHash() == sl.getLog().getPath().hashCode()) {
 					partPointer = pp.getOffset();
+					parts[z] = null;
 					break;
 				}
 			}
@@ -154,7 +164,7 @@ public class CompoundLogAccess
 				final long start = System.currentTimeMillis();
 				final CompoundLogPointer cp = (CompoundLogPointer) toRefresh;
 				final PointerPart[] refreshedParts = new PointerPart[composedLogs.size()];
-				final int i = 0;
+				int i = 0;
 				for (final Pair<LogInstance, LogPointer> p : mapPointer(cp)) {
 					LogPointer refreshedPointer = null;
 					final LogInstance logInstance = p.getLeft();
@@ -163,7 +173,7 @@ public class CompoundLogAccess
 					} else {
 						refreshedPointer = navigateTo(logInstance, cp.getCurrentTimestamp()).get();
 					}
-					refreshedParts[i] = new PointerPart(logInstance.getLogSourceId(), logInstance.getLog().getPath(),
+					refreshedParts[i++] = new PointerPart(logInstance.getLogSourceId(), logInstance.getLog().getPath(),
 							refreshedPointer);
 				}
 				final CompoundLogPointer cpr = new CompoundLogPointer(refreshedParts, cp.getCurrentTimestamp());

@@ -19,8 +19,8 @@ angular
 .module('lsfSnifferTestModule',[])
 .controller(
 	"SnifferTestCtrl",
-	['$scope', '$http', '$log', 'usSpinnerService', '$modalInstance', '$timeout', 'source', 'scanner', 'publisher', 'sniffer', 'title', 'testSession',
-	function($scope, $http, $log, usSpinnerService, $modalInstance, $timeout, source, scanner, publisher, sniffer, title, testSession) {
+	['$scope', '$http', '$log', 'usSpinnerService', '$uibModalInstance', '$timeout', 'source', 'scanner', 'publisher', 'sniffer', 'title', 'testSession',
+	function($scope, $http, $log, usSpinnerService, $uibModalInstance, $timeout, source, scanner, publisher, sniffer, title, testSession) {
 	    $scope.title =  title;
 	    $scope.source = source;
 	    $scope.scanner = scanner;
@@ -36,7 +36,7 @@ angular
 	    $scope.event = null;
 	    
 	    $scope.close = function () {
-		$modalInstance.close();
+		$uibModalInstance.close();
 	    };
 	    
 	    

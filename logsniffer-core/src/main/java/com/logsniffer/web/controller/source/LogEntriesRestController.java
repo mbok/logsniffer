@@ -63,7 +63,7 @@ import com.logsniffer.model.support.TimestampNavigation;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.LogEntryReader;
 import com.logsniffer.reader.support.BufferedConsumer;
-import com.logsniffer.reader.support.FluentReverseReader;
+import com.logsniffer.reader.support.InverseReader;
 import com.logsniffer.web.controller.LogEntriesResult;
 import com.logsniffer.web.controller.exception.ResourceNotFoundException;
 
@@ -128,7 +128,7 @@ public class LogEntriesRestController {
 			@RequestParam("log") final String logPath,
 			@RequestParam(value = "mark", required = false) final String mark,
 			@RequestParam(value = "count") final int count)
-					throws IOException, FormatException, ResourceNotFoundException {
+			throws IOException, FormatException, ResourceNotFoundException {
 		logger.debug("Start load entries log={} from source={}, mark={}, count={}", logPath, activeLogSource, mark,
 				count);
 		try {
@@ -168,7 +168,7 @@ public class LogEntriesRestController {
 			@RequestParam("log") final String logPath,
 			@RequestParam(value = "mark", required = false) final String mark,
 			@RequestParam(value = "count") final int count)
-					throws IOException, FormatException, ResourceNotFoundException {
+			throws IOException, FormatException, ResourceNotFoundException {
 		logger.debug("Start load entries log={} from source={}, mark={}, count={}", logPath, logSource, mark, count);
 		try {
 			final LogSource<LogRawAccess<? extends LogInputStream>> activeLogSource = getActiveLogSource(logSource);
@@ -193,7 +193,7 @@ public class LogEntriesRestController {
 			@RequestParam("log") final String logPath,
 			@RequestParam(value = "navType", defaultValue = "BYTE") final NavigationType navType,
 			@RequestParam(value = "mark") final String position, @RequestParam(value = "count") final int count)
-					throws IOException, FormatException, ResourceNotFoundException {
+			throws IOException, FormatException, ResourceNotFoundException {
 		logger.debug("Start loading random access entries log={} from source={}, navType={}, position={}, count={}",
 				logPath, activeLogSource, navType, position, count);
 		try {
@@ -250,7 +250,7 @@ public class LogEntriesRestController {
 			@RequestParam("log") final String logPath,
 			@RequestParam(value = "navType", defaultValue = "BYTE") final NavigationType navType,
 			@RequestParam(value = "mark") final String position, @RequestParam(value = "count") final int count)
-					throws IOException, FormatException, ResourceNotFoundException {
+			throws IOException, FormatException, ResourceNotFoundException {
 		logger.debug("Start loading random access entries log={} from source={}, navType={}, position={}, count={}",
 				logPath, logSource, navType, position, count);
 		try {
@@ -315,7 +315,7 @@ public class LogEntriesRestController {
 			@PathVariable("logSource") final long logSource, @RequestParam("log") final String logPath,
 			@RequestParam(value = "mark", required = false) final String mark,
 			@RequestParam(value = "count") final int count, final BindingResult bResult)
-					throws IOException, FormatException, ResourceNotFoundException {
+			throws IOException, FormatException, ResourceNotFoundException {
 		final long start = System.currentTimeMillis();
 		logger.debug("Start searching entries log={} from source={}, mark={}, count={}", logPath, logSource, mark,
 				count);
@@ -333,7 +333,7 @@ public class LogEntriesRestController {
 		if (count >= 0) {
 			reader = ((LogSource) source).getReader();
 		} else {
-			reader = new FluentReverseReader(source.getReader());
+			reader = new InverseReader<>(source.getReader());
 		}
 		scanner.find(reader, new TimeoutReaderStrategy(3 * 1000) {
 			@Override
@@ -422,7 +422,7 @@ public class LogEntriesRestController {
 		@Override
 		public NavigationFuture navigate(final LogSource<? extends LogRawAccess<? extends LogInputStream>> logSource,
 				final LogRawAccess<? extends LogInputStream> logAccess, final Log log, final String strPosition)
-						throws IOException {
+				throws IOException {
 			if (NumberUtils.isNumber(strPosition)) {
 				final Date from = new Date(Long.parseLong(strPosition));
 				if (logAccess instanceof ByteLogAccess) {

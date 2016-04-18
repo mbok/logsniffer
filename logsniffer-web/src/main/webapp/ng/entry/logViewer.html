@@ -49,14 +49,15 @@
 </style>
 	<div class="backdrop-overlay" style="display:none"></div>
 	<div lsf-alerts alerts="alerts"></div>
-	<accordion close-others="false" ng-if="searchEnabled" class="viewer-search">
-		<accordion-group is-open="searchSettings.expanded">
-	        <accordion-heading>
+	<uib-accordion close-others="false" ng-if="searchEnabled" class="viewer-search">
+		<uib-accordion-group is-open="searchSettings.expanded">
+	        <uib-accordion-heading>
 	            Search<i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': !searchSettings.expanded, 'glyphicon-chevron-up': searchSettings.expanded}"></i>
-	        </accordion-heading>
+	        </uib-accordion-heading>
 	        <div id="search-control" ng-form="form">
 	        	<lfs-bean-wizard ng-if="wizardScannerEnabled" bean="wizardScanner.bean" bean-type-label="Scanner type" wizards="searchWizards()"
-					shared-scope="sharedScope" bind-errors="searchBindErrors" bind-errors-prefix=""></lfs-bean-wizard>
+					shared-scope="sharedScope" bind-errors="searchBindErrors" bind-errors-prefix=""
+					model-exclude="['fieldTypes']"></lfs-bean-wizard>
 				<div class="row">
 				    <div class="col-md-12">
 						<div class="radio-inline">
@@ -102,8 +103,8 @@
 				    </div>
 				</div>
 	        </div>
-    	</accordion-group>
-	</accordion>
+    	</uib-accordion-group>
+	</uib-accordion>
 
 
 
@@ -115,8 +116,9 @@
 		</div>
 		<div class="col-md-10">
 			<div class="row">
-				<div class="col-md-12">
-					<lsf-log-position pointer="mark" name="logpos" log="log" active="false" disabled="false" pointer-tpl="pointerTpl()"></lsf-log-position>
+				<div class="col-md-12" ng-init="sliderValue={v:77, min:0, max:120}">
+					<lsf-log-navigator-date ng-if="source.navigationType=='DATE'"></lsf-log-navigator-date>
+					<lsf-log-position ng-if="source.navigationType!='DATE'" pointer="mark" name="logpos" log="log" active="false" disabled="false" pointer-tpl="pointerTpl()"></lsf-log-position>
 				</div>
 			</div>
 		</div>

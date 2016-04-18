@@ -19,7 +19,7 @@
 <script type="text/javascript">
 	LogSnifferNgApp.controller(
 			"SourceBeanWizardControllerWrapper",
-			function($scope, $http, $log, $modal, lsfAlerts) {
+			function($scope, $http, $log, $uibModal, lsfAlerts) {
 				$scope.alerts = lsfAlerts.create();
 				$scope.sourceWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.model.LogSource', pageContext.response.locale))};
 				$scope.readerWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.reader.LogEntryReader', pageContext.response.locale))};
@@ -84,7 +84,7 @@
 				};
 				
 				$scope.testLogViewing = function () {
-					$modal.open({
+					$uibModal.open({
 				      templateUrl: $scope.contextPath + '/ng/source/readerTest.html',
 				      controller: 'ReaderTestCtrl',
 				      size: 'lg',
@@ -172,11 +172,11 @@
 <div id="source-editor" ng-controller="SourceBeanWizardControllerWrapper" ng-form="form2">
 	<div lsf-alerts alerts="alerts"></div>
 	<lsf-model-editor model="beanWrapper[0]" name="Overall log source configuration" exclude="['fieldTypes','supportedSeverities','readerConfigurable']"></lsf-model-editor>
-	<tabset>
-    	<tab>
-    		<tab-heading>
+	<uib-tabset>
+    	<uib-tab>
+    		<uib-tab-heading>
 				Main <i class="glyphicon muted" ng-class="{'glyphicon-ok-circle': formValidation.main, 'glyphicon-remove-circle': !formValidation.main}"></i>
-			</tab-heading>
+			</uib-tab-heading>
 			<div ng-form="mainForm">
 				<div ng-form="form">
 					<lsf-form-valid-observer form="mainForm" on-valid-change="mainFormValid" />
@@ -213,12 +213,12 @@
 					</lfs-bean-wizard>
 				</div>
 			</div>
-		</tab>
+		</uib-tab>
 
-		<tab ng-if="beanWrapper[0]['@type'] && beanWrapper[0].readerConfigurable">
-    		<tab-heading>
+		<uib-tab ng-if="beanWrapper[0]['@type'] && beanWrapper[0].readerConfigurable">
+    		<uib-tab-heading>
 				Reader <i class="glyphicon muted" ng-class="{'glyphicon-ok-circle': formValidation.reader, 'glyphicon-remove-circle': !formValidation.reader}"></i>
-			</tab-heading>
+			</uib-tab-heading>
 			<!-- TODO if reader is configurable -->
 			<div ng-form="readerForm">
 				<div id="log-reader-editor" ng-if="beanWrapper[0]['@type']" ng-form="form">
@@ -229,7 +229,7 @@
 					</lfs-bean-wizard>
 				</div>
 			</div>
-		</tab>
+		</uib-tab>
 
 	<!-- Filters -->
 	<script type="text/javascript">
@@ -244,10 +244,10 @@
 		}
 	);
 	</script>
-		<tab ng-if="beanWrapper[0]['@type']">
-    		<tab-heading>
+		<uib-tab ng-if="beanWrapper[0]['@type']">
+    		<uib-tab-heading>
 				Filters <i class="glyphicon muted" ng-class="{'glyphicon-ok-circle': formValidation.filters, 'glyphicon-remove-circle': !formValidation.filters}"></i>
-			</tab-heading>
+			</uib-tab-heading>
 			<div ng-form="filtersForm">
 				<div id="source-reader-filters" ng-if="beanWrapper[0]['@type']" ng-form="form">
 					<lsf-form-valid-observer form="filtersForm" on-valid-change="filtersFormValid" />
@@ -274,11 +274,11 @@
 					</div>
 				</div>
 			</div>
-		</tab>
-		<tab ng-if="beanWrapper[0]['@type']">
-    		<tab-heading>
+		</uib-tab>
+		<uib-tab ng-if="beanWrapper[0]['@type']">
+    		<uib-tab-heading>
 				UI settings <i class="glyphicon muted" ng-class="{'glyphicon-ok-circle': formValidation.ui, 'glyphicon-remove-circle': !formValidation.ui}"></i>
-			</tab-heading>
+			</uib-tab-heading>
 			<div ng-form="uiForm">
 				<div id="source-ui" ng-form="form">
 					<lsf-form-valid-observer form="uiForm" on-valid-change="uiFormValid" />
@@ -315,8 +315,8 @@
 				</div>
 			</div>
 
-		</tab>
-	</tabset>
+		</uib-tab>
+	</uib-tabset>
 	<hr>
 
 	<div class="row">

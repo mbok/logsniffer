@@ -34,7 +34,8 @@ import com.logsniffer.reader.FormatException;
 import com.logsniffer.reader.LogEntryReader;
 
 /**
- * Consumes log entries in a reverse order direction fluently.
+ * Consumes log entries from a byte log access in a reverse order direction
+ * fluently.
  * 
  * @author mbok
  * 

@@ -1,0 +1,51 @@
+<div>
+	<div class="row">
+		<div class="col-md-1">
+			Date:
+		</div>
+		<div class="col-md-8">
+			<lsf-bar-slider value="dateSlider.value" max="dateSlider.max" min="dateSlider.min" step="dateSlider.step" formater="dateSliderFormater"
+				slide-stop="onSliderChanged()"></lsf-bar-slider>
+		</div>
+		<div class="col-md-3">
+			<div class="controls">
+				<div class="input-group input-group-sm">
+					<input type="text" class="form-control" uib-datepicker-popup="shortDate" ng-model="dateSlider.value" ng-required="true"
+						is-open="dateSliderPickerOpen" datepicker-append-to-body="true" />
+					<span class="input-group-btn">
+						<button type="button" class="btn btn-default btn-sm"
+							ng-click="$event.preventDefault();$event.stopPropagation();dateSliderPickerOpen=!dateSliderPickerOpen"><i class="glyphicon glyphicon-calendar"></i></button>
+          			</span>
+        		</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/ng-template" id="timePickerTpl"><uib-timepicker ng-model="timeSlider.value" hour-step="1" minute-step="1" show-meridian="true" show-seconds="true"></uib-timepicker></script>
+	<div class="row">
+		<div class="col-md-1">
+			Time:
+		</div>
+		<div class="col-md-8">
+			<lsf-bar-slider value="timeSlider.value" max="timeSlider.max" min="timeSlider.min" step="timeSlider.step" formater="timeSliderFormater"
+				slide-stop="onSliderChanged()"></lsf-bar-slider>
+		</div>
+		<div class="col-md-3">
+			<div class="controls">
+				<div class="input-group input-group-sm">
+					<input type="text" class="form-control" readonly="readonly" value="{{timeSlider.value | date:'mediumTime'}}"/>
+					<span class="input-group-btn">
+						<button type="button" 
+							uib-popover-template="'timePickerTpl'"
+							popover-append-to-body="true"
+							popover-placement="top-right"
+							popover-trigger="outsideClick"
+							class="btn btn-default btn-sm" title="Select time"><i class="glyphicon glyphicon-time"></i></button>
+						<button type="button" title="Navigate in the log to the desired timestamp" class="btn btn-default btn-sm"
+							ng-disabled="!applicable" ng-class="{'btn-primary':applicable}"
+							ng-click="navigate()"><i class="glyphicon glyphicon-chevron-right"></i></button>
+          			</span>
+        		</div>
+			</div>
+		</div>
+	</div>
+</div>

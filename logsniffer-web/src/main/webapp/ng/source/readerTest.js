@@ -19,8 +19,8 @@ angular
 .module('lsfReaderTestModule',[])
 .controller(
 	"ReaderTestCtrl",
-	['$scope', '$http', '$log', 'usSpinnerService', '$modalInstance', '$timeout', 'lsfAlerts', 'title', 'source', 'testSession',
-	function($scope, $http, $log, usSpinnerService, $modalInstance, $timeout, lsfAlerts, title, source, testSession) {
+	['$scope', '$http', '$log', 'usSpinnerService', '$uibModalInstance', '$timeout', 'lsfAlerts', 'title', 'source', 'testSession',
+	function($scope, $http, $log, usSpinnerService, $uibModalInstance, $timeout, lsfAlerts, title, source, testSession) {
 	    $scope.alerts = lsfAlerts.create();
 	    $scope.busy = false;
 	    $scope.title = title;
@@ -37,7 +37,7 @@ angular
 	    $scope.viwerInitialized = false;
 	    
 	    $scope.close = function () {
-		$modalInstance.close();
+		$uibModalInstance.close();
 	    };
 	    
 	    $scope.logViewerErrorHandler = function () {

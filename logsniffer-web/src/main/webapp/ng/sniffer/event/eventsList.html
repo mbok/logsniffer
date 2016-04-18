@@ -1,8 +1,8 @@
 <ul class="breadcrumb">
 	<li><a href="{{contextPath}}/c/sniffers">Sniffers</a></li>
 	<li><a href="{{contextPath}}/c/sniffers/{{sniffer.id}}/events#/">{{sniffer.name}}</a>
-		<span class="dropdown" dropdown>
-			<button class="btn btn-xs" dropdown-toggle><i class="glyphicon glyphicon-cog"></i> <span class="caret"></span></button>
+		<span class="dropdown" uib-dropdown>
+			<button class="btn btn-xs" uib-dropdown-toggle><i class="glyphicon glyphicon-cog"></i> <span class="caret"></span></button>
 			<ul class="dropdown-menu">
 				<li><a href="{{contextPath}}/c/sniffers/{{sniffer.id}}/events"><i class="glyphicon glyphicon-bullhorn"></i> Events</a></li>
 				<li><a href="{{contextPath}}/c/sniffers/{{sniffer.id}}"><i class="glyphicon glyphicon-edit"></i> Edit</a></li>
@@ -84,7 +84,7 @@
 				      <li><a href="#" ng-click="setOccurrenceRangeFrom('YEAR',-1)" onclick="return false">1y</a></li>
 				    </ul>
 				</div>
-		        <input type="text" class="form-control input-sm" datepicker-popup="medium" ng-model="searchForm._from" close-text="Close" 
+		        <input type="text" class="form-control input-sm" uib-datepicker-popup="medium" ng-model="searchForm._from" close-text="Close" 
 		        	placeholder="Start timestamp" is-open="datePickerFromOpen" datepicker-append-to-body="true" readonly="readonly"/>
 		        <span class="input-group-btn">
 		          <button type="button" class="btn btn-default btn-sm" ng-click="$event.preventDefault();$event.stopPropagation();datePickerFromOpen=!datePickerFromOpen"><i class="glyphicon glyphicon-calendar"></i></button>
@@ -94,7 +94,7 @@
 		</div>
 		<div class="col-md-3">
 			<div class="input-group" ng-init="datePickerToOpen=false">
-		        <input type="text" class="form-control input-sm" datepicker-popup="medium" ng-model="searchForm._to" close-text="Close" 
+		        <input type="text" class="form-control input-sm" uib-datepicker-popup="medium" ng-model="searchForm._to" close-text="Close" 
 		        	placeholder="End timestamp" is-open="datePickerToOpen" datepicker-append-to-body="true" readonly="readonly"/>
 		        <span class="input-group-btn">
 		          <button type="button" class="btn btn-default btn-sm" ng-click="$event.preventDefault();$event.stopPropagation();datePickerToOpen=!datePickerToOpen"><i class="glyphicon glyphicon-calendar"></i></button>
@@ -132,9 +132,9 @@
 				<strong>Events {{searchForm._offset + 1}} - {{Math.min(searchForm._offset + searchForm._itemsPerPage, eventsList.totalCount)}} of {{eventsList.totalCount}}</strong>
 			</div>
 			<div class="pull-right">
-				<pagination total-items="eventsList.totalCount" ng-model="pager.currentPage" ng-change="pageChanged()" max-size="15" class="pagination-sm" boundary-links="true" rotate="false" num-pages="numPages"
+				<uib-pagination total-items="eventsList.totalCount" ng-model="pager.currentPage" ng-change="pageChanged()" max-size="15" class="pagination-sm" boundary-links="true" rotate="false" num-pages="numPages"
 					previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;"
-					items-per-page="searchForm._itemsPerPage"></pagination>
+					items-per-page="searchForm._itemsPerPage"></uib-pagination>
 			</div>
 		</div>
 		<div>
@@ -166,9 +166,9 @@
 				<strong>Events {{searchForm._offset + 1}} - {{Math.min(searchForm._offset + searchForm._itemsPerPage, eventsList.totalCount)}} of {{eventsList.totalCount}}</strong>
 			</div>
 			<div class="pull-right">
-				<pagination total-items="eventsList.totalCount" ng-model="pager.currentPage" ng-change="pageChanged()" max-size="15" class="pagination-sm" boundary-links="true" rotate="false" num-pages="numPages"
+				<uib-pagination total-items="eventsList.totalCount" ng-model="pager.currentPage" ng-change="pageChanged()" max-size="15" class="pagination-sm" boundary-links="true" rotate="false" num-pages="numPages"
 					previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;"
-					items-per-page="searchForm._itemsPerPage"></pagination>
+					items-per-page="searchForm._itemsPerPage"></uib-pagination>
 			</div>
 		</div>
 	</div>

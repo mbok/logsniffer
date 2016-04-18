@@ -26,7 +26,7 @@
 <script type="text/javascript">
 	LogSnifferNgApp.controller(
 		"SnifferBeanWizardControllerWrapper",
-		function($scope, $http, $log, $modal) {
+		function($scope, $http, $log, $uibModal) {
 		    $scope.scannerWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.event.Scanner', pageContext.response.locale))};
 			$scope.readerStrategyWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.event.LogEntryReaderStrategy', pageContext.response.locale))};
 		    $scope.publisherWizards=${logfn:jsonify(logfn:wizardsInfo('com.logsniffer.event.Publisher', pageContext.response.locale))};
@@ -96,7 +96,7 @@
 			};
 			
 			$scope.testPublisher = function (publisher) {
-				$modal.open({
+				$uibModal.open({
 			      templateUrl: $scope.contextPath + '/ng/sniffer/snifferTest.html',
 			      controller: 'SnifferTestCtrl',
 			      size: 'lg',
@@ -130,7 +130,7 @@
 		    };
 		    
 			$scope.testScanner = function () {
-				$modal.open({
+				$uibModal.open({
 			      templateUrl: $scope.contextPath + '/ng/sniffer/snifferTest.html',
 			      controller: 'SnifferTestCtrl',
 			      size: 'lg',
@@ -202,11 +202,11 @@
 	
 <fieldset id="sniffer-editor" ng-controller="SnifferBeanWizardControllerWrapper" ng-disabled="${scheduled}" ng-form="rootForm">
 	<lsf-model-editor model="bean" name="Overall sniffer configuration" exclude="['aspects','fieldTypes','supportedSeverities']"></lsf-model-editor>
-	<tabset>
-    	<tab heading="Main">
-	   		<tab-heading>
+	<uib-tabset>
+    	<uib-tab heading="Main">
+	   		<uib-tab-heading>
 				Main <i class="glyphicon muted" ng-class="{'glyphicon-ok-circle': formValidation.main, 'glyphicon-remove-circle': !formValidation.main}"></i>
-			</tab-heading>
+			</uib-tab-heading>
 	    	<div ng-form="mainForm">
 	    		<lsf-form-valid-observer form="mainForm" on-valid-change="mainFormValid" />
 	    		<div ng-form="form">
@@ -304,20 +304,21 @@
 					</div>
 				</div>
 			</div>
-	</tab>
+	</uib-tab>
 
 	<!-- Scanner wizard -->
-	<tab>
-   		<tab-heading>
+	<uib-tab>
+   		<uib-tab-heading>
 			Scanner <i class="glyphicon muted" ng-class="{'glyphicon-ok-circle': formValidation.scanner, 'glyphicon-remove-circle': !formValidation.scanner}"></i>
-		</tab-heading>
+		</uib-tab-heading>
 		<div id="sniffer-scanner-editor" ng-form="scannerForm">
 			<lsf-form-valid-observer form="scannerForm" on-valid-change="scannerFormValid" />
 			<div ng-form="form">
 				<h4>Event scanner configuration
 					<small>Configures the scanner sniffing the log consecutively for new events</small></h4>
 				<lfs-bean-wizard bean="bean.scanner.targetScanner" bean-type-label="Scanner" wizards="scannerWizards"
-					shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="scanner.targetScanner.">
+					shared-scope="sharedScope" bind-errors="bindErrors" bind-errors-prefix="scanner.targetScanner."
+					model-exclude="['fieldTypes']">
 				</lfs-bean-wizard>
 		
 				<!-- Filters -->
@@ -352,7 +353,7 @@
 				</div>
 			</div>
 		</div>
-	</tab>
+	</uib-tab>
 	
 	<!-- Publishers -->
 	<script type="text/javascript">
@@ -367,10 +368,10 @@
 		}
 	);
 	</script>
-	<tab>
-   		<tab-heading>
+	<uib-tab>
+   		<uib-tab-heading>
 			Publishers <i class="glyphicon muted" ng-class="{'glyphicon-ok-circle': formValidation.publishers, 'glyphicon-remove-circle': !formValidation.publishers}"></i>
-		</tab-heading>
+		</uib-tab-heading>
 		<div id="sniffer-publishers" ng-form="publishersForm">
 			<lsf-form-valid-observer form="publishersForm" on-valid-change="publishersFormValid" />
 			<div ng-form="form">
@@ -398,5 +399,5 @@
 				</div>
 			</div>
 		</div>
-	</tab>
+	</uib-tab>
 </fieldset>
