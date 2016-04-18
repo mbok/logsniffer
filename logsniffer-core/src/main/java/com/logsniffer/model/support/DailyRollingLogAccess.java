@@ -311,7 +311,7 @@ public class DailyRollingLogAccess implements ByteLogAccess {
 		// Search for the proper log
 		final int index = getLogIndex(source.path);
 		if (index < 0) {
-			LOGGER.debug("Using start pointer for log '{}' due to '{}' is no more listed", log.getPath(), source.path);
+			LOGGER.info("Using start pointer for log '{}' due to '{}' is no more listed", log.getPath(), source.path);
 			return new PointerData(parts.length - 1, null);
 		} else {
 			if (Arrays.hashCode(allLogPathes) == source.allLogsHash) {
@@ -324,16 +324,16 @@ public class DailyRollingLogAccess implements ByteLogAccess {
 					if (source.liveNext != null) {
 						final int next = getLogIndex(source.liveNext) - 1;
 						if (next > 0 && next < parts.length) {
-							LOGGER.debug("Using for rolled live log '{}' the next listed '{}'", log.getPath(),
+							LOGGER.info("Using for rolled live log '{}' the next listed '{}'", log.getPath(),
 									parts[next].getPath());
 							return new PointerData(next, source);
 						} else {
-							LOGGER.debug("Using start pointer for log '{}', because the next rolled wasn't found",
+							LOGGER.info("Using start pointer for log '{}', because the next rolled wasn't found",
 									log.getPath());
 							return new PointerData(parts.length - 1, null);
 						}
 					}
-					LOGGER.debug("Using start pointer for log '{}', because the live one was rolled", log.getPath());
+					LOGGER.info("Using start pointer for log '{}', because the live one was rolled", log.getPath());
 					return new PointerData(parts.length - 1, null);
 
 				} else {
