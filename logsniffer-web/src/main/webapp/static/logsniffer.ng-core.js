@@ -692,7 +692,7 @@ angular.module('LogSnifferCore', ['jsonFormatter','ui.bootstrap'])
 	        	  "sourceId": scope.source.id,
 	        	  "logPath": scope.log.path,
 	        	  "entryLoader": entryLoader,
-	        	  "appendTo": angular.element(element)
+	        	  "appendTo": scope.fullscreen ? angular.element(element): null
 	          });
 		};
 		function renderPrefixCells(fieldsTypes, e) {

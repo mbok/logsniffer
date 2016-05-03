@@ -36,7 +36,7 @@
 						<div class="col-md-12">
 							<div class="row">
 								<div class="col-md-12">
-									<h4><a href="${showUrl}">${logfn:fileName(log.path)}</a><br> <small>${logfn:filePath(log.path)}</small></h4>
+									<h4><a href="${showUrl}">${log.name}</a><br> <small>${logfn:filePath(log.path)}</small></h4>
 								</div>
 							</div>
 							<div class="row">

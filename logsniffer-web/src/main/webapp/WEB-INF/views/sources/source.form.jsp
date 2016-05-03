@@ -199,7 +199,6 @@
 						<div class="alert alert-success animate-show" ng-show="resolvedTestLogs.length>0">
 							<h4>Resolved logs:</h4>
 							<ol>
-								<!-- TODO: Rolling logs -->
 								<li ng-repeat="log in resolvedTestLogs">{{log.path}} ({{log.size | bytesToSize}})
 									<label ng-if="log['@type']=='rolling'" class="blocked">Log parts:</label>
 									<ol ng-if="log['@type']=='rolling'">

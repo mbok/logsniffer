@@ -5,7 +5,7 @@
 <%@taglib prefix="logfn" uri="http://logsniffer.com/jstl/fn"%>
 <%@taglib prefix="spring" uri="http://www.springframework.org/tags"%>
 
-<tpl:bodyFull title="${logfn:fileName(activeLog.path)} - View" activeNavbar="sources"
+<tpl:bodyFull title="${activeLog.name} - View" activeNavbar="sources"
 	ngModules="'LogShowModule'">
   <jsp:body>
 	<c:url var="entriesJsonURL"

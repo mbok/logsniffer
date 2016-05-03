@@ -1,10 +1,74 @@
-<div id="source-wildcard-rolling-file-wizard">
-	<lsf-info-label label="Compounds log data from multiple logs into a continuous stream ordered by the timestamp" class="text-muted">
-		This source concats a live actively written log file with older rolled over files into a single continuous log.
-		The live log has a static name and it's the single file which can change size. After it's rolled, the file got renamed to
-		a fix timestamp based name and no longer changed to enable exact navigation in the concated logs. 
-		<strong>Important:</strong> This source supports rolling only based on a timestamp name pattern, because this guarantees 
-		static names of rolled over files, which is the key for navigating in the concated files.
-	</lsf-info-label>
+<script type="text/javascript">
+LogSnifferNgApp.controllerProvider.register(
+	"CompoundSourceController", ['$scope', '$http', 'lsfAlerts', '$log',
+	function ($scope, $http, lsfAlerts, $log) {
+		$scope.alerts = lsfAlerts.create();
+		$scope.busy = false;
+		$scope.sources = [];
+		
+		$log.info("Resolving sources");
+		$http({
+        		url : $scope.contextPath + "/c/sources",
+        		method : "GET"
+        	})
+       	.success(
+       		function(data, status, headers, config) {
+       		    $scope.busy = false;
+       		    $scope.sources = data;
+       		    $log.info("Sources loaded: ", $scope.sources);
+       		})
+       	.error(
+       		function(data, status, headers, config, statusText) {
+       		    $scope.busy = false;
+       		    $scope.alerts.httpError("Failed to load log sources", data, status, headers, config, statusText);
+       		}
+       	);
 
+}]);
+</script>
+<div id="source-compound-wizard" ng-controller="CompoundSourceController">
+	<div lsf-alerts alerts="alerts"></div>
+	<div lsf-busy-container busy="busy">
+		<lsf-info-label label="Compounds log data from multiple logs into a continuous stream ordered by the timestamp" class="text-muted">
+			This source concats a live actively written log file with older rolled over files into a single continuous log.
+			The live log has a static name and it's the single file which can change size. After it's rolled, the file got renamed to
+			a fix timestamp based name and no longer changed to enable exact navigation in the concated logs. 
+			<strong>Important:</strong> This source supports rolling only based on a timestamp name pattern, because this guarantees 
+			static names of rolled over files, which is the key for navigating in the concated files.
+		</lsf-info-label>
+
+		<div ng-repeat="part in bean.parts">
+			<h5>Log instance {{$index + 1}}</h5>
+			<div class="row">
+				<div class="col-md-6">
+					<lsf-form-group class="form-group required" field-name="sourceId" field-path="parts[{{$index}}].sourceId" bind-errors="bindErrors">
+						<lsf-info-label label="Source:" for="part[{{$index}}].sourceId">
+							Reference here the live and the rolled over files using an 
+							<a href="http://ant.apache.org/manual/dirtasks.html#patterns" target="_blank">Ant-style pattern</a> expression.
+							The live file is determined as first entry of the matching file collection regarding
+							the set order criteria. This source supports exposing of only one rolling log.
+						</lsf-info-label>
+						<select ng-model="part.sourceId" name="sourceId" id="part[{{$index}}].sourceId"
+							required="required" ng-options="logSource.id as logSource.name for logSource in sources" class="form-control">
+							<option value="">- Please select -</option>
+						</select>
+					</lsf-form-group>
+				</div>
+				<div class="col-md-6">
+					<lsf-form-group class="form-group required" field-name="pastLogsType" field-path="pastLogsType" bind-errors="bindErrors">
+						<lsf-info-label label="Log:" for="part[{{$index}}].logPath">
+							Defines the order criteria of the matching files which should correlate to the sequence the log files
+							have been written over time.
+						</lsf-info-label>
+						<select ng-model="part.logPath" name="logPath" id="part[{{$index}}].logPath"
+							required="required" ng-options="log.path as log.name for log in logs[part.sourceId]" class="form-control">
+							<option value="">- All -</option>
+						</select>
+					</lsf-form-group>
+				</div>
+			</div>
+		</div>
+
+
+	</div>
 </div>

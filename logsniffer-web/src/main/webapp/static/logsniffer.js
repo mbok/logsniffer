@@ -401,7 +401,7 @@ LogPosition.prototype.resetToEnd = function() {
 					html += cellsBeforeCallback(fieldsTypes, e);
 				}
 				html += '<td colspan="' + fLength + '" class="text">'
-						+ e.lf_raw + '</td>';
+						+ escapeHtml(e.lf_raw) + '</td>';
 			}
 			if (cellsAfterCallback) {
 				html += cellsAfterCallback(fieldsTypes, e);
@@ -434,13 +434,22 @@ LogPosition.prototype.resetToEnd = function() {
 				html = JSON.stringify(fieldValue);
 				break;
 			default:
-				html = $("<div>").text(fieldValue).html();
+				html = escapeHtml(fieldValue);
 			}
 			return '<span class="'+fieldType+'">'+html+'</span>';
 		} else {
 			return null;
 		}
-	}
+	};
+	
+	function escapeHtml(unsafe) {
+	    return unsafe
+	         .replace(/&/g, "&amp;")
+	         .replace(/</g, "&lt;")
+	         .replace(/>/g, "&gt;")
+	         .replace(/"/g, "&quot;")
+	         .replace(/'/g, "&#039;");
+	 };
 
 	$.LogSniffer = {
 		entriesIgnoreFields : {
