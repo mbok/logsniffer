@@ -1,5 +1,6 @@
 package com.logsniffer.util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -29,7 +30,12 @@ public class I18NResource {
 
 		public LocalesAndTimezonesWrapper(final List<Locale> locales, final List<String> timezones) {
 			super();
-			this.locales = locales;
+			this.locales = new ArrayList<Locale>();
+			for (final Locale l : locales) {
+				if (l.toString().length() > 0) {
+					this.locales.add(l);
+				}
+			}
 			this.timezones = timezones;
 		}
 
