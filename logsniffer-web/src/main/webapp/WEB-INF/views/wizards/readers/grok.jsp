@@ -9,15 +9,13 @@
 
 
 <div id="reader-grok-wizard" class="wizard">
-	<lsf-info-label label="Regular expression pattern reader">
+	<lsf-info-label label="Regex / Grok pattern reader">
 		This reader reads the content of a log and parses each line using the specified regular or grok expression.
+		The below pattern is evaluated against each log line. <span ng-include="contextPath + '/ng/help/regexGrokPattern.html?v='+version"></span>
 	</lsf-info-label>
 	<div class="row">
 		<t:ngFormFieldWrapper cssClass="form-group col-md-10 required" fieldName="grokPattern" bindErrorsPath="grokBean.pattern">
-			<lsf-info-label for="grokPattern" label="Pattern:">
-				The pattern each log line is parsed by.
-				<span ng-include="contextPath + '/ng/help/regexGrokPattern.html?v='+version"></span>
-			</lsf-info-label>
+			<label for="grokPattern" class="control-label">Pattern:</label>
 			<div class="controls controls-row">
 				<input type="text" class="form-control pattern" ng-model="bean.grokBean.pattern" name="grokPattern" id="grokPattern" required/>
 			</div>
@@ -53,7 +51,7 @@
 			</div>
 		</div>
 		<t:ngFormFieldWrapper cssClass="form-group col-md-6" fieldName="overflowAttribute">
-			<lsf-info-label label="Overflow attribute" for="overflowAttribute">
+			<lsf-info-label label="Overflow attribute:" for="overflowAttribute">
 				In case of lines not matching the pattern these can be attached to a field of last well parsed log line.
 				 The overflow field can reference an existing or a new field. If not set, the not matching lines will be attached (as default)
 				 to the <code>lf_raw</code> field of the last well parsed log entry.

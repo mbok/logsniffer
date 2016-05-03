@@ -60,6 +60,9 @@
 		</t:ngFormFieldWrapper>
 	</div>
 	<div class="row">
+		<div ng-include="contextPath + '/ng/wizards/filter/util/localeTimeZoneFields.html?v='+version"></div>
+	</div>
+	<div class="row">
 		<div class="form-group col-md-12">
 			<label class="control-label">Conversion specifier field mapping:
 				<i class="glyphicon glyphicon-info-sign help-popup" data-container="body" data-html="true" data-content="
@@ -81,5 +84,4 @@
 			<div class="help-block" ng-if="getUsedSpecifiers(bean.formatPattern).length==0">Please configure first the proper conversion pattern!</div>
 		</div>
 	</div>
-
 </div>

@@ -1,0 +1,58 @@
+<script type="text/javascript">
+LogSnifferNgApp.controllerProvider.register(
+	"LocaleTimeZoneFieldsController", ['$scope', '$http', 'lsfAlerts', '$log',
+	function ($scope, $http, lsfAlerts, $log) {
+		$scope.alerts = lsfAlerts.create();
+		$scope.busy = false;
+		$scope.locales = [];
+		$scope.timezones = [];
+		
+		$log.info("Resolving locales and timezones");
+		$http({
+        		url : $scope.contextPath + "/c/utils/i18n/localesAndTimezones",
+        		method : "GET"
+        	})
+       	.success(
+       		function(data, status, headers, config) {
+       		    $scope.busy = false;
+       		    $scope.locales = data.locales;
+       		    $scope.timezones = data.timezones;
+       		    $log.info("Loaded Locales and timezones: ", data);
+       		})
+       	.error(
+       		function(data, status, headers, config, statusText) {
+       		    $scope.busy = false;
+       		    $scope.alerts.httpError("Failed to load available locales/timezones", data, status, headers, config, statusText);
+       		}
+       	);
+
+}]);
+</script>
+<div ng-controller="LocaleTimeZoneFieldsController">
+	<div lsf-alerts alerts="alerts"></div>
+	<div lsf-busy-container busy="busy">
+		<div class="col-md-3">
+			<lsf-form-group class="form-group" field-name="locale" field-path="locale" bind-errors="bindErrors">
+				<lsf-info-label label="Timestamp locale:" for="locale">
+					The locale whose date format symbols (e.g. month names) should be used during parsing the timestamp string.
+				</lsf-info-label>
+				<select ng-model="bean.locale" name="locale" id="locale"
+					ng-options="locale for locale in locales | orderBy : locale" class="form-control">
+					<option value="">- System default locale -</option>
+				</select>
+			</lsf-form-group>
+		</div>
+		<div class="col-md-3">
+			<lsf-form-group class="form-group" field-name="timeZone" field-path="timeZone" bind-errors="bindErrors">
+				<lsf-info-label label="Time zone:" for="timeZone">
+					When no time zone information is present in the input timestamp string,
+					you should explictly set the time zone it’s meant to refer to.
+				</lsf-info-label>
+				<select ng-model="bean.timeZone" name="timeZone" id="timeZone"
+					ng-options="timezone for timezone in timezones | orderBy : timezone" class="form-control">
+					<option value="">- Derived from input string -</option>
+				</select>
+			</lsf-form-group>
+		</div>
+	</div>
+</div>

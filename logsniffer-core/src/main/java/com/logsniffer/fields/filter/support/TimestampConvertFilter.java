@@ -20,7 +20,10 @@ package com.logsniffer.fields.filter.support;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,9 +48,15 @@ public class TimestampConvertFilter extends AbstractTransformationFilter<Date> {
 	@SimpleDateFormatConstraint
 	private String pattern;
 
+	@JsonProperty
+	private Locale locale;
+
+	@JsonProperty
+	private String timeZone;
+
 	private SimpleDateFormat parsedPattern;
 
-	{
+	public TimestampConvertFilter() {
 		setTargetField(LogEntry.FIELD_TIMESTAMP);
 	}
 
@@ -60,7 +69,14 @@ public class TimestampConvertFilter extends AbstractTransformationFilter<Date> {
 	protected Date transform(final String sourceValue) {
 		try {
 			if (parsedPattern == null) {
-				parsedPattern = new SimpleDateFormat(pattern);
+				if (locale != null) {
+					parsedPattern = new SimpleDateFormat(pattern, locale);
+				} else {
+					parsedPattern = new SimpleDateFormat(pattern);
+				}
+				if (StringUtils.isNotBlank(timeZone)) {
+					parsedPattern.setTimeZone(TimeZone.getTimeZone(timeZone));
+				}
 			}
 			return parsedPattern.parse(sourceValue);
 		} catch (ParseException | IllegalArgumentException e) {
@@ -92,4 +108,33 @@ public class TimestampConvertFilter extends AbstractTransformationFilter<Date> {
 		parsedPattern = null;
 	}
 
+	/**
+	 * @return the locale
+	 */
+	public Locale getLocale() {
+		return locale;
+	}
+
+	/**
+	 * @param locale
+	 *            the locale to set
+	 */
+	public void setLocale(final Locale locale) {
+		this.locale = locale;
+	}
+
+	/**
+	 * @return the timeZone
+	 */
+	public String getTimeZone() {
+		return timeZone;
+	}
+
+	/**
+	 * @param timeZone
+	 *            the timeZone to set
+	 */
+	public void setTimeZone(final String timeZone) {
+		this.timeZone = timeZone;
+	}
 }

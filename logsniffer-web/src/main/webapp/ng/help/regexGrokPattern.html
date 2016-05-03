@@ -44,7 +44,9 @@
 
 <span ng-controller="GroksHelpController">
 The supported pattern syntax is described on this <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html" target="_blank">JavaDoc</a> page.
-Rugular expressions can be mixed with grok patterns, click <a href ng-click="showGroks()"><i class="glyphicon glyphicon-info-sign help-icon"></i> here</a> 
+Rugular expressions can be mixed with grok patterns, click <a href ng-click="showGroks()">here</a> 
 to get more information regarding grok and for a list of predefined grok patterns. Use named capturing or grok groups to extract matching text groups from the input and to assign it to destined fields.
 The simpliest pattern you can start with is <code>(?&lt;myField&gt;.+)</code> which matches the whole input text and assigns the content to the <code>myField</code> field.
+<br>Apache's web server request log can be parsed it its compound parts by the simple grok pattern <code>%{COMBINEDAPACHELOG}</code>. See the
+<a href ng-click="showGroks()">complete grok pattern list</a>. 
 </span>

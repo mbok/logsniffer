@@ -86,7 +86,7 @@ public class GrokTextReader extends AbstractPatternLineReader<GrokMatcher>
 	@Override
 	protected void init() throws FormatException {
 		super.init();
-		logger.info("Compiled grok: {}", grokBean.getGrok(groksRegistry));
+		logger.debug("Compiled grok: {}", grokBean.getGrok(groksRegistry));
 	}
 
 	@Override

@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Level;
@@ -64,7 +66,10 @@ public class Log4jTextReader extends FormattedTextReader {
 	private LevelSpecifier levelSpecifier;
 
 	@JsonProperty
-	private final String strTimestampFieldName = "text_timestamp";
+	private Locale locale;
+
+	@JsonProperty
+	private String timeZone;
 
 	static {
 		LEVEL_MAP.put(Level.TRACE.toString(),
@@ -103,7 +108,7 @@ public class Log4jTextReader extends FormattedTextReader {
 
 		@Override
 		protected void set(final LogEntry entry, String match) {
-			entry.getFields().put(getFieldName(), match);
+			entry.put(getFieldName(), match);
 			match = match.trim();
 			SeverityLevel level = LEVEL_MAP.get(match);
 			if (level != null) {
@@ -138,7 +143,7 @@ public class Log4jTextReader extends FormattedTextReader {
 	 * @author mbok
 	 * 
 	 */
-	private static class TimeSpecifier extends Specifier {
+	private class TimeSpecifier extends Specifier {
 		public TimeSpecifier(final String specifierKey) {
 			super(specifierKey);
 		}
@@ -148,20 +153,29 @@ public class Log4jTextReader extends FormattedTextReader {
 		@Override
 		protected String getRegex() throws FormatException {
 			if ("ABSOLUTE".equals(getModifier())) {
-				dateFormat = new SimpleDateFormat("HH:mm:ss,SSS");
+				dateFormat = createFormat("HH:mm:ss,SSS");
 				return "\\d{1,2}:\\d{1,2}:\\d{1,2},\\d{1,3}";
 			} else if (StringUtils.isEmpty(getModifier())) {
 				// ISO8601: yyyy-MM-dd HH:mm:ss,SSS
-				dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS");
+				dateFormat = createFormat("yyyy-MM-dd HH:mm:ss,SSS");
 				return "[1-9]\\d{3}-\\d{2}-\\d{2} " + "\\d{1,2}:\\d{1,2}:\\d{1,2},\\d{1,3}";
 			} else {
 				try {
-					dateFormat = new SimpleDateFormat(getModifier());
+					dateFormat = createFormat(getModifier());
 					return DateFormatUtils.getRegexPattern(dateFormat);
 				} catch (final IllegalArgumentException e) {
 					throw new FormatException("Not valid simple formate date format: " + getModifier());
 				}
 			}
+		}
+
+		private SimpleDateFormat createFormat(final String format) {
+			final SimpleDateFormat dateFormat = locale != null ? new SimpleDateFormat(format, locale)
+					: new SimpleDateFormat(format);
+			if (StringUtils.isNotBlank(timeZone)) {
+				dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
+			}
+			return dateFormat;
 		}
 
 		@Override
@@ -184,7 +198,7 @@ public class Log4jTextReader extends FormattedTextReader {
 			// Clone not thread-safe date format
 			final TimeSpecifier c = (TimeSpecifier) super.clone();
 			if (dateFormat != null) {
-				c.dateFormat = new SimpleDateFormat(dateFormat.toPattern());
+				c.dateFormat = createFormat(dateFormat.toPattern());
 			}
 			return c;
 		}
@@ -270,5 +284,35 @@ public class Log4jTextReader extends FormattedTextReader {
 			types.put(LogEntry.FIELD_SEVERITY_LEVEL, FieldBaseTypes.SEVERITY);
 		}
 		return types;
+	}
+
+	/**
+	 * @return the locale
+	 */
+	public Locale getLocale() {
+		return locale;
+	}
+
+	/**
+	 * @param locale
+	 *            the locale to set
+	 */
+	public void setLocale(final Locale locale) {
+		this.locale = locale;
+	}
+
+	/**
+	 * @return the timeZone
+	 */
+	public String getTimeZone() {
+		return timeZone;
+	}
+
+	/**
+	 * @param timeZone
+	 *            the timeZone to set
+	 */
+	public void setTimeZone(final String timeZone) {
+		this.timeZone = timeZone;
 	}
 }

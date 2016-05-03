@@ -11,7 +11,8 @@
 			<div class="controls">
 				<div class="input-group input-group-sm">
 					<input type="text" class="form-control" uib-datepicker-popup="shortDate" ng-model="dateSlider.value" ng-required="true"
-						is-open="dateSliderPickerOpen" datepicker-append-to-body="true" />
+						is-open="dateSliderPickerOpen" datepicker-append-to-body="false" 
+						ng-change="onSliderChanged()"/>
 					<span class="input-group-btn">
 						<button type="button" class="btn btn-default btn-sm"
 							ng-click="$event.preventDefault();$event.stopPropagation();dateSliderPickerOpen=!dateSliderPickerOpen"><i class="glyphicon glyphicon-calendar"></i></button>
@@ -20,7 +21,7 @@
 			</div>
 		</div>
 	</div>
-	<script type="text/ng-template" id="timePickerTpl"><uib-timepicker ng-model="timeSlider.value" hour-step="1" minute-step="1" show-meridian="true" show-seconds="true"></uib-timepicker></script>
+	<script type="text/ng-template" id="timePickerTpl"><uib-timepicker ng-model="timeSlider.value" ng-change="onSliderChanged()" hour-step="1" minute-step="1" show-meridian="true" show-seconds="true"></uib-timepicker></script>
 	<div class="row">
 		<div class="col-md-1">
 			Time:
