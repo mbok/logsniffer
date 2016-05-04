@@ -880,3 +880,17 @@ LogSniffer.getFieldType = function (fields, fieldName) {
 	}
 };
 
+LogSniffer.has = function(obj, key) {
+    return key.split(".").every(function(x) {
+        if(typeof obj != "object" || obj === null || ! x in obj)
+            return false;
+        obj = obj[x];
+        return true;
+    });
+};
+
+LogSniffer.get = function(obj, key) {
+    return key.split(".").reduce(function(o, x) {
+        return (typeof o == "undefined" || o === null) ? o : o[x];
+    }, obj);
+};

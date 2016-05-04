@@ -146,4 +146,9 @@ public abstract class BaseLogsSource<ACCESSTYPE extends LogRawAccess<? extends L
 	@JsonProperty(access = Access.READ_ONLY)
 	@JsonView(Views.Info.class)
 	public abstract NavigationType getNavigationType();
+
+	@Override
+	public String toString() {
+		return "id=" + id + ", name=" + name;
+	}
 }

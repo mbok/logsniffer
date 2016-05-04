@@ -5,7 +5,32 @@ LogSnifferNgApp.controllerProvider.register(
 		$scope.alerts = lsfAlerts.create();
 		$scope.busy = false;
 		$scope.sources = [];
-		
+		$scope.logs = {};
+
+		$scope.loadLogsForSource = function (sourceId) {
+			if (typeof $scope.logs[sourceId] == "undefined") {
+				$scope.logs[sourceId] = [];
+       		    $scope.busy = true;
+				$log.info("Resolving logs for source", sourceId);
+				$http({
+		        		url : $scope.contextPath + "/c/sources/"+sourceId+"/logs",
+		        		method : "GET"
+		        	})
+		       	.success(
+		       		function(data, status, headers, config) {
+		       		    $scope.busy = false;
+		       		 	$scope.logs[sourceId] = data;
+		       		    $log.info("Loaded logs for source: ", sourceId, data);
+		       		})
+		       	.error(
+		       		function(data, status, headers, config, statusText) {
+		       		    $scope.busy = false;
+		       		    $scope.alerts.httpError("Failed to load logs for source " + sourceId, data, status, headers, config, statusText);
+		       		}
+		       	);
+			}
+		};
+
 		$log.info("Resolving sources");
 		$http({
         		url : $scope.contextPath + "/c/sources",
@@ -14,7 +39,20 @@ LogSnifferNgApp.controllerProvider.register(
        	.success(
        		function(data, status, headers, config) {
        		    $scope.busy = false;
-       		    $scope.sources = data;
+       		    $scope.sources = [];
+       		    for(var i=0;i<data.length;i++) {
+       		    	if (data[i].id == $scope.bean.id) {
+       		    		// Filter out current source
+       		    		continue;
+       		    	}
+       		    	var tmstField = LogSniffer.get(data[i], 'reader.fieldTypes.lf_timestamp');
+       		    	if (tmstField != "DATE") {
+       		    		// Filter out sources without timestamp field
+	       		    	$log.info("Source "+data[i].id+" is filtered out, because it has not a lf_timestamp field of type DATE: ", tmstField);
+       		    		continue;
+       		    	}
+       		    	$scope.sources.push(data[i]);
+       		    }
        		    $log.info("Sources loaded: ", $scope.sources);
        		})
        	.error(
@@ -23,7 +61,14 @@ LogSnifferNgApp.controllerProvider.register(
        		    $scope.alerts.httpError("Failed to load log sources", data, status, headers, config, statusText);
        		}
        	);
-
+}]);
+LogSnifferNgApp.controllerProvider.register(
+	"CompoundSourcePartController", ['$scope', '$http', '$log',
+	function ($scope, $http, $log) {
+		$scope.$watch('part.sourceId', function(newValue, oldValue) {
+			// Call in parent
+			$scope.loadLogsForSource(newValue);
+		});
 }]);
 </script>
 <div id="source-compound-wizard" ng-controller="CompoundSourceController">
@@ -39,7 +84,7 @@ LogSnifferNgApp.controllerProvider.register(
 
 		<div ng-repeat="part in bean.parts">
 			<h5>Log instance {{$index + 1}}</h5>
-			<div class="row">
+			<div class="row" ng-controller="CompoundSourcePartController">
 				<div class="col-md-6">
 					<lsf-form-group class="form-group required" field-name="sourceId" field-path="parts[{{$index}}].sourceId" bind-errors="bindErrors">
 						<lsf-info-label label="Source:" for="part[{{$index}}].sourceId">
@@ -61,7 +106,7 @@ LogSnifferNgApp.controllerProvider.register(
 							have been written over time.
 						</lsf-info-label>
 						<select ng-model="part.logPath" name="logPath" id="part[{{$index}}].logPath"
-							required="required" ng-options="log.path as log.name for log in logs[part.sourceId]" class="form-control">
+							ng-options="log.path as log.name for log in logs[part.sourceId]" class="form-control">
 							<option value="">- All -</option>
 						</select>
 					</lsf-form-group>

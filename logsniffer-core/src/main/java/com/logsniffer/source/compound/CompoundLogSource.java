@@ -9,6 +9,7 @@ import java.util.Map;
 
 import javax.validation.constraints.Size;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,6 +106,11 @@ public class CompoundLogSource extends BaseLogsSource<CompoundLogAccess> {
 			this.logPath = logPath;
 		}
 
+		@Override
+		public String toString() {
+			return "LogPartBean [sourceId=" + sourceId + ", logPath=" + logPath + "]";
+		}
+
 	}
 
 	private LogSourceProvider logSourceProvider;
@@ -137,20 +143,29 @@ public class CompoundLogSource extends BaseLogsSource<CompoundLogAccess> {
 					logSources.put(part.sourceId, source);
 				}
 				try {
-					final Log log = source.getLog(part.getLogPath());
-					if (log != null) {
-						instances.add(new LogInstance(part.sourceId, log, source));
-					} else {
-						LOGGER.warn(
-								"Part log {} in source {} not found, it will be excluded in composition for log: {}",
-								part.sourceId, part.getLogPath(), getId());
+					if (StringUtils.isNotBlank(part.getLogPath())) {
+						final Log log = source.getLog(part.getLogPath());
+						if (log != null) {
+							instances.add(new LogInstance(part.sourceId, log, source));
+						} else {
+							LOGGER.warn(
+									"Part log {} in source {} not found, it will be excluded in composition for log: {}",
+									part.sourceId, part.getLogPath(), getId());
 
+						}
+					} else {
+						// Add all
+						for (final Log log : source.getLogs()) {
+							instances.add(new LogInstance(part.sourceId, log, source));
+						}
 					}
+
 				} catch (final IOException e) {
 					LOGGER.warn("Failed to load part log " + part.logPath + " in source" + part.sourceId
 							+ ", it will be excluded", e);
 				}
 			}
+			LOGGER.debug("Resolved for compound source {} the following log parts: {}", this, instances);
 		}
 		return instances;
 	}
@@ -205,6 +220,11 @@ public class CompoundLogSource extends BaseLogsSource<CompoundLogAccess> {
 	@Override
 	public NavigationType getNavigationType() {
 		return NavigationType.DATE;
+	}
+
+	@Override
+	public String toString() {
+		return "CompoundLogSource [parts=" + parts + ", " + super.toString() + "]";
 	}
 
 }
