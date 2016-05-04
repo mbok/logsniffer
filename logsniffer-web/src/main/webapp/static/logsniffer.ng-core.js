@@ -1097,9 +1097,7 @@ angular.module('LogSnifferCore', ['jsonFormatter','ui.bootstrap'])
 	       $scope.$on('updateCurrentPosition', function(event, args) {
 			   $scope.pointer = args.newPointer;
 			   console.log("Updating control position: ", $scope.pointer);
-			   if ($scope.initialized) {
-				   $scope.logPosition.changePosition($scope.pointer);
-			   }
+			   $scope.logPosition.changePosition($scope.pointer);
 	       });
 		   $scope.changedRollingLog = function() {
 			   console.log("Changed rolling log");
@@ -1113,8 +1111,10 @@ angular.module('LogSnifferCore', ['jsonFormatter','ui.bootstrap'])
 	       scope.logPosition = new LogPosition(scope.name, scope.disabled(), scope.active(), scope.log['@type']=='rolling', scope.pointerTpl(), function(p) {
 			console.log("Changing log pos from control for " + scope.name + ": ", p);
 			scope.$apply(function(){
-			    scope.pointer = p;
-			    scope.$emit('controlPositionChanged', { newPointer: p, navType: 'BYTE' });
+					if (scope.initialized) {
+						scope.pointer = p;
+						scope.$emit('controlPositionChanged', { newPointer: p, navType: 'BYTE' });
+					}
 		    	}); 
 	       });
 	       $timeout(function () {
