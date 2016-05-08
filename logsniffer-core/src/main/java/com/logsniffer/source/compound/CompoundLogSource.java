@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.validation.constraints.Size;
 
@@ -17,6 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.logsniffer.config.BeanConfigFactoryManager;
 import com.logsniffer.config.BeanPostConstructor;
 import com.logsniffer.config.ConfigException;
@@ -31,7 +36,9 @@ import com.logsniffer.model.Navigation.NavigationType;
 import com.logsniffer.model.support.BaseLogsSource;
 import com.logsniffer.model.support.DefaultLog;
 import com.logsniffer.reader.filter.FilteredLogEntryReader;
+import com.logsniffer.reader.filter.FilteredLogEntryReader.FilteredLogEntryReaderWithNotConfigurableTarget;
 import com.logsniffer.source.compound.CompoundLogSource.ComposedLogSourceProducer;
+import com.logsniffer.util.json.Views;
 import com.logsniffer.validators.NotDefaultPrimitiveValue;
 
 /**
@@ -121,53 +128,74 @@ public class CompoundLogSource extends BaseLogsSource<CompoundLogAccess> {
 
 	private List<LogInstance> instances;
 
+	private static ThreadLocal<Set<Long>> cycleDetector = new ThreadLocal<>();
+
 	public CompoundLogSource() {
 		super();
 		readerConfigurable = false;
 	}
 
 	protected List<LogInstance> getPartInstances() {
-		if (instances == null) {
-			instances = new ArrayList<>();
-			final Map<Long, LogSource<LogRawAccess<? extends LogInputStream>>> logSources = new HashMap<>();
-			for (final LogPartBean part : parts) {
-				LogSource<LogRawAccess<? extends LogInputStream>> source = logSources.get(part.sourceId);
-				if (source == null) {
-					source = logSourceProvider.getSourceById(part.sourceId);
-					if (source == null) {
-						LOGGER.warn(
-								"Part log source with id {} not found, it will be excluded in composition for log: {}",
-								part.sourceId, getId());
-						continue;
-					}
-					logSources.put(part.sourceId, source);
-				}
-				try {
-					if (StringUtils.isNotBlank(part.getLogPath())) {
-						final Log log = source.getLog(part.getLogPath());
-						if (log != null) {
-							instances.add(new LogInstance(part.sourceId, log, source));
-						} else {
-							LOGGER.warn(
-									"Part log {} in source {} not found, it will be excluded in composition for log: {}",
-									part.sourceId, part.getLogPath(), getId());
-
-						}
-					} else {
-						// Add all
-						for (final Log log : source.getLogs()) {
-							instances.add(new LogInstance(part.sourceId, log, source));
-						}
-					}
-
-				} catch (final IOException e) {
-					LOGGER.warn("Failed to load part log " + part.logPath + " in source" + part.sourceId
-							+ ", it will be excluded", e);
-				}
-			}
-			LOGGER.debug("Resolved for compound source {} the following log parts: {}", this, instances);
+		if (cycleDetector.get() == null) {
+			cycleDetector.set(new HashSet<Long>());
 		}
-		return instances;
+		cycleDetector.get().add(getId());
+		try {
+			if (instances == null) {
+				instances = new ArrayList<>();
+				if (parts != null) {
+					final Map<Long, LogSource<LogRawAccess<? extends LogInputStream>>> logSources = new HashMap<>();
+					for (final LogPartBean part : parts) {
+						if (cycleDetector.get().contains(Long.valueOf(part.getSourceId()))) {
+							LOGGER.warn(
+									"Part log source with id {} would build a cycle, it's excluded in composition for log: {}",
+									part.sourceId, this);
+							continue;
+						}
+						LogSource<LogRawAccess<? extends LogInputStream>> source = logSources.get(part.sourceId);
+						if (source == null) {
+							source = logSourceProvider.getSourceById(part.sourceId);
+							if (source == null) {
+								LOGGER.warn(
+										"Part log source with id {} not found, it will be excluded in composition for log: {}",
+										part.sourceId, getId());
+								continue;
+							}
+							logSources.put(part.sourceId, source);
+						}
+						try {
+							if (StringUtils.isNotBlank(part.getLogPath())) {
+								final Log log = source.getLog(part.getLogPath());
+								if (log != null) {
+									instances.add(new LogInstance(part.sourceId, log, source));
+								} else {
+									LOGGER.warn(
+											"Part log {} in source {} not found, it will be excluded in composition for log: {}",
+											part.sourceId, part.getLogPath(), getId());
+
+								}
+							} else {
+								// Add all
+								for (final Log log : source.getLogs()) {
+									instances.add(new LogInstance(part.sourceId, log, source));
+								}
+							}
+
+						} catch (final IOException e) {
+							LOGGER.warn("Failed to load part log " + part.logPath + " in source" + part.sourceId
+									+ ", it will be excluded", e);
+						}
+					}
+				}
+				LOGGER.debug("Resolved for compound source {} the following log parts: {}", this, instances);
+			}
+			return instances;
+		} finally {
+			cycleDetector.get().remove(getId());
+			if (cycleDetector.get().isEmpty()) {
+				cycleDetector.remove();
+			}
+		}
 	}
 
 	@Override
@@ -209,6 +237,9 @@ public class CompoundLogSource extends BaseLogsSource<CompoundLogAccess> {
 	}
 
 	@Override
+	@JsonView(Views.Info.class)
+	@JsonSerialize(as = FilteredLogEntryReaderWithNotConfigurableTarget.class)
+	@JsonDeserialize(as = FilteredLogEntryReaderWithNotConfigurableTarget.class)
 	public FilteredLogEntryReader<CompoundLogAccess> getReader() {
 		final FilteredLogEntryReader<CompoundLogAccess> reader = super.getReader();
 		if (!(reader.getTargetReader() instanceof CompoundLogReader)) {
@@ -224,7 +255,7 @@ public class CompoundLogSource extends BaseLogsSource<CompoundLogAccess> {
 
 	@Override
 	public String toString() {
-		return "CompoundLogSource [parts=" + parts + ", " + super.toString() + "]";
+		return "CompoundLogSource [" + super.toString() + ", parts=" + parts + "]";
 	}
 
 }

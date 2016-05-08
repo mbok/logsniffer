@@ -393,7 +393,7 @@ angular.module('LogSnifferCore', ['jsonFormatter','ui.bootstrap'])
 			$scope.searchStatusText = null;
 			entriesUpdCallback = $scope.getEntriesUpdateCallback();
 			var scanner = $scope.wizardScannerEnabled ? $scope.wizardScanner.bean : $scope.searchScanner();
-			var pointer = $scope.getTopLogPointer($scope.searchSettings.dir > 0 ? 'end' : 'start');
+			var pointer = $scope.getTopLogPointerInfo($scope.searchSettings.dir > 0 ? 'end' : 'start').pointer;
 			searchLogPositionerOriginPointer = $scope.mark;
 			var incrementalSearch = function(pointer) {
 				$log.info("Search for entries from "+JSON.stringify(pointer)+" using scanner: " + JSON.stringify(scanner));
@@ -473,9 +473,9 @@ angular.module('LogSnifferCore', ['jsonFormatter','ui.bootstrap'])
 		};
 		$scope.$on("viewerFieldsChanged", function(event, viewerFields) {
 			$log.info("Changed viewer fields, reloading viewer content from current position", viewerFields);
-			var topPointer = $scope.getTopLogPointer();
+			var topPointerInfo = $scope.getTopLogPointerInfo();
 			$scope.viewerFields = viewerFields;
-			$scope.loadRandomAccessEntries(topPointer);
+			$scope.loadRandomAccessEntries(topPointerInfo.pointer);
 		});
 	   },
 	   link: function(scope, element, attrs) {
@@ -594,7 +594,7 @@ angular.module('LogSnifferCore', ['jsonFormatter','ui.bootstrap'])
 		function isEofReached() {
 			return $(element).find('.log-entries tbody tr:last').attr('eof')=='true';
 		}
-		scope.getTopLogPointer = function(pointerType) {
+		scope.getTopLogPointerInfo = function(pointerType) {
 			var entriesPadding=$(element).find("#log-entries-frame").outerHeight(true) - $(element).find("#log-entries-frame").innerHeight();
 			var entriesOffset=$(element).find("#log-entries-frame").offset();
 			var x=entriesOffset.left + 50;
@@ -611,22 +611,30 @@ angular.module('LogSnifferCore', ['jsonFormatter','ui.bootstrap'])
 				var mark=$(elem).parents("tr").attr(pointerType?pointerType:'start');
 				console.log("Top entry pointer: "+mark);
 				if (mark) {
-					return $.parseJSON(mark);
+					return {
+						pointer: $.parseJSON(mark),
+						sof: $(elem).parents("tr").attr("sof")=="true",
+						eof: $(elem).parents("tr").attr("eof")=="true"
+					}
 				}
 			}
-			return null;
+			return {
+				pointer: null
+			};
+		};
+		scope.setPointerInfo = function(pointerInfo) {
+    		scope.mark = pointerInfo.pointer;
+    		scope.$broadcast('updateCurrentPosition', { newPointer: pointerInfo.pointer, "sof": pointerInfo.sof, "eof": pointerInfo.eof });
 		};
 		scope.setPointer = function(newPointer) {
-	    		scope.mark = newPointer;
-	    		scope.$broadcast('updateCurrentPosition', { newPointer: scope.mark });
+			scope.setPointerInfo({pointer:newPointer});
 		};
 		function updateLogPositioner(forwardMove, inprog) {
-		    	console.log("Setting new pointer position after forwardMove: ", forwardMove, scope.mark);
 		    	scope.skipPositioning = true;
 		    	var setter = function(){
-		    	    var scrolledMark = scope.getTopLogPointer();
-		    	    if (scrolledMark) {
-		    		scope.setPointer(scrolledMark);
+		    	    var scrolledMarkInfo = scope.getTopLogPointerInfo();
+		    	    if (scrolledMarkInfo.pointer) {
+		    	    	scope.setPointerInfo(scrolledMarkInfo);
 		    	    }
 		    	};
 		    	if (inprog) {
@@ -824,7 +832,13 @@ angular.module('LogSnifferCore', ['jsonFormatter','ui.bootstrap'])
 					}
 					$(element).find('#log-entries-frame').scrollTop(10);
 			    		if (entries.length>0) {
-			    		    scope.setPointer(entries[0].lf_startOffset.json);
+			    		    scope.setPointerInfo(
+			    		    	{
+			    		    		pointer: entries[0].lf_startOffset.json,
+			    		    		sof: entries[0].lf_startOffset.sof,
+			    		    		eof: entries[0].lf_startOffset.eof
+			    		    	}
+			    		    );
 			    		}
 				}
 				updateLogControls(true);
@@ -1096,7 +1110,7 @@ angular.module('LogSnifferCore', ['jsonFormatter','ui.bootstrap'])
 	   controller: function($scope) {
 	       $scope.$on('updateCurrentPosition', function(event, args) {
 			   $scope.pointer = args.newPointer;
-			   console.log("Updating control position: ", $scope.pointer);
+			   console.log("Updating control position: ", args);
 			   $scope.logPosition.changePosition($scope.pointer);
 	       });
 		   $scope.changedRollingLog = function() {
@@ -1590,16 +1604,24 @@ angular.module('LogSnifferCore', ['jsonFormatter','ui.bootstrap'])
 			
 			$scope.$on('updateCurrentPosition', function(event, args) {
 			   var pointer = args.newPointer;
-			   $log.debug("Updating date control position: ", pointer);
+			   $log.debug("Updating date control position: ", args);
 			   if (angular.isDefined(pointer.d)) {
 				   $scope.value = new Date(pointer.d);
 				   $scope.applicable = false;
+				   if (args.sof) {
+					   $scope.minDate = $scope.value;
+					   $log.debug("Setting min date by sof: ", $scope.minDate);
+				   }
 			   }
 			});
 			$scope.$watch('value', function(newValue, oldValue) {
-				$scope.dateSlider.min = $scope.minDate.clearTime().getTime();
-				$scope.dateSlider.max = $scope.maxDate.clearTime().getTime();
-				$scope.dateSlider.value = new Date(newValue).clearTime().getTime();
+				if (newValue.getTime() < $scope.minDate.getTime()) {
+					$scope.minDate = new Date(newValue);
+					$log.debug("Min is less than current value, reset min to : ", $scope.minDate);
+				}
+				$scope.dateSlider.min = new Date($scope.minDate).clearTime().getTime();
+				$scope.dateSlider.max = new Date($scope.maxDate).clearTime().getTime();
+				$scope.dateSlider.value = new Date(newValue.getTime()).clearTime().getTime();
 				
 				$scope.timeSlider.min = getTimeSliderMin(newValue).getTime();
 				$scope.timeSlider.max = getTimeSliderMax(newValue).getTime();

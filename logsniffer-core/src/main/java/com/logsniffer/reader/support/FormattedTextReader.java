@@ -258,7 +258,7 @@ public abstract class FormattedTextReader extends AbstractPatternLineReader<Matc
 						}
 					}
 					if (spec == null) {
-						logger.info(
+						logger.debug(
 								"Format specifier {} in pattern '{}' is unknown and will be parsed as simple text pattern",
 								specName, formatPattern);
 						spec = new ArbitraryTextSpecifier(specName, false);

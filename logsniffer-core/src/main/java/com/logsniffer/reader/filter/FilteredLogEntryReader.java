@@ -25,6 +25,7 @@ import java.util.List;
 
 import javax.validation.Valid;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.logsniffer.fields.FieldBaseTypes;
@@ -47,19 +48,33 @@ import com.logsniffer.util.json.Views;
  * @author mbok
  * 
  */
-public final class FilteredLogEntryReader<ACCESSTYPE extends LogRawAccess<? extends LogInputStream>>
+public class FilteredLogEntryReader<ACCESSTYPE extends LogRawAccess<? extends LogInputStream>>
 		implements LogEntryReader<ACCESSTYPE> {
 	@JsonProperty
 	@Valid
 	private List<FieldsFilter> filters = new ArrayList<>();
 
-	@JsonProperty
 	@Valid
 	private LogEntryReader<ACCESSTYPE> targetReader;
 
 	/**
+	 * Mixin to disables serialization for not configurable readers.
 	 * 
+	 * @author mbok
+	 *
+	 * @param <ACCESSTYPE>
 	 */
+	public static class FilteredLogEntryReaderWithNotConfigurableTarget<ACCESSTYPE extends LogRawAccess<? extends LogInputStream>>
+			extends FilteredLogEntryReader<ACCESSTYPE> {
+
+		@Override
+		@JsonIgnore
+		public LogEntryReader<ACCESSTYPE> getTargetReader() {
+			return super.getTargetReader();
+		}
+
+	}
+
 	public FilteredLogEntryReader() {
 		super();
 	}
@@ -99,6 +114,7 @@ public final class FilteredLogEntryReader<ACCESSTYPE extends LogRawAccess<? exte
 	/**
 	 * @return the targetReader
 	 */
+	@JsonProperty
 	public LogEntryReader<ACCESSTYPE> getTargetReader() {
 		return targetReader;
 	}

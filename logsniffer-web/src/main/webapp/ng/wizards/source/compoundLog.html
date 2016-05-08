@@ -7,6 +7,29 @@ LogSnifferNgApp.controllerProvider.register(
 		$scope.sources = [];
 		$scope.logs = {};
 
+		$scope.$watch('bean.parts', function(newValue, oldValue) {
+			if (!angular.isArray(newValue) || newValue.length==0) {
+				$scope.bean.parts=[{
+					sourceId: null,
+					logPath: null
+				}];
+			}
+		}, true);
+
+		$scope.$watch('bean.reader.targetReader', function(newValue, oldValue) {
+			$scope.bean.reader.targetReader = null;
+		}, true);
+
+		$scope.addInstance = function() {
+			$scope.bean.parts.push({
+				sourceId: null,
+				logPath: null
+			})
+		};
+		$scope.deleteInstance = function(i) {
+			$scope.bean.parts.splice(i,1);
+		};
+
 		$scope.loadLogsForSource = function (sourceId) {
 			if (typeof $scope.logs[sourceId] == "undefined") {
 				$scope.logs[sourceId] = [];
@@ -67,7 +90,9 @@ LogSnifferNgApp.controllerProvider.register(
 	function ($scope, $http, $log) {
 		$scope.$watch('part.sourceId', function(newValue, oldValue) {
 			// Call in parent
-			$scope.loadLogsForSource(newValue);
+			if (newValue) {
+				$scope.loadLogsForSource(newValue);
+			}
 		});
 }]);
 </script>
@@ -75,40 +100,45 @@ LogSnifferNgApp.controllerProvider.register(
 	<div lsf-alerts alerts="alerts"></div>
 	<div lsf-busy-container busy="busy">
 		<lsf-info-label label="Compounds log data from multiple logs into a continuous stream ordered by the timestamp" class="text-muted">
-			This source concats a live actively written log file with older rolled over files into a single continuous log.
-			The live log has a static name and it's the single file which can change size. After it's rolled, the file got renamed to
-			a fix timestamp based name and no longer changed to enable exact navigation in the concated logs. 
-			<strong>Important:</strong> This source supports rolling only based on a timestamp name pattern, because this guarantees 
-			static names of rolled over files, which is the key for navigating in the concated files.
+			This source compounds in real-time multiple logs into one continuous stream of log entries
+			ordered by the internal timestamp field <code>lf_timestamp</code>. This enables correlation of logs from multiple sources by timestamp.
+			Typical use case are e.g.
+			<ul>
+				<li>Compounding of logs from all hosts of a cluster</li>
+				<li>Correlating of logs from different systems like web servers, application
+					servers, databases etc. to support efficient root cause analysis</li>
+			</ul>
 		</lsf-info-label>
 
+		<label>Log instances to combine</label>
+		<a class="btn btn-link" ng-click="addInstance()">
+			<i class="glyphicon glyphicon-plus"></i> Add instance</a>
 		<div ng-repeat="part in bean.parts">
-			<h5>Log instance {{$index + 1}}</h5>
 			<div class="row" ng-controller="CompoundSourcePartController">
 				<div class="col-md-6">
-					<lsf-form-group class="form-group required" field-name="sourceId" field-path="parts[{{$index}}].sourceId" bind-errors="bindErrors">
-						<lsf-info-label label="Source:" for="part[{{$index}}].sourceId">
-							Reference here the live and the rolled over files using an 
-							<a href="http://ant.apache.org/manual/dirtasks.html#patterns" target="_blank">Ant-style pattern</a> expression.
-							The live file is determined as first entry of the matching file collection regarding
-							the set order criteria. This source supports exposing of only one rolling log.
-						</lsf-info-label>
-						<select ng-model="part.sourceId" name="sourceId" id="part[{{$index}}].sourceId"
+					<lsf-form-group class="form-group required" field-name="part[{{$index}}].sourceId" field-path="parts[{{$index}}].sourceId" bind-errors="bindErrors">
+						<label for="part[{{$index}}].sourceId" class="form-label">Source:</label>
+						<select ng-model="part.sourceId" name="part[{{$index}}].sourceId" id="part[{{$index}}].sourceId"
 							required="required" ng-options="logSource.id as logSource.name for logSource in sources" class="form-control">
 							<option value="">- Please select -</option>
 						</select>
 					</lsf-form-group>
 				</div>
 				<div class="col-md-6">
-					<lsf-form-group class="form-group required" field-name="pastLogsType" field-path="pastLogsType" bind-errors="bindErrors">
+					<lsf-form-group class="form-group required" field-name="part[{{$index}}].logPath" field-path="pastLogsType" bind-errors="bindErrors">
 						<lsf-info-label label="Log:" for="part[{{$index}}].logPath">
-							Defines the order criteria of the matching files which should correlate to the sequence the log files
-							have been written over time.
+							Choose between compounding all logs from a source or only a dedicated one.
 						</lsf-info-label>
-						<select ng-model="part.logPath" name="logPath" id="part[{{$index}}].logPath"
-							ng-options="log.path as log.name for log in logs[part.sourceId]" class="form-control">
-							<option value="">- All -</option>
-						</select>
+						<div class="input-group">
+							<select ng-model="part.logPath" name="part[{{$index}}].logPath" id="part[{{$index}}].logPath"
+								ng-options="log.path as log.name for log in logs[part.sourceId]" class="form-control">
+								<option value="">- All -</option>
+							</select>
+							<div class="input-group-btn">
+								<button class="btn btn-default" type="button" ng-click="deleteInstance($index)"
+									title="Delete this log instance"><i class="glyphicon glyphicon-trash"></i></button>
+							</div>
+						</div>
 					</lsf-form-group>
 				</div>
 			</div>

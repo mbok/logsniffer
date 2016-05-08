@@ -14,6 +14,7 @@ import java.util.concurrent.Semaphore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.logsniffer.event.Event;
 import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.model.Log;
@@ -34,6 +35,7 @@ import com.logsniffer.source.compound.CompoundLogPointer.PointerPart;
  * @author mbok
  *
  */
+@JsonIgnoreType
 public class CompoundLogReader implements LogEntryReader<CompoundLogAccess> {
 	protected static final int BUFFER_SIZE_PER_THREAD = 20;
 	private static final Logger logger = LoggerFactory.getLogger(CompoundLogReader.class);
