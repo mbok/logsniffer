@@ -83,7 +83,7 @@
 						})
 						.success(
 							function(data, status, headers, config) {
-							    $log.info("Viefer fields stored to profile settings");
+							    $log.info("Viewer fields stored to profile settings");
 							})
 						.error(
 							function(data, status, headers, config, statusText) {

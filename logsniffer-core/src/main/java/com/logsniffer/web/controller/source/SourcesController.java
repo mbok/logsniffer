@@ -128,7 +128,7 @@ public class SourcesController {
 	@RequestMapping(value = "/sources/{logSource}/show", method = RequestMethod.GET)
 	ModelAndView showStart(@PathVariable("logSource") final long logSourceId, @RequestParam("log") final String logPath,
 			final HttpServletRequest request, final HttpServletResponse response)
-					throws IOException, ResourceNotFoundException {
+			throws IOException, ResourceNotFoundException {
 		final ModelAndView mv = new ModelAndView("sources/show");
 		final LogSource<?> logSource = getAndFillActiveLogSource(mv, logSourceId);
 		final Log log = getAndFillLog(mv, logSource, logPath);
