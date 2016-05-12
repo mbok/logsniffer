@@ -266,7 +266,7 @@ public class LogEntriesRestController {
 		@JsonIgnore
 		private boolean sofReached = false;
 		private LogEntriesResult entries;
-		private LogPointer lastPointer;
+		private LogEntry lastEntry;
 		private long scannedSize;
 		private long scannedTime;
 		private Event event;
@@ -278,11 +278,8 @@ public class LogEntriesRestController {
 			return entries;
 		}
 
-		/**
-		 * @return the lastPointer
-		 */
-		public LogPointer getLastPointer() {
-			return lastPointer;
+		public LogEntry getLastEntry() {
+			return lastEntry;
 		}
 
 		/**
@@ -339,39 +336,40 @@ public class LogEntriesRestController {
 			@Override
 			public boolean continueReading(final Log log, final LogPointerFactory pointerFactory,
 					final LogEntry currentReadEntry) throws IOException {
+				searchResult.lastEntry = currentReadEntry;
 				if (count < 0 && currentReadEntry.getStartOffset().isSOF()) {
 					// File start reached
 					searchResult.sofReached = true;
 				}
-				return !searchResult.sofReached && searchResult.lastPointer == null
+				return !searchResult.sofReached && searchResult.event == null
 						&& super.continueReading(log, pointerFactory, currentReadEntry);
 			}
 		}, log, logAccess, incData, new EventConsumer() {
 			@Override
 			public void consume(final Event eventData) throws IOException {
 				searchResult.event = eventData;
+				// TODO Check after merge of events and entries
 				if (eventData.getEntries() != null && !eventData.getEntries().isEmpty()) {
-					searchResult.lastPointer = eventData.getEntries().get(0).getStartOffset();
-				} else if (incData.getNextOffset() != null) {
-					searchResult.lastPointer = incData.getNextOffset();
+					searchResult.lastEntry = eventData.getEntries().get(0);
 				}
 			}
 		});
 		searchResult.scannedTime = System.currentTimeMillis() - start;
-		if (searchResult.lastPointer != null) {
+		LogPointer pointerForResult = searchResult.lastEntry != null ? searchResult.lastEntry.getStartOffset() : null;
+		if (searchResult.event != null) {
 			// Found
-			logger.debug("Found next entry of interest in {} at: {}", log, searchResult.lastPointer);
+			logger.debug("Found next entry of interest in {}: {}", log, searchResult.event);
 			final BufferedConsumer bc = new BufferedConsumer(Math.abs(count));
-			source.getReader().readEntries(log, logAccess, searchResult.lastPointer, bc);
+			source.getReader().readEntries(log, logAccess, pointerForResult, bc);
 			searchResult.entries = new LogEntriesResult(source.getReader().getFieldTypes(), bc.getBuffer(), 0);
 		} else if (searchResult.sofReached) {
 			// Return start pointer
-			searchResult.lastPointer = logAccess.start();
+			pointerForResult = logAccess.start();
 		} else {
 			// Nothing found in that round
-			searchResult.lastPointer = incData.getNextOffset();
+			pointerForResult = incData.getNextOffset();
 		}
-		searchResult.scannedSize = Math.abs(logAccess.getDifference(searchPointer, searchResult.lastPointer));
+		searchResult.scannedSize = Math.abs(logAccess.getDifference(searchPointer, pointerForResult));
 		return searchResult;
 	}
 

@@ -116,16 +116,26 @@
 		</div>
 		<div class="col-md-10">
 			<div class="row">
-				<div class="col-md-12" ng-init="sliderValue={v:77, min:0, max:120}">
-					<lsf-log-navigator-date ng-if="source.navigationType=='DATE'"></lsf-log-navigator-date>
-					<lsf-log-position ng-if="source.navigationType!='DATE'" pointer="mark" name="logpos" log="log" active="false" disabled="false" pointer-tpl="pointerTpl()"></lsf-log-position>
+				<div class="col-md-12">
+					<lsf-log-navigator-date ng-if="navType=='DATE'" init-with-entry="getTopLogEntry()"></lsf-log-navigator-date>
+					<lsf-log-position ng-if="navType!='DATE'" pointer="mark" name="logpos" log="log" active="false" disabled="false" pointer-tpl="pointerTpl()"></lsf-log-position>
 				</div>
 			</div>
 		</div>
 		<div class="col-md-1">
 			<a class="btn btn-default btn-sm pull-right tail" id="tail"
-				ng-click="fromTail()"><i
+				ng-click="fromTail()" style="margin-left:4px"><i
 				class="glyphicon glyphicon-fast-forward"></i> Tail</a>
+			<button data-toggle="dropdown" href="#" class="btn btn-xs pull-right" style="margin:4px 0"
+				title="Navigate by {{navType=='BYTE' ? 'byte offset':(navType=='DATE' ? 'timestamp' : '')}}">
+					<i class="glyphicon"
+						ng-class="{'glyphicon-transfer': navType=='BYTE', 'glyphicon-time': navType=='DATE'}"></i>
+					<i class="glyphicon glyphicon-option-horizontal"></i></button>
+			<ul class="dropdown-menu dropdown-menu-right" role="menu">
+				<li class="dropdown-header">Navigation type</li>
+				<li><a href ng-click="setNavType('BYTE')" ng-if="supportedNavTypes.BYTE"><i class="glyphicon glyphicon-transfer"></i> By byte offset</a></li>
+				<li><a href ng-click="setNavType('DATE')" ng-if="supportedNavTypes.DATE"><i class="glyphicon glyphicon-time"></i> By timestamp</a></li>
+			</ul>
 		</div>
 	</div>
 	
