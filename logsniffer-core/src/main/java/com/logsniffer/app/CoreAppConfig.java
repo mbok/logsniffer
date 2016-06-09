@@ -122,7 +122,7 @@ public class CoreAppConfig {
 	@Bean
 	@Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 	@Autowired
-	public PropertyPlaceholderConfigurer propertyPlaceholderConfigurer(
+	public static PropertyPlaceholderConfigurer propertyPlaceholderConfigurer(
 			@Qualifier(BEAN_LOGSNIFFER_PROPS) final Properties props) throws IOException {
 		final PropertyPlaceholderConfigurer c = new PropertyPlaceholderConfigurer();
 		c.setIgnoreResourceNotFound(true);
