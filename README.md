@@ -1,7 +1,7 @@
-[![Build Status](https://travis-ci.org/chriseverty/logsniffer.svg?branch=travis-ci)](https://travis-ci.org/chriseverty/logsniffer/builds)
-
 # logsniffer ![alt tag](https://raw.githubusercontent.com/logsniffer/logsniffer/master/logo-109x150.png) 
 logsniffer is a sophisticated open source web tool for parsing, viewing, monitoring and analyzing log data - smarter, collaborative and easier.
+
+[![Build Status](https://travis-ci.org/logsniffer/logsniffer.svg?branch=travis-ci)](https://travis-ci.org/logsniffer/logsniffer/builds)
 
 ## Quick start
 1. Download the latest [release](https://github.com/logsniffer/logsniffer/releases) of `logsniffer.war`
