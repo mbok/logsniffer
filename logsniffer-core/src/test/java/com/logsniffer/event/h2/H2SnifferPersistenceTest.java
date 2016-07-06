@@ -34,6 +34,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpMethod;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
@@ -56,6 +57,7 @@ import com.logsniffer.event.filter.FilteredScanner;
 import com.logsniffer.event.processing.ScheduleInfoAccess;
 import com.logsniffer.event.processing.SnifferJobManager;
 import com.logsniffer.event.publisher.MailPublisher;
+import com.logsniffer.event.publisher.http.HttpPublisher;
 import com.logsniffer.event.support.LevelScanner;
 import com.logsniffer.event.support.MinBAmountReadStrategy;
 import com.logsniffer.model.Log;
@@ -145,15 +147,7 @@ public class H2SnifferPersistenceTest {
 	@DirtiesContext
 	public void testGetPersistentSniffers() throws ConfigException {
 		Assert.assertEquals(0, snifferPersistence.getSnifferListBuilder().list().getItems().size());
-		final Sniffer s1 = new Sniffer();
-		s1.setName("S1");
-		s1.setScheduleCronExpression("-");
-		s1.setLogSourceId(source1.getId());
-		final LevelScanner levelScanner = new LevelScanner();
-		levelScanner.setSeverityNumber(5);
-		s1.setScanner(new FilteredScanner(levelScanner));
-		s1.setPublishers(Collections.singletonList((Publisher) new MailPublisher()));
-		s1.setReaderStrategy(new MinBAmountReadStrategy(2));
+		final Sniffer s1 = createTestSniffer();
 		final long sid = snifferPersistence.createSniffer(s1);
 		Assert.assertEquals(1, snifferPersistence.getSnifferListBuilder().list().getItems().size());
 		Sniffer checkSniffer = snifferPersistence.getSnifferListBuilder().list().getItems().get(0);
@@ -214,6 +208,19 @@ public class H2SnifferPersistenceTest {
 		checkSnifferDel = snifferPersistence.getSniffer(sid);
 		Assert.assertNull(checkSnifferDel);
 		Mockito.verifyNoMoreInteractions(mockAppEventPublisher);
+	}
+
+	private Sniffer createTestSniffer() {
+		final Sniffer s1 = new Sniffer();
+		s1.setName("S1");
+		s1.setScheduleCronExpression("-");
+		s1.setLogSourceId(source1.getId());
+		final LevelScanner levelScanner = new LevelScanner();
+		levelScanner.setSeverityNumber(5);
+		s1.setScanner(new FilteredScanner(levelScanner));
+		s1.setPublishers(Collections.singletonList((Publisher) new MailPublisher()));
+		s1.setReaderStrategy(new MinBAmountReadStrategy(2));
+		return s1;
 	}
 
 	private void checkS1Sniffer(final Sniffer checkSniffer) {
@@ -317,5 +324,25 @@ public class H2SnifferPersistenceTest {
 		Assert.assertTrue(checkSniffer.getScanner() instanceof FilteredScanner);
 		checkS1Sniffer(checkSniffer);
 
+	}
+
+	/**
+	 * Reported by https://github.com/logsniffer/logsniffer/issues/78
+	 */
+	@Test
+	@DirtiesContext
+	public void testDeserializationOfPublishersWithRawJsonData() {
+		final HttpPublisher publisher = new HttpPublisher();
+		publisher.setMethod(HttpMethod.POST);
+		publisher.setUrl("http://localhost");
+		publisher.setBody(
+				"{\"channel\":\"#test\",\"username\":\"webhookbot\",\"text\":\"This is posted to #test and comes from a bot named webhookbot.\",\"icon_emoji\":\":ghost:\"}");
+
+		final Sniffer s1 = createTestSniffer();
+		s1.setPublishers(Collections.singletonList((Publisher) publisher));
+		final long sid = snifferPersistence.createSniffer(s1);
+		final Sniffer test = snifferPersistence.getSniffer(sid);
+		Assert.assertNotNull(test);
+		Assert.assertNotNull(test.getPublishers().get(0) instanceof HttpPublisher);
 	}
 }
