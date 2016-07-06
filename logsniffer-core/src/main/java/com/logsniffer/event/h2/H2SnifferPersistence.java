@@ -42,6 +42,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logsniffer.aspect.AspectProvider;
 import com.logsniffer.aspect.PostAspectProvider;
 import com.logsniffer.aspect.sql.QueryAdaptor;
@@ -68,7 +69,6 @@ import com.logsniffer.util.PageableResult;
 import com.logsniffer.util.messages.Message;
 import com.logsniffer.util.messages.Message.MessageType;
 
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 /**
@@ -137,15 +137,14 @@ public class H2SnifferPersistence implements SnifferPersistence {
 					@Override
 					public List<Publisher> createList() {
 						final List<Publisher> pubs = new ArrayList<Publisher>();
-						final JSONArray jsonArray = JSONArray.fromObject(publishersConfigStr);
-						for (final Object pubJson : jsonArray) {
-							pubs.add(new PublisherWrapper() {
-								@Override
-								public Publisher getWrapped() throws ConfigException {
-									return configManager.createBeanFromJSON(Publisher.class, pubJson.toString());
-								}
-
-							});
+						try {
+							final Publisher[] deserialized = objectMapper.readValue(publishersConfigStr,
+									Publisher[].class);
+							for (final Publisher p : deserialized) {
+								pubs.add(p);
+							}
+						} catch (final IOException e) {
+							throw new ConfigException("Failed to deserialize publishers", e);
 						}
 						return pubs;
 					}
@@ -217,6 +216,9 @@ public class H2SnifferPersistence implements SnifferPersistence {
 
 	@Autowired
 	private BeanConfigFactoryManager configManager;
+
+	@Autowired
+	private ObjectMapper objectMapper;
 
 	@Override
 	public SnifferListBuilder getSnifferListBuilder() {
