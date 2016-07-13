@@ -199,10 +199,10 @@
 						<div class="alert alert-success animate-show" ng-show="resolvedTestLogs.length>0">
 							<h4>Resolved logs:</h4>
 							<ol>
-								<li ng-repeat="log in resolvedTestLogs">{{log.path}} ({{log.size | bytesToSize}})
+								<li ng-repeat="log in resolvedTestLogs">{{log.path!='default'?log.path:log.name}} ({{log.size | bytesToSize}})
 									<label ng-if="log['@type']=='rolling'" class="blocked">Log parts:</label>
 									<ol ng-if="log['@type']=='rolling'">
-										<li ng-repeat="part in log.parts">{{part.path}} ({{part.size | bytesToSize}})</li>
+										<li ng-repeat="part in log.parts">{{part.path!='default'?part.path:part.name}} ({{part.size | bytesToSize}})</li>
 									</ol>
 								</li>
 							</ol>

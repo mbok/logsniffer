@@ -17,7 +17,6 @@
  *******************************************************************************/
 package com.logsniffer.event;
 
-import java.text.ParseException;
 import java.util.Date;
 
 import org.quartz.SchedulerException;
@@ -84,8 +83,7 @@ public interface SnifferScheduler {
 
 	}
 
-	public void startSniffing(long snifferId) throws SchedulerException,
-			ParseException;
+	public void startSniffing(long snifferId) throws SchedulerException;
 
 	public void stopSniffing(long snifferId) throws SchedulerException;
 

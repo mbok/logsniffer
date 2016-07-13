@@ -18,21 +18,15 @@
 package com.logsniffer.web.controller.sniffer;
 
 import java.io.IOException;
-import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 
-import javax.servlet.ServletRequest;
-
-import org.apache.commons.lang.StringUtils;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.ServletRequestBindingException;
-import org.springframework.web.bind.ServletRequestUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -58,25 +52,18 @@ public class SnifferStatusController extends SniffersBaseController {
 	private static Logger logger = LoggerFactory.getLogger(SnifferStatusController.class);
 
 	public static class LogSniffingStatus {
-		private final LogPointer nextOffset;
+		private final long currentOffset;
 		private final long logSize;
 		private final Log log;
-		private final LogPointer pointerTpl;
+		private final LogPointer currentPointer;
 
-		public LogSniffingStatus(final Log log, final LogPointer nextOffset, final long logSize,
-				final LogPointer pointerTpl) {
+		public LogSniffingStatus(final Log log, final LogPointer currentPointer, final long currentOffset,
+				final long logSize) {
 			super();
-			this.nextOffset = nextOffset;
 			this.logSize = logSize;
+			this.currentPointer = currentPointer;
 			this.log = log;
-			this.pointerTpl = pointerTpl;
-		}
-
-		/**
-		 * @return the nextOffset
-		 */
-		public LogPointer getNextOffset() {
-			return nextOffset;
+			this.currentOffset = currentOffset;
 		}
 
 		/**
@@ -94,10 +81,17 @@ public class SnifferStatusController extends SniffersBaseController {
 		}
 
 		/**
-		 * @return the pointerTpl
+		 * @return the currentOffset
 		 */
-		public LogPointer getPointerTpl() {
-			return pointerTpl;
+		public long getCurrentOffset() {
+			return currentOffset;
+		}
+
+		/**
+		 * @return the currentPointer
+		 */
+		public LogPointer getCurrentPointer() {
+			return currentPointer;
 		}
 
 	}
@@ -109,46 +103,24 @@ public class SnifferStatusController extends SniffersBaseController {
 		final Sniffer activeSniffer = getAndBindActiveSniffer(model, snifferId);
 		final LogSource<?> logSource = getLogSource(activeSniffer.getLogSourceId());
 		final Map<Log, IncrementData> logsIncData = snifferPersistence.getIncrementDataByLog(activeSniffer, logSource);
-		final TreeMap<String, LogSniffingStatus> logsStatus = new TreeMap<String, LogSniffingStatus>();
+		final List<LogSniffingStatus> logsStatus = new ArrayList<LogSniffingStatus>();
 		for (final Log log : logsIncData.keySet()) {
 			final LogRawAccess<?> logAccess = logSource.getLogAccess(log);
 			final IncrementData incData = logsIncData.get(log);
-			LogPointer nextOffset = null;
+			LogPointer currentPointer = null;
+			long currentOffset = 0;
 			if (incData.getNextOffset() != null) {
-				nextOffset = logAccess.refresh(logAccess.getFromJSON(incData.getNextOffset().getJson())).get();
+				currentPointer = logAccess.refresh(logAccess.getFromJSON(incData.getNextOffset().getJson())).get();
 			}
-			logsStatus.put(log.getPath(), new LogSniffingStatus(log, nextOffset, log.getSize(), logAccess.start()));
+			if (currentPointer != null) {
+				currentOffset = Math.abs(logAccess.getDifference(null, currentPointer));
+			}
+			logsStatus.add(new LogSniffingStatus(log, currentPointer, currentOffset, log.getSize()));
 		}
 		model.addAttribute("scheduleInfo", snifferScheduler.getScheduleInfo(snifferId));
 		model.addAttribute("logsStatus", logsStatus);
+		model.addAttribute("source", logSource);
 		return "sniffers/status";
-	}
-
-	@RequestMapping(value = "/sniffers/{snifferId}/startForm", method = RequestMethod.POST)
-	@Transactional(rollbackFor = Exception.class)
-	String start(@PathVariable("snifferId") final long snifferId, final ServletRequest request, final Model model,
-			final RedirectAttributes redirectAttrs) throws ResourceNotFoundException, SchedulerException,
-					ParseException, IOException, ServletRequestBindingException {
-		logger.info("Starting sniffer: {}", snifferId);
-		final Sniffer activeSniffer = getAndBindActiveSniffer(model, snifferId);
-		final LogSource<?> source = sourceProvider.getSourceById(activeSniffer.getLogSourceId());
-		for (final Log log : source.getLogs()) {
-			final String newPos = ServletRequestUtils.getStringParameter(request,
-					"newPositions['" + log.getPath() + "']");
-			logger.debug("Received new position to start sniffing {} from: {}", log.getPath(), newPos);
-			if (StringUtils.isNotEmpty(newPos)) {
-				final LogPointer p = source.getLogAccess(log).getFromJSON(newPos);
-				final IncrementData incData = snifferPersistence.getIncrementData(activeSniffer, source, log);
-				incData.setNextOffset(p);
-				snifferPersistence.storeIncrementalData(activeSniffer, source, log, incData);
-				logger.debug("Set new position to start sniffing {} from: {}", log.getPath(), newPos);
-			}
-		}
-
-		snifferScheduler.startSniffing(activeSniffer.getId());
-		logger.info("Started sniffer: {}", snifferId);
-		redirectAttrs.addFlashAttribute("started", true);
-		return "redirect:status";
 	}
 
 	@RequestMapping(value = "/sniffers/{snifferId}/stopForm", method = RequestMethod.POST)

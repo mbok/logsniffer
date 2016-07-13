@@ -64,49 +64,42 @@ public class SnifferJobManager implements SnifferScheduler {
 	private ScheduleInfoAccess scheduleInfoAccess;
 
 	@Override
-	@Transactional(rollbackFor = { SchedulerException.class,
-			ParseException.class })
-	public void startSniffing(final long snifferId) throws SchedulerException,
-			ParseException {
+	@Transactional(rollbackFor = { SchedulerException.class, ParseException.class })
+	public void startSniffing(final long snifferId) throws SchedulerException {
 		logger.debug("Starting cron job for sniffer: {}", snifferId);
-		Sniffer sniffer = snifferPersistence.getSniffer(snifferId);
+		final Sniffer sniffer = snifferPersistence.getSniffer(snifferId);
 		if (sniffer == null) {
 			throw new SchedulerException("Sniffer not found: " + snifferId);
 		}
 		stopAndDeleteAllSnifferJobs(sniffer.getId());
-		MutableTrigger trigger = CronScheduleBuilder
-				.cronScheduleNonvalidatedExpression(
-						sniffer.getScheduleCronExpression())
-				.withMisfireHandlingInstructionDoNothing().build();
+		MutableTrigger trigger;
+		try {
+			trigger = CronScheduleBuilder.cronScheduleNonvalidatedExpression(sniffer.getScheduleCronExpression())
+					.withMisfireHandlingInstructionDoNothing().build();
+		} catch (final ParseException e) {
+			throw new SchedulerException("Failed to parse cron expression", e);
+		}
 		trigger.setKey(getKey(sniffer, sniffer.getLogSourceId()));
-		JobDetail jobDetail = JobBuilder.newJob(SnifferJob.class)
-				.requestRecovery()
-				.withIdentity(getJobKey(sniffer, sniffer.getLogSourceId()))
-				.build();
+		final JobDetail jobDetail = JobBuilder.newJob(SnifferJob.class).requestRecovery()
+				.withIdentity(getJobKey(sniffer, sniffer.getLogSourceId())).build();
 		scheduler.scheduleJob(jobDetail, trigger);
-		ScheduleInfo scheduleInfo = scheduleInfoAccess
-				.getScheduleInfo(snifferId);
+		final ScheduleInfo scheduleInfo = scheduleInfoAccess.getScheduleInfo(snifferId);
 		scheduleInfo.setScheduled(true);
 		scheduleInfoAccess.updateScheduleInfo(snifferId, scheduleInfo);
-		logger.info(
-				"Scheduled cron job for sniffer {} and log source {} with trigger {}",
-				sniffer, sniffer.getLogSourceId(), trigger);
+		logger.info("Scheduled cron job for sniffer {} and log source {} with trigger {}", sniffer,
+				sniffer.getLogSourceId(), trigger);
 	}
 
 	protected TriggerKey getKey(final Sniffer sniffer, final long logSourceId) {
-		return TriggerKey.triggerKey(sniffer.getId() + ":" + logSourceId,
-				"SNIFFER:" + sniffer.getId());
+		return TriggerKey.triggerKey(sniffer.getId() + ":" + logSourceId, "SNIFFER:" + sniffer.getId());
 	}
 
 	protected JobKey getJobKey(final Sniffer sniffer, final long logSourceId) {
-		return JobKey.jobKey(sniffer.getId() + ":" + logSourceId, "SNIFFER:"
-				+ sniffer.getId());
+		return JobKey.jobKey(sniffer.getId() + ":" + logSourceId, "SNIFFER:" + sniffer.getId());
 	}
 
-	protected static JobKey getJobKey(final long snifferId,
-			final long logSourceId) {
-		return JobKey.jobKey(snifferId + ":" + logSourceId, "SNIFFER:"
-				+ snifferId);
+	protected static JobKey getJobKey(final long snifferId, final long logSourceId) {
+		return JobKey.jobKey(snifferId + ":" + logSourceId, "SNIFFER:" + snifferId);
 	}
 
 	protected static long getSnifferId(final JobKey key) {
@@ -117,16 +110,11 @@ public class SnifferJobManager implements SnifferScheduler {
 		return Long.parseLong(key.getName().split(":")[1]);
 	}
 
-	protected void stopAndDeleteAllSnifferJobs(final long snifferId)
-			throws SchedulerException {
-		for (JobKey job : scheduler.getJobKeys(GroupMatcher
-				.jobGroupEquals("SNIFFER:" + snifferId))) {
-			logger.info(
-					"Deleting scheduled job for sniffer={} and log source={}",
-					snifferId, getLogSourceId(job));
+	protected void stopAndDeleteAllSnifferJobs(final long snifferId) throws SchedulerException {
+		for (final JobKey job : scheduler.getJobKeys(GroupMatcher.jobGroupEquals("SNIFFER:" + snifferId))) {
+			logger.info("Deleting scheduled job for sniffer={} and log source={}", snifferId, getLogSourceId(job));
 			scheduler.deleteJob(job);
-			logger.info("Interrupting job for sniffer={} and log source={}",
-					snifferId, getLogSourceId(job));
+			logger.info("Interrupting job for sniffer={} and log source={}", snifferId, getLogSourceId(job));
 			scheduler.interrupt(job);
 		}
 	}
@@ -136,8 +124,7 @@ public class SnifferJobManager implements SnifferScheduler {
 	public void stopSniffing(final long snifferId) throws SchedulerException {
 		logger.debug("Stopping scheduled cron jobs for sniffer: {}", snifferId);
 		stopAndDeleteAllSnifferJobs(snifferId);
-		ScheduleInfo scheduleInfo = scheduleInfoAccess
-				.getScheduleInfo(snifferId);
+		final ScheduleInfo scheduleInfo = scheduleInfoAccess.getScheduleInfo(snifferId);
 		scheduleInfo.setScheduled(false);
 		scheduleInfoAccess.updateScheduleInfo(snifferId, scheduleInfo);
 	}
@@ -160,16 +147,12 @@ public class SnifferJobManager implements SnifferScheduler {
 		}
 
 		@Override
-		public RowMapper<AspectSniffer> getRowMapper(
-				final RowMapper<? extends AspectSniffer> innerMapper) {
+		public RowMapper<AspectSniffer> getRowMapper(final RowMapper<? extends AspectSniffer> innerMapper) {
 			return new RowMapper<SnifferPersistence.AspectSniffer>() {
 				@Override
-				public AspectSniffer mapRow(final ResultSet rs, final int rowNum)
-						throws SQLException {
-					AspectSniffer sniffer = innerMapper.mapRow(rs, rowNum);
-					sniffer.setAspect("scheduleInfo",
-							ScheduleInfoAccess.SCHEDULE_INFO_MAPPER.mapRow(rs,
-									rowNum));
+				public AspectSniffer mapRow(final ResultSet rs, final int rowNum) throws SQLException {
+					final AspectSniffer sniffer = innerMapper.mapRow(rs, rowNum);
+					sniffer.setAspect("scheduleInfo", ScheduleInfoAccess.SCHEDULE_INFO_MAPPER.mapRow(rs, rowNum));
 					return sniffer;
 				}
 			};
@@ -182,8 +165,7 @@ public class SnifferJobManager implements SnifferScheduler {
 
 		@Override
 		public String getQuery(final String innerQuery) {
-			return "SELECT oxy.*, ssi.SCHEDULED, ssi.LAST_FIRE FROM ("
-					+ innerQuery
+			return "SELECT oxy.*, ssi.SCHEDULED, ssi.LAST_FIRE FROM (" + innerQuery
 					+ ") oxy LEFT JOIN SNIFFERS_SCHEDULE_INFO ssi ON (oxy.ID=ssi.SNIFFER)";
 		}
 	};

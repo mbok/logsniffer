@@ -353,10 +353,12 @@ angular.module('LogSnifferCore', ['jsonFormatter','ui.bootstrap'])
 	       searchScanner: '&',
 	       searchFound: '&',
 	       followDisabled: '&',
+	       fullscreenDisabled: '&',
 	       searchExpanded: '&',
 	       onError: '&',
 	       fullHeight: '@',
-	       highlightPointer: '&'
+	       highlightPointer: '&',
+	       zoomContext: '&'
 	   },
 	   controller: function($scope) {
 		$scope.searchSettings= {
@@ -364,6 +366,7 @@ angular.module('LogSnifferCore', ['jsonFormatter','ui.bootstrap'])
 			expanded: $scope.searchExpanded() === true
 		};
 		$scope.isFollowEnabled = $scope.followDisabled() === true ? false: true;
+		$scope.isFullscreenEnabled = $scope.fullscreenDisabled() === true ? false: true;
 		$scope.wizardScannerEnabled = angular.isArray($scope.searchWizards()) && $scope.searchWizards().length > 0;
 		$scope.wizardScanner = { bean: {}};
 		$scope.searchStatus = "none"; // none, searching, hit, miss, cancelled
@@ -708,13 +711,14 @@ angular.module('LogSnifferCore', ['jsonFormatter','ui.bootstrap'])
     		  }
     		  return loaderPromise.promise;
     	  };
-			$.LogSniffer.zoomLogEntry({
+			$.LogSniffer.zoomLogEntry(angular.extend({}, scope.zoomContext(logEntries[id]),
+			  {
 	        	  "entry": logEntries[id],
 	        	  "sourceId": scope.source.id,
 	        	  "logPath": scope.log.path,
 	        	  "entryLoader": entryLoader,
 	        	  "appendTo": scope.fullscreen ? angular.element(element): null
-	          });
+	          }));
 		};
 		function renderPrefixCells(fieldsTypes, e) {
 		    entriesStaticCounter++;
@@ -1151,6 +1155,7 @@ angular.module('LogSnifferCore', ['jsonFormatter','ui.bootstrap'])
        $scope.busy = false;
 	   $log.debug("Openning entry details", context);
        $scope.entry = context.entry;
+       $scope.bottomBarButtonsTpl = context.bottomBarButtonsTpl;
        var loaderContext = {};
        function updatePermalinks() {
 	       if (context.sourceId && context.logPath && $scope.entry.lf_startOffset && $scope.entry.lf_startOffset.json) {

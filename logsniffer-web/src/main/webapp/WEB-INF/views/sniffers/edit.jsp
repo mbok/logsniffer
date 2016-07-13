@@ -13,19 +13,6 @@
 		<script type="text/javascript" src="<c:url value="/ng/sniffer/snifferTest.js?v=${logsnifferProps['logsniffer.version']}" />"></script>
 	</jsp:attribute>
 	<jsp:body>
-		<jsp:include page="sniffer.breadcrumb.jsp">
-			<jsp:param value="Edit" name="context"/>
-		</jsp:include>
-
-		<c:if test="${param.created}">
-			<div class="alert alert-success">
-				<button type="button" class="close" data-dismiss="alert">&times;</button>
-				<h4>Successfully created</h4>
-				Complete the settings if not yet happened and then start monitoring.
-			</div>
-		</c:if>
-
-
 		<script type="text/javascript">
 			var SnifferEditorModule = angular.module('SnifferEditorModule', ['ui.bootstrap', 'angularSpinner', 'lsfSnifferTestModule']);
 			SnifferEditorModule.controller(
@@ -35,6 +22,9 @@
 					$scope.bindErrors={<spring:hasBindErrors name="snifferForm"><c:forEach items="${errors.allErrors}" var="error">'${error.field }':'<spring:message code="${error.code}" text="${error.defaultMessage}" javaScriptEscape="true" />',</c:forEach></spring:hasBindErrors>};
 					$scope.bean = ${logfn:jsonify(activeSniffer)};
 					$scope.beanWrapper = [$scope.bean];
+					$scope.scheduleInfo = {
+						scheduled: ${scheduled}
+					};
 
 					$scope.submit = function(form) {
 						$(".backdrop-overlay").show();
@@ -66,19 +56,32 @@
 				}
 			]);
 		</script>
-		<form id="refresh" method="post"></form>
-		<form ng-controller="SnifferEditController" ng-cloak name="form" method="post" action="/c/sniffers/${activeSniffer.id}" id="snifferForm"
-			role="form" novalidate="novalidate">
-
-			<jsp:include page="sniffer.form.jsp" />
-			
-			<hr>
-			<div class="row">
-				<div class="col-md-12" us-spinner spinner-key="update">
-					<button type="button" class="btn btn-primary" ng-disabled="${scheduled} || form.$invalid" ng-click="submit(form)">Save</button>
+		<div ng-controller="SnifferEditController" ng-cloak >
+			<jsp:include page="sniffer.breadcrumb.jsp">
+				<jsp:param value="Edit" name="context"/>
+			</jsp:include>
+	
+			<c:if test="${param.created}">
+				<div class="alert alert-success">
+					<button type="button" class="close" data-dismiss="alert">&times;</button>
+					<h4>Successfully created</h4>
+					Complete the settings if not yet happened and then start monitoring.
 				</div>
-			</div>
-		</form>
+			</c:if>
 
+			<form id="refresh" method="post"></form>
+			<form name="form" method="post" action="/c/sniffers/${activeSniffer.id}" id="snifferForm"
+				role="form" novalidate="novalidate">
+	
+				<jsp:include page="sniffer.form.jsp" />
+				
+				<hr>
+				<div class="row">
+					<div class="col-md-12" us-spinner spinner-key="update">
+						<button type="button" class="btn btn-primary" ng-disabled="${scheduled} || form.$invalid" ng-click="submit(form)">Save</button>
+					</div>
+				</div>
+			</form>
+		</div>
 	</jsp:body>
 </tpl:bodyFull>

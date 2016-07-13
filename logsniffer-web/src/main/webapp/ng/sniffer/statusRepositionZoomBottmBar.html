@@ -1,0 +1,20 @@
+<script type="text/javascript">
+LogSnifferNgApp.controllerProvider.register(
+	"SnifferStatusSetPositionController", ['$scope', '$http', '$log',
+	function ($scope, $http, $log) {
+		$scope.setPosition = function(start) {
+			var pointer = start ? $scope.entry.lf_startOffset : $scope.entry.lf_endOffset;
+			$log.info("Set sniffing position:", pointer);
+			$scope.$root.$broadcast('snifferReposition', pointer);
+		};
+	}
+]);
+</script>
+<span ng-controller="SnifferStatusSetPositionController">
+	<button class="btn btn-default" ng-click="setPosition(true);close()"
+		title="Set position before this log entry to start sniffing">
+			<i class="glyphicon glyphicon-hand-left"></i> set position before</button>
+	<button class="btn btn-default" ng-click="setPosition(false);close()"
+		title="Set position after this log entry to start sniffing">
+			<i class="glyphicon glyphicon-hand-right"></i> set position after</button>
+</span>

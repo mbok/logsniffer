@@ -1,0 +1,17 @@
+<div class="modal-header">
+	<h4 class="modal-title">Reposition sniffing position</h4>
+</div>
+<div class="modal-body" class="zoom-entry-modal" style="padding-bottom:0">
+	<lsf-busy-container busy="busy">
+		<div lsf-alerts alerts="alerts"></div>
+		<div>
+			<lsf-log-viewer source="source" log="log" pointer="pointer" search-wizards="scannerWizards"
+				init-tail="false" follow-disabled="true" fullscreen-disabled="true" on-error="logViewerErrorHandler"
+				configured-viewer-fields="source.uiSettings.viewerFields"
+				zoom-context="{ bottomBarButtonsTpl: contextPath + '/ng/sniffer/statusRepositionZoomBottmBar.html'}"></lsf-log-viewer>
+		</div>
+	</lsf-busy-container>
+</div>
+<div class="modal-footer">
+	<button class="btn btn-primary" ng-click="close()">Close</button>
+</div>

@@ -289,6 +289,10 @@ LogPosition.prototype.changePosition = function(currentBytePos) {
     	if (currentBytePos && !this.templatePointer) {
     	    this.templatePointer = currentBytePos;
     	}
+	if (!this.currentSlider) {
+		// Init not finished
+		return;
+	}
 	if (this.isRolling) {
 		this.changeLogPartPosition(currentBytePos);
 		this.currentFile.update();

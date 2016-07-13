@@ -34,9 +34,14 @@ public class ResourceNotFoundException extends Exception {
 
 	private final Object id;
 
-	public ResourceNotFoundException(final Class<?> resourceType,
-			final Object id, final String internalMsg) {
+	public ResourceNotFoundException(final Class<?> resourceType, final Object id, final String internalMsg) {
 		super(internalMsg);
+		this.resourceType = resourceType;
+		this.id = id;
+	}
+
+	public ResourceNotFoundException(final Class<?> resourceType, final Object id) {
+		super(resourceType.getSimpleName() + " not found for id: " + id);
 		this.resourceType = resourceType;
 		this.id = id;
 	}

@@ -10,7 +10,8 @@
 				<li class="divider"></li>
 				<li><a href ng-click="deleteAllEvents()"><i class="glyphicon glyphicon-trash"></i> Delete all events</a></li>
 				<li class="divider"></li>
-				<li><a href ng-click="deleteSniffer()"><i class="glyphicon glyphicon-trash"></i> Delete sniffer</a></li>
+				<li ng-if="!sniffer.aspects.scheduleInfo.scheduled"><a href ng-click="deleteSniffer()"><i class="glyphicon glyphicon-trash"></i> Delete sniffer</a></li>
+				<li ng-if="sniffer.aspects.scheduleInfo.scheduled" class="disabled"><a href ><i class="glyphicon glyphicon-trash"></i> Delete sniffer</a></li>
 			</ul>
 		</span>
 		<sup>
