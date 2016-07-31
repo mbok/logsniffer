@@ -85,6 +85,22 @@ public class EsEventPersistenceTest {
 		public SnifferPersistence snifferPersistence() {
 			return Mockito.mock(SnifferPersistence.class);
 		}
+
+		@Bean
+		public IndexNamingStrategy nameStrategy() {
+			return new IndexNamingStrategy() {
+
+				@Override
+				public String buildActiveName(final long snifferId) {
+					return "test";
+				}
+
+				@Override
+				public String[] getRetrievalNames(final long snifferId) {
+					return new String[] { buildActiveName(snifferId), "temp" };
+				}
+			};
+		}
 	}
 
 	@Autowired
@@ -173,4 +189,5 @@ public class EsEventPersistenceTest {
 		persister.deleteAll(sniffer1.getId());
 		persister.deleteAll(sniffer1.getId());
 	}
+
 }

@@ -71,7 +71,7 @@ public class CompoundLogReaderTest {
 		@Override
 		public void readEntries(final Log log, final LogRawAccess<LogInputStream> logAccess,
 				final LogPointer startOffset, final com.logsniffer.reader.LogEntryReader.LogEntryConsumer consumer)
-						throws IOException, FormatException {
+				throws IOException, FormatException {
 			for (int i = 0; i < maxCount; i++) {
 				if (exceptionAt == i) {
 					throw new IOException("Throw error at " + i);
@@ -92,7 +92,7 @@ public class CompoundLogReaderTest {
 		@Override
 		public void readEntriesReverse(final Log log, final LogRawAccess<LogInputStream> logAccess,
 				final LogPointer startOffset, final com.logsniffer.reader.LogEntryReader.LogEntryConsumer consumer)
-						throws IOException {
+				throws IOException {
 			for (int i = maxCount - 1; i >= 0; i--) {
 				if (exceptionAt == i) {
 					throw new IOException("Throw error at " + i);
@@ -198,7 +198,7 @@ public class CompoundLogReaderTest {
 	 * @throws IOException
 	 */
 	@Test(timeout = 1000 * 100 * 100)
-	@Repeat(20)
+	@Repeat(1)
 	public void testLongComposition() throws FormatException, IOException {
 		final long start = System.currentTimeMillis();
 		final List<LogInstance> subLogs = new ArrayList<>();

@@ -65,54 +65,52 @@ angular
 			    	busy: false	
 			    };
 			    $scope.searchForm = {
-				basicSearch: $routeParams._nativeQuery ? false: true,
-				_nativeQuery: $routeParams._nativeQuery ? $routeParams._nativeQuery : null,
-				_itemsPerPage : 25,
-				_offset : $routeParams._offset ? $routeParams._offset * 1 : 0,
-				_from : $routeParams._from ? new Date($routeParams._from*1) : null,
-				_to : $routeParams._to ? new Date($routeParams._to*1) : null,
-				_query: $routeParams._query ? $routeParams._query : null
+			    	basicSearch: $routeParams._nativeQuery ? false: true,
+			    	_nativeQuery: $routeParams._nativeQuery ? $routeParams._nativeQuery : null,
+			    	_itemsPerPage : 25,
+			    	_offset : $routeParams._offset ? $routeParams._offset * 1 : 0,
+			    	_from : $routeParams._from ? new Date($routeParams._from*1) : null,
+			    	_to : $routeParams._to ? new Date($routeParams._to*1) : null,
+			    	_query: $routeParams._query ? $routeParams._query : null
 			    };
 			    $scope.pager = {
-				currentPage: 1 + Math
-				    .floor($scope.searchForm._offset
-					    / $scope.searchForm._itemsPerPage)
+			    		currentPage: 1 + Math.floor($scope.searchForm._offset / $scope.searchForm._itemsPerPage)
 			    };
 			    
 			    var getBasicEsQuery = function() {
 				var nativeQuery = {
 					"query" : {
-					    "filtered" : {
-						"query" : {
-						    // To be determined
-						},
-						"filter" : {
-						    "range" : {
-							"lf_timestamp" : {
-							    "to" : $scope.searchForm._to ? $scope.searchForm._to.getTime() : null,
-							    "from" : $scope.searchForm._from ? $scope.searchForm._from.getTime() : null,
-							    "include_lower" : true,
-							    "include_upper" : true
+					    "bool" : {
+							"must" : {
+							    // To be determined
+							},
+							"filter" : {
+							    "range" : {
+									"lf_timestamp" : {
+									    "to" : $scope.searchForm._to ? $scope.searchForm._to.getTime() : null,
+									    "from" : $scope.searchForm._from ? $scope.searchForm._from.getTime() : null,
+									    "include_lower" : true,
+									    "include_upper" : true
+									}
+								 }
 							}
-						    }
-						}
 					    }
 					},
 					"sort" : [ {
 					    "lf_timestamp" : {
-						"order" : "asc",
+						"order" : "desc",
 						"ignore_unmapped" : true
 					    }
 					} ]
 				    };
             			if ($scope.searchForm._query) {
-            			    nativeQuery.query.filtered.query = {
-            				    "simple_query_string" : {
+            			    nativeQuery.query.bool.must = {
+            				    "query_string" : {
             				        "query" : $scope.searchForm._query
             				}
             			    };
             			} else {
-            			    nativeQuery.query.filtered.query = {
+            			    nativeQuery.query.bool.must = {
             				    "match_all" : {}
             			    };
             			}
@@ -154,6 +152,8 @@ angular
 						function(data, status, headers,
 							config) {
 						    $scope.eventsList = data;
+						    // 10.000 scroll limit in ES
+						    $scope.searchForm.maxScrollCount = Math.min(10000, $scope.eventsList.totalCount);
 						    $scope.items = $scope.eventsList.items;
 						    $log.info("Events loaded",
 							    data);

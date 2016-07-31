@@ -213,7 +213,7 @@ public class CompoundLogSource extends BaseLogsSource<CompoundLogAccess> {
 				latestModified = li.getLog().getLastModified();
 			}
 		}
-		return new DefaultLog(getName(), "default", latestModified, SizeMetric.BYTE, totalSize);
+		return new DefaultLog(getName(), getName(), latestModified, SizeMetric.BYTE, totalSize);
 	}
 
 	@Override

@@ -131,9 +131,12 @@
 		<div class="clearfix">
 			<div class="pull-left">
 				<strong>Events {{searchForm._offset + 1}} - {{Math.min(searchForm._offset + searchForm._itemsPerPage, eventsList.totalCount)}} of {{eventsList.totalCount}}</strong>
+				<small class="glyphicon glyphicon-warning-sign text-muted" 
+					   ng-if="searchForm.maxScrollCount < eventsList.totalCount && pager.currentPage > 5" uib-tooltip="Paging is limited only to first {{searchForm.maxScrollCount}} items. Try to refine the query.">
+				</small>
 			</div>
 			<div class="pull-right">
-				<uib-pagination total-items="eventsList.totalCount" ng-model="pager.currentPage" ng-change="pageChanged()" max-size="15" class="pagination-sm" boundary-links="true" rotate="false" num-pages="numPages"
+				<uib-pagination total-items="searchForm.maxScrollCount" ng-model="pager.currentPage" ng-change="pageChanged()" max-size="15" class="pagination-sm" boundary-links="true" rotate="false" num-pages="numPages"
 					previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;"
 					items-per-page="searchForm._itemsPerPage"></uib-pagination>
 			</div>
@@ -165,6 +168,9 @@
 		<div class="clearfix" ng-if="5 < eventsList.totalCount">
 			<div class="pull-left">
 				<strong>Events {{searchForm._offset + 1}} - {{Math.min(searchForm._offset + searchForm._itemsPerPage, eventsList.totalCount)}} of {{eventsList.totalCount}}</strong>
+				<small class="glyphicon glyphicon-warning-sign text-muted" 
+					   ng-if="searchForm.maxScrollCount < eventsList.totalCount && pager.currentPage > 5" uib-tooltip="Paging is limited only to first {{searchForm.maxScrollCount}} items. Try to refine the query.">
+				</small>
 			</div>
 			<div class="pull-right">
 				<uib-pagination total-items="eventsList.totalCount" ng-model="pager.currentPage" ng-change="pageChanged()" max-size="15" class="pagination-sm" boundary-links="true" rotate="false" num-pages="numPages"

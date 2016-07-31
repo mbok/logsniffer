@@ -19,6 +19,8 @@ package com.logsniffer.app;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -29,11 +31,9 @@ import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
-import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
@@ -322,9 +322,14 @@ public class ElasticSearchAppConfig {
 				};
 			} else {
 				logger.info("Establishing remote elasticsearch connection to: {}", settings.getRemoteAddresses());
-				final TransportClient client = new TransportClient();
+				final TransportClient client = TransportClient.builder().build();
 				for (final RemoteAddress a : settings.getRemoteAddresses()) {
-					client.addTransportAddress(new InetSocketTransportAddress(a.getHost(), a.getPort()));
+					try {
+						client.addTransportAddress(
+								new InetSocketTransportAddress(InetAddress.getByName(a.getHost()), a.getPort()));
+					} catch (final UnknownHostException e) {
+						logger.warn("Failed to resolve ES host, it'll be ignored: " + a.getHost(), e);
+					}
 				}
 				clientConnection = new ClientConnection() {
 
@@ -343,10 +348,12 @@ public class ElasticSearchAppConfig {
 
 			final Client client = clientConnection.getClient();
 			client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet();
-			if (!client.admin().indices().exists(new IndicesExistsRequest(indexName)).actionGet().isExists()) {
-				logger.info("Created elasticsearch index: {}", indexName);
-				client.admin().indices().create(new CreateIndexRequest(indexName)).actionGet();
-			}
+			// if (!client.admin().indices().exists(new
+			// IndicesExistsRequest(indexName)).actionGet().isExists()) {
+			// logger.info("Created elasticsearch index: {}", indexName);
+			// client.admin().indices().create(new
+			// CreateIndexRequest(indexName)).actionGet();
+			// }
 
 		}
 		return clientConnection;
@@ -362,13 +369,12 @@ public class ElasticSearchAppConfig {
 	}
 
 	private Node buildLocalEmbeddedNode() {
-		final File esDataDir = new File(logSnifferHome.getHomeDir(), "elasticsearch");
+		final File esHomeDir = new File(logSnifferHome.getHomeDir(), "elasticsearch");
+		final File esDataDir = new File(esHomeDir, "data");
 		logger.info("Preparing local elasticsearch node on data path: {}", esDataDir.getPath());
 		esDataDir.mkdirs();
-		final ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder();
-		settings.put("node.name", "embedded");
-		settings.put("path.data", esDataDir.getPath());
-		settings.put("http.enabled", false);
+		final Settings settings = Settings.settingsBuilder().put("node.name", "embedded")
+				.put("path.home", esHomeDir.getPath()).put("http.enabled", false).build();
 		final Node node = NodeBuilder.nodeBuilder().settings(settings).clusterName("embedded").data(true).local(true)
 				.node();
 		return node;

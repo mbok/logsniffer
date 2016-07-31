@@ -28,34 +28,35 @@ import javax.annotation.PostConstruct;
 
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
-import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchPhaseExecutionException;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
-import org.elasticsearch.index.query.FilterBuilder;
-import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.index.IndexNotFoundException;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.RangeFilterBuilder;
-import org.elasticsearch.indices.TypeMissingException;
+import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogram;
-import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogram.Interval;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
+import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
+import org.elasticsearch.search.aggregations.bucket.histogram.Histogram.Bucket;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram.Order;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsBuilder;
 import org.elasticsearch.search.aggregations.metrics.stats.Stats;
 import org.elasticsearch.search.aggregations.metrics.stats.StatsBuilder;
-import org.elasticsearch.search.facet.FacetBuilders;
-import org.elasticsearch.search.facet.terms.TermsFacet;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -66,6 +67,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.logsniffer.app.ElasticSearchAppConfig.ClientCallback;
 import com.logsniffer.app.ElasticSearchAppConfig.ElasticClientTemplate;
 import com.logsniffer.aspect.AspectProvider;
@@ -80,8 +82,10 @@ import com.logsniffer.event.es.EsEventPersistence.AspectEventImpl.AspectEventImp
 import com.logsniffer.fields.FieldBaseTypes;
 import com.logsniffer.fields.FieldsMap;
 import com.logsniffer.model.LogEntry;
+import com.logsniffer.model.LogPointer;
 import com.logsniffer.model.LogSource;
 import com.logsniffer.model.LogSourceProvider;
+import com.logsniffer.model.support.JsonLogPointer;
 import com.logsniffer.reader.FormatException;
 import com.logsniffer.util.DataAccessException;
 
@@ -109,8 +113,8 @@ public class EsEventPersistence implements EventPersistence {
 	@Autowired
 	private ElasticClientTemplate clientTpl;
 
-	@Value(value = "${logsniffer.es.indexName}")
-	private String indexName;
+	@Autowired
+	private IndexNamingStrategy indexNamingStrategy;
 
 	private ObjectMapper jsonMapper;
 
@@ -122,40 +126,32 @@ public class EsEventPersistence implements EventPersistence {
 		jsonMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, true);
 		jsonMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		jsonMapper.registerSubtypes(LogEntry.class);
+		final SimpleModule esModule = new SimpleModule();
+		esModule.addSerializer(LogPointer.class, new EsLogPointerSerializer());
+		esModule.addDeserializer(LogPointer.class, new EsLogPointerDeserializer());
+		esModule.addDeserializer(JsonLogPointer.class, new EsLogPointerDeserializer());
+		jsonMapper.registerModule(esModule);
 	}
 
-	// @PostConstruct
-	// protected void initEventMapping() {
-	// Event dummyEvent = new Event();
-	// LogEntry entry = new LogEntry();
-	// entry.setTimeStamp(new Date());
-	// dummyEvent.setEntries(Collections.singletonList((LogEntryData) entry));
-	// dummyEvent.setPublished(new Date());
-	// String id = persist(dummyEvent);
-	// delete(new String[] { id });
-	// logger.debug("Initiated basic event index mapping");
-	// }
-
 	/**
-	 * Returns the sniffer related id.
+	 * Returns the type for events.
 	 * 
 	 * @param snifferId
 	 *            sniffer id
-	 * @return sniffer related id
+	 * @return type
 	 */
-	public static String getSnifferIdAsType(final long snifferId) {
-		return "event_" + snifferId;
+	public static String getType(final long snifferId) {
+		return "event";
 	}
 
 	@Override
 	public String persist(final Event event) {
-		// long nextEventId = jTpl
-		// .queryForLong("SELECT NEXTVAL('EVENTS_SEQUENCE')");
-
+		String evStr = null;
 		try {
-			final String evStr = jsonMapper.writeValueAsString(event);
-			final IndexRequest indexRequest = Requests.indexRequest(indexName)
-					.type(getSnifferIdAsType(event.getSnifferId())).source(evStr);
+			evStr = jsonMapper.writeValueAsString(event);
+			final IndexRequest indexRequest = Requests
+					.indexRequest(indexNamingStrategy.buildActiveName(event.getSnifferId()))
+					.type(getType(event.getSnifferId())).source(evStr);
 			final String eventId = clientTpl.executeWithClient(new ClientCallback<IndexResponse>() {
 				@Override
 				public IndexResponse execute(final Client client) {
@@ -165,7 +161,7 @@ public class EsEventPersistence implements EventPersistence {
 			logger.debug("Persisted event with id: {}", eventId);
 			return eventId;
 		} catch (final Exception e) {
-			throw new DataAccessException("Failed to persiste event: " + event.getId(), e);
+			throw new DataAccessException("Failed to persiste event: " + evStr, e);
 		}
 	}
 
@@ -174,9 +170,11 @@ public class EsEventPersistence implements EventPersistence {
 		clientTpl.executeWithClient(new ClientCallback<Object>() {
 			@Override
 			public Object execute(final Client client) {
-				final BulkRequest deletes = new BulkRequest();
+				final BulkRequest deletes = new BulkRequest().refresh(true);
 				for (final String id : eventIds) {
-					deletes.add(new DeleteRequest(indexName, getSnifferIdAsType(snifferId), id));
+					for (final String index : indexNamingStrategy.getRetrievalNames(snifferId)) {
+						deletes.add(new DeleteRequest(index, getType(snifferId), id));
+					}
 				}
 				client.bulk(deletes).actionGet();
 				logger.info("Deleted events: {}", (Object[]) eventIds);
@@ -190,12 +188,14 @@ public class EsEventPersistence implements EventPersistence {
 		clientTpl.executeWithClient(new ClientCallback<Object>() {
 			@Override
 			public Object execute(final Client client) {
-				logger.debug("Going to delete all events for sniffer: {}", snifferId);
+				final String[] indexNames = indexNamingStrategy.getRetrievalNames(snifferId);
+				logger.debug("Going to delete all events for sniffer {} by deleting the index(es): {}", snifferId,
+						indexNames);
 				try {
-					client.admin().indices().prepareDeleteMapping(indexName).setType(getSnifferIdAsType(snifferId))
-							.execute().actionGet();
-				} catch (final TypeMissingException e) {
-					logger.info("Catched TypeMissingException when deleting all events of sniffer: {}", snifferId);
+					client.admin().indices().prepareDelete(indexNames)
+							.setIndicesOptions(IndicesOptions.lenientExpandOpen()).execute().actionGet();
+				} catch (final IndexNotFoundException e) {
+					logger.info("Catched IndexNotFoundException when deleting all events of sniffer: {}", snifferId);
 				}
 				logger.info("Deleted all events for sniffer: {}", snifferId);
 				return null;
@@ -238,10 +238,11 @@ public class EsEventPersistence implements EventPersistence {
 		}
 
 		protected SearchRequestBuilder getBaseRequestBuilder(final Client esClient) {
-			final SearchRequestBuilder requestBuilder = esClient.prepareSearch(indexName)
-					.setTypes(getSnifferIdAsType(snifferId));
+			final SearchRequestBuilder requestBuilder = esClient
+					.prepareSearch(indexNamingStrategy.getRetrievalNames(snifferId))
+					.setIndicesOptions(IndicesOptions.lenientExpandOpen()).setTypes(getType(snifferId));
 			requestBuilder.setFrom(offset).setSize(size)
-					.addSort(SortBuilders.fieldSort(Event.FIELD_TIMESTAMP).order(SortOrder.ASC).ignoreUnmapped(true));
+					.addSort(SortBuilders.fieldSort(Event.FIELD_TIMESTAMP).order(SortOrder.ASC).unmappedType("date"));
 			return requestBuilder;
 		}
 
@@ -258,16 +259,19 @@ public class EsEventPersistence implements EventPersistence {
 				final SearchRequestBuilder timeRangeQuery = adaptRequestBuilder(esClient,
 						getBaseRequestBuilder(esClient).setSize(0).addAggregation(timeRangeAgg));
 				try {
-					final Stats timeRangeStats = timeRangeQuery.execute().actionGet().getAggregations()
-							.get("timeRange");
-					final long timeRange = (long) (timeRangeStats.getMax() - timeRangeStats.getMin());
-					logger.debug("Time range query: {}", timeRangeQuery);
-					logger.debug("Retrieved time range for events of sniffer={} in {}ms: {}", snifferId,
-							System.currentTimeMillis() - start, timeRange);
-					histogram = new EventsCountHistogram();
-					final Interval interval = getInterval(timeRange, maxHistogramIntervalSlots, histogram);
-					requestBuilder.addAggregation(AggregationBuilders.dateHistogram("eventsCount").interval(interval)
-							.field(Event.FIELD_TIMESTAMP).order(Order.KEY_ASC));
+					final Aggregations aggregations = timeRangeQuery.execute().actionGet().getAggregations();
+					if (aggregations != null) {
+						final Stats timeRangeStats = aggregations.get("timeRange");
+						final long timeRange = (long) (timeRangeStats.getMax() - timeRangeStats.getMin());
+						logger.debug("Time range query: {}", timeRangeQuery);
+						logger.debug("Retrieved time range for events of sniffer={} in {}ms: {}", snifferId,
+								System.currentTimeMillis() - start, timeRange);
+						histogram = new EventsCountHistogram();
+						final DateHistogramInterval interval = getInterval(timeRange, maxHistogramIntervalSlots,
+								histogram);
+						requestBuilder.addAggregation(AggregationBuilders.dateHistogram("eventsCount")
+								.interval(interval).field(Event.FIELD_TIMESTAMP).order(Order.KEY_ASC));
+					}
 				} catch (final SearchPhaseExecutionException e) {
 					logger.warn("Events histogram disabled because of exceptions (probably no events?)", e);
 				}
@@ -285,9 +289,11 @@ public class EsEventPersistence implements EventPersistence {
 			}
 			if (histogram != null) {
 				histogram.setEntries(new ArrayList<EventPersistence.HistogramEntry>());
-				for (final DateHistogram.Bucket e : ((DateHistogram) response.getAggregations().get("eventsCount"))
-						.getBuckets()) {
-					histogram.getEntries().add(new HistogramEntry(e.getKeyAsNumber().longValue(), e.getDocCount()));
+				if (response.getAggregations() != null) {
+					for (final Bucket e : ((Histogram) response.getAggregations().get("eventsCount")).getBuckets()) {
+						final DateTime key = (DateTime) e.getKey();
+						histogram.getEntries().add(new HistogramEntry(key.getMillis(), e.getDocCount()));
+					}
 				}
 			}
 			logger.debug("Retrieved events for sniffer={} in {}ms with query: {}", snifferId,
@@ -330,9 +336,9 @@ public class EsEventPersistence implements EventPersistence {
 		@Override
 		protected SearchRequestBuilder adaptRequestBuilder(final Client esClient,
 				final SearchRequestBuilder requestBuilder) {
-			FilterBuilder filter = null;
+			QueryBuilder filter = null;
 			if (from != null || to != null) {
-				final RangeFilterBuilder occRange = FilterBuilders.rangeFilter(Event.FIELD_TIMESTAMP);
+				final RangeQueryBuilder occRange = QueryBuilders.rangeQuery(Event.FIELD_TIMESTAMP);
 				if (from != null) {
 					occRange.gte(from.getTime());
 				}
@@ -342,7 +348,7 @@ public class EsEventPersistence implements EventPersistence {
 				filter = occRange;
 			}
 			if (filter != null) {
-				requestBuilder.setQuery(QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(), filter));
+				requestBuilder.setQuery(filter);
 			}
 			return requestBuilder;
 		}
@@ -376,31 +382,31 @@ public class EsEventPersistence implements EventPersistence {
 		return new EsEventsNativeQueryBuilder(snifferId, (int) offset, limit);
 	}
 
-	protected Interval getInterval(final long timeRange, final int maxSlotsCount,
+	protected DateHistogramInterval getInterval(final long timeRange, final int maxSlotsCount,
 			final EventsCountHistogram histogram) {
 		// year, quarter, month, week, day, hour, minute, second
 		long dif = timeRange / maxSlotsCount / 1000;
 		if (dif <= 0) {
 			histogram.setInterval(HistogramInterval.SECOND);
-			return Interval.SECOND;
+			return DateHistogramInterval.SECOND;
 		} else if (dif < 60) {
 			histogram.setInterval(HistogramInterval.MINUTE);
-			return Interval.MINUTE;
+			return DateHistogramInterval.MINUTE;
 		} else if ((dif = dif / 60) < 60) {
 			histogram.setInterval(HistogramInterval.HOUR);
-			return Interval.HOUR;
+			return DateHistogramInterval.HOUR;
 		} else if ((dif = dif / 60) < 24) {
 			histogram.setInterval(HistogramInterval.DAY);
-			return Interval.DAY;
+			return DateHistogramInterval.DAY;
 		} else if ((dif = dif / 24) < 7) {
 			histogram.setInterval(HistogramInterval.WEEK);
-			return Interval.WEEK;
+			return DateHistogramInterval.WEEK;
 		} else if ((dif = dif / 7) < 4) {
 			histogram.setInterval(HistogramInterval.MONTH);
-			return Interval.MONTH;
+			return DateHistogramInterval.MONTH;
 		}
 		histogram.setInterval(HistogramInterval.YEAR);
-		return Interval.YEAR;
+		return DateHistogramInterval.YEAR;
 	}
 
 	@Override
@@ -409,11 +415,13 @@ public class EsEventPersistence implements EventPersistence {
 			@Override
 			public Event execute(final Client client) {
 				try {
-					final GetResponse r = client.prepareGet(indexName, getSnifferIdAsType(snifferId), eventId).execute()
-							.get();
-					if (r != null && r.isExists()) {
-						final Event event = jsonMapper.readValue(r.getSourceAsString(), Event.class);
-						event.setId(r.getId());
+					final SearchResponse r = client.prepareSearch(indexNamingStrategy.getRetrievalNames(snifferId))
+							.setIndicesOptions(IndicesOptions.lenientExpandOpen())
+							.setQuery(QueryBuilders.idsQuery().ids(eventId)).execute().get();
+					if (r != null && r.getHits().hits().length > 0) {
+						final SearchHit hit = r.getHits().hits()[0];
+						final Event event = jsonMapper.readValue(hit.getSourceAsString(), Event.class);
+						event.setId(hit.getId());
 						return event;
 					} else {
 						return null;
@@ -471,35 +479,37 @@ public class EsEventPersistence implements EventPersistence {
 			@Override
 			public void injectAspect(final List<AspectSniffer> hosts) {
 				final long start = System.currentTimeMillis();
-				final HashMap<String, AspectSniffer> mapHosts = new HashMap<String, SnifferPersistence.AspectSniffer>();
+				final HashMap<Long, AspectSniffer> mapHosts = new HashMap<>();
 				final long[] hostIds = new long[hosts.size()];
 				int i = 0;
 				for (final AspectSniffer s : hosts) {
 					hostIds[i++] = s.getId();
-					mapHosts.put(Long.toString(s.getId()), s);
+					mapHosts.put(s.getId(), s);
 					s.setAspect(EVENTS_COUNT, 0);
 				}
-				final TermsFacet countersFacet = clientTpl.executeWithClient(new ClientCallback<TermsFacet>() {
+				clientTpl.executeWithClient(new ClientCallback<Object>() {
 					@Override
-					public TermsFacet execute(final Client client) {
-						final SearchRequestBuilder requestBuilder = client.prepareSearch(indexName).setSize(0)
-								.addFacet(FacetBuilders.termsFacet("eventsCounter").allTerms(true)
-										.field(Event.FIELD_SNIFFER_ID)
-										.facetFilter(FilterBuilders.termsFilter(Event.FIELD_SNIFFER_ID, hostIds)));
+					public Object execute(final Client client) {
+						final TermsBuilder terms = AggregationBuilders.terms("eventsCounter")
+								.field(Event.FIELD_SNIFFER_ID).include(hostIds).size(hostIds.length);
+						final SearchRequestBuilder requestBuilder = client.prepareSearch().setSize(0)
+								.addAggregation(terms);
 						final SearchResponse response = requestBuilder.execute().actionGet();
 						logger.debug("Performed events counting search {} in {}ms", requestBuilder,
 								System.currentTimeMillis() - start);
-						return response.getFacets().facet(TermsFacet.class, "eventsCounter");
+						final Terms aventsCounterAgg = response.getAggregations() != null
+								? (Terms) response.getAggregations().get("eventsCounter") : null;
+						if (aventsCounterAgg != null) {
+							for (final Terms.Bucket entry : aventsCounterAgg.getBuckets()) {
+								final long snifferId = entry.getKeyAsNumber().longValue();
+								if (mapHosts.containsKey(snifferId)) {
+									mapHosts.get(snifferId).setAspect(EVENTS_COUNT, entry.getDocCount());
+								}
+							}
+						}
+						return null;
 					}
 				});
-
-				for (final org.elasticsearch.search.facet.terms.TermsFacet.Entry e : countersFacet.getEntries()) {
-					final String id = e.getTerm().string();
-					if (mapHosts.containsKey(id)) {
-						mapHosts.get(id).setAspect(EVENTS_COUNT, e.getCount());
-					}
-				}
-
 			}
 		};
 	}
@@ -532,8 +542,8 @@ public class EsEventPersistence implements EventPersistence {
 				public Object execute(final Client client) {
 					final StringWriter jsonMapping = new StringWriter();
 					final JSONBuilder mappingBuilder = new JSONBuilder(jsonMapping).object();
-					final JSONBuilder props = mappingBuilder.key(getSnifferIdAsType(snifferId)).object()
-							.key("properties").object();
+					final JSONBuilder props = mappingBuilder.key(getType(snifferId)).object().key("properties")
+							.object();
 
 					// TODO: Map sniffer fields dynamically
 					props.key(Event.FIELD_TIMESTAMP).object().key("type").value("date").endObject();
@@ -545,8 +555,8 @@ public class EsEventPersistence implements EventPersistence {
 
 					mappingBuilder.endObject().endObject().endObject();
 					logger.info("Creating mapping for sniffer {}: {}", snifferId, jsonMapping);
-					client.admin().indices().preparePutMapping(indexName).setType(getSnifferIdAsType(snifferId))
-							.setSource(jsonMapping.toString()).get();
+					client.admin().indices().preparePutMapping(indexNamingStrategy.buildActiveName(snifferId))
+							.setType(getType(snifferId)).setSource(jsonMapping.toString()).get();
 					return null;
 				}
 			});

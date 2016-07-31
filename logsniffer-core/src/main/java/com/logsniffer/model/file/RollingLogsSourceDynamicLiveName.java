@@ -50,7 +50,7 @@ public class RollingLogsSourceDynamicLiveName extends AbstractTimestampRollingLo
 			final List<Log> pastLogs = logs.subList(1, logs.size());
 			logger.debug("Exposing rolling log with dynamic live file {} and rolled over files: {}", liveLog, pastLogs);
 			final List<Log> rolledLog = new ArrayList<>();
-			rolledLog.add(new DailyRollingLog(liveLog.getName(), "default", liveLog, pastLogs));
+			rolledLog.add(new DailyRollingLog(liveLog.getName(), getName(), liveLog, pastLogs));
 			return rolledLog;
 		} else {
 			return new ArrayList<>();

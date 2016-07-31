@@ -252,6 +252,7 @@ public class H2SnifferPersistence implements SnifferPersistence {
 						((PostAspectProvider<AspectSniffer, Integer>) eventsCounter).injectAspect(sniffers);
 					}
 				} catch (final Exception e) {
+					logger.error("Failed to access event count", e);
 					result.getMessages()
 							.add(new Message(MessageType.ERROR, "Failed to access event counts: " + e.getMessage()));
 				}
