@@ -1,6 +1,8 @@
 # logsniffer ![alt tag](https://raw.githubusercontent.com/logsniffer/logsniffer/master/logo-109x150.png) 
 logsniffer is a sophisticated open source web tool for parsing, viewing, monitoring and analyzing log data - smarter, collaborative and easier.
 
+# Important: logsniffer is no longer actively maintained. If you have some fixes, feel free to make PR.
+
 [![Build Status](https://travis-ci.org/logsniffer/logsniffer.svg?branch=master)](https://travis-ci.org/logsniffer/logsniffer/builds)
 
 ## Quick start
